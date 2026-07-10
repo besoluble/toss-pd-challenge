@@ -359,19 +359,46 @@
   .stepper button:active{ scale:.9; background:#fff; }
   .stepper button:disabled{ color:var(--ink-4); cursor:default; }
   .stepper .val{ min-width:88px; text-align:center; font-size:15px; font-weight:700; color:var(--ink); }
-  .when{ display:flex; gap:8px; }
-  .when button{
-    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
-    border:0; background:var(--surface); border-radius:12px; padding:12px 6px; min-height:56px;
-    font:inherit; cursor:pointer;
+  .select-btn{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
+    border:0; background:var(--surface-2); border-radius:12px; padding:13px 14px;
+    font:inherit; font-size:14.5px; color:var(--ink); cursor:pointer; text-align:left;
+    transition-property:background-color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .select-btn:active{ scale:.98; background:var(--surface); }
+  .select-btn svg{ width:18px; height:18px; color:var(--ink-4); flex:none; }
+
+  .preset-row{ display:flex; gap:8px; margin:2px 0 16px; }
+  .preset{
+    flex:1; border:0; background:var(--surface); border-radius:10px; padding:10px 6px; min-height:40px;
+    font:inherit; font-size:13px; font-weight:600; color:var(--ink-2); cursor:pointer;
     transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
   }
-  .when button:active{ scale:.96; }
-  .when button b{ font-size:14px; font-weight:600; color:var(--ink-2); }
-  .when button span{ font-size:11.5px; color:var(--ink-4); }
-  .when button[aria-pressed="true"]{ background:var(--blue-weak); }
-  .when button[aria-pressed="true"] b{ color:#1B64DA; }
-  .when button[aria-pressed="true"] span{ color:#1B64DA; opacity:.75; }
+  .preset:active{ scale:.96; }
+  .preset[aria-pressed="true"]{ background:var(--blue-weak); color:#1B64DA; }
+
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .cal-head b{ font-size:14.5px; font-weight:700; }
+  .cal-head button{
+    width:36px; height:36px; border:0; background:none; border-radius:10px;
+    font-size:20px; line-height:1; color:var(--ink-3); cursor:pointer;
+    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .cal-head button:active{ scale:.9; background:var(--surface); }
+  .cal-head button:disabled{ color:var(--line); cursor:default; }
+  .cal-week{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center;
+    font-size:11.5px; font-weight:600; color:var(--ink-4); margin-bottom:4px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); row-gap:3px; }
+  .cal-day{
+    height:38px; border:0; background:none; font:inherit; font-size:13.5px; color:var(--ink);
+    cursor:pointer; border-radius:10px; position:relative;
+    transition-property:background-color,color; transition-duration:.12s; transition-timing-function:var(--ease);
+  }
+  .cal-day:disabled{ color:var(--ink-4); cursor:default; text-decoration:line-through; text-decoration-color:var(--line); }
+  .cal-day.mid{ background:var(--blue-weak); border-radius:0; color:#1B64DA; }
+  .cal-day.rs{ background:var(--blue); color:#fff; border-radius:10px 0 0 10px; }
+  .cal-day.re{ background:var(--blue); color:#fff; border-radius:0 10px 10px 0; }
+  .cal-day.rs.re, .cal-day.rs.solo{ border-radius:10px; }
 
   /* 주최자: 추천 시간 카드 */
   .times{ display:flex; flex-direction:column; gap:10px; }
@@ -544,11 +571,10 @@
             </div>
             <div class="form-field">
               <span class="f-label">언제쯤이면 좋아요?</span>
-              <div class="when" id="whenPick">
-                <button type="button" aria-pressed="true"><b>다음 주</b><span>7/13 – 7/17</span></button>
-                <button type="button" aria-pressed="false"><b>다다음 주</b><span>7/20 – 7/24</span></button>
-                <button type="button" aria-pressed="false"><b>이번 달 안</b><span>~ 7/31</span></button>
-              </div>
+              <button type="button" class="select-btn" id="whenBtn">
+                <span id="whenLabel">다음 주 · 7/13 – 7/17</span>
+                <svg viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
             </div>
           </div>
 
@@ -631,6 +657,27 @@
           <span class="notif-icon">🔔</span>
           <span class="notif-body"><b>회의 시간이 정해졌어요</b>신규 기능 킥오프 · <span id="notif1Time"></span></span>
         </button>
+
+        <!-- 기간 선택 시트 -->
+        <div class="modal" id="whenModal">
+          <div class="dim" id="whenDim"></div>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="whenTitle">
+            <h3 id="whenTitle">언제쯤이면 좋아요?</h3>
+            <div class="preset-row" id="presetRow">
+              <button type="button" class="preset">다음 주</button>
+              <button type="button" class="preset">다다음 주</button>
+              <button type="button" class="preset">이번 달 안</button>
+            </div>
+            <div class="cal-head">
+              <button type="button" id="calPrev" aria-label="이전 달">‹</button>
+              <b id="calTitle">2026년 7월</b>
+              <button type="button" id="calNext" aria-label="다음 달">›</button>
+            </div>
+            <div class="cal-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+            <div class="cal-grid" id="calGrid"></div>
+            <button class="cta" id="whenOk" style="margin-top:14px;">확인</button>
+          </div>
+        </div>
 
         <!-- 이탈 확인 -->
         <div class="modal" id="exitModal">
@@ -1110,7 +1157,7 @@
   });
 
   // 회의 정보
-  const meet={name:"스프린트 회고", dur:"30분", span:"다음 주"};
+  const meet={name:"스프린트 회고", dur:"30분", span:"다음 주 · 7/13 – 7/17"};
 
   // 길이: 30분 단위 스테퍼 (30분 ~ 3시간)
   let durMin=30;
@@ -1119,24 +1166,76 @@
   function fmtDur(m){ return m<60 ? m+"분" : (m%60 ? Math.floor(m/60)+"시간 "+(m%60)+"분" : (m/60)+"시간"); }
   function renderDur(){
     meet.dur=fmtDur(durMin); durVal.textContent=meet.dur;
-    durMinus.disabled=durMin<=30; durPlus.disabled=durMin>=180;
+    durMinus.disabled=durMin<=10; durPlus.disabled=durMin>=180;
   }
-  durMinus.addEventListener("click",()=>{ durMin=Math.max(30,durMin-30); renderDur(); });
-  durPlus.addEventListener("click",()=>{ durMin=Math.min(180,durMin+30); renderDur(); });
+  durMinus.addEventListener("click",()=>{ durMin=Math.max(10,durMin-10); renderDur(); });
+  durPlus.addEventListener("click",()=>{ durMin=Math.min(180,durMin+10); renderDur(); });
   renderDur();
 
-  // 언제: 기간 칩
-  const WHEN=["다음 주","다다음 주","이번 달"];
-  const whenBtns=[...document.querySelectorAll("#whenPick button")];
-  whenBtns.forEach((b,i)=>b.addEventListener("click",()=>{
-    whenBtns.forEach(x=>x.setAttribute("aria-pressed","false"));
-    b.setAttribute("aria-pressed","true"); meet.span=WHEN[i];
+  // 언제: 프리셋 + 기간 캘린더 (바텀시트)
+  const TODAY=new Date(2026,6,11);
+  const PRESETS=[
+    {label:"다음 주",   s:new Date(2026,6,13), e:new Date(2026,6,17)},
+    {label:"다다음 주", s:new Date(2026,6,20), e:new Date(2026,6,24)},
+    {label:"이번 달 안", s:new Date(2026,6,12), e:new Date(2026,6,31)},
+  ];
+  let selS=PRESETS[0].s, selE=PRESETS[0].e, viewY=2026, viewM=6;
+  const whenModal=document.getElementById("whenModal"), whenLabel=document.getElementById("whenLabel"),
+        calGrid=document.getElementById("calGrid"), calTitle=document.getElementById("calTitle"),
+        calPrev=document.getElementById("calPrev"), calNext=document.getElementById("calNext"),
+        presetBtns=[...document.querySelectorAll("#presetRow .preset")];
+  const fmtD=d=>(d.getMonth()+1)+"/"+d.getDate();
+  function spanLabel(){
+    if(!selS) return "기간을 골라 주세요";
+    if(!selE) return fmtD(selS)+"부터";
+    const p=PRESETS.find(p=>+p.s===+selS && +p.e===+selE);
+    return p ? p.label+" · "+fmtD(p.s)+" – "+fmtD(p.e) : fmtD(selS)+" – "+fmtD(selE);
+  }
+  function renderCal(){
+    calTitle.textContent=viewY+"년 "+(viewM+1)+"월";
+    calPrev.disabled=(viewY===2026 && viewM<=6);
+    calNext.disabled=(viewY===2026 && viewM>=9);
+    presetBtns.forEach((b,i)=>{
+      const p=PRESETS[i];
+      b.setAttribute("aria-pressed", (selS&&selE&&+p.s===+selS&&+p.e===+selE)?"true":"false");
+    });
+    calGrid.replaceChildren();
+    const first=new Date(viewY,viewM,1), days=new Date(viewY,viewM+1,0).getDate();
+    for(let i=0;i<first.getDay();i++) calGrid.appendChild(document.createElement("span"));
+    for(let d=1; d<=days; d++){
+      const date=new Date(viewY,viewM,d);
+      const b=document.createElement("button"); b.type="button"; b.className="cal-day"; b.textContent=d;
+      if(date<TODAY){ b.disabled=true; }
+      if(selS && +date===+selS){ b.classList.add("rs"); if(!selE) b.classList.add("solo"); }
+      if(selE && +date===+selE) b.classList.add("re");
+      if(selS && selE && date>selS && date<selE) b.classList.add("mid");
+      b.addEventListener("click",()=>{
+        if(!selS || (selS&&selE)){ selS=date; selE=null; }
+        else if(+date===+selS){ selE=date; }
+        else if(date>selS){ selE=date; }
+        else { selS=date; selE=null; }
+        renderCal();
+      });
+      calGrid.appendChild(b);
+    }
+  }
+  presetBtns.forEach((b,i)=>b.addEventListener("click",()=>{
+    selS=PRESETS[i].s; selE=PRESETS[i].e; viewY=selS.getFullYear(); viewM=selS.getMonth(); renderCal();
   }));
+  calPrev.addEventListener("click",()=>{ viewM--; if(viewM<0){viewM=11;viewY--;} renderCal(); });
+  calNext.addEventListener("click",()=>{ viewM++; if(viewM>11){viewM=0;viewY++;} renderCal(); });
+  document.getElementById("whenBtn").addEventListener("click",()=>{ renderCal(); whenModal.classList.add("show"); });
+  document.getElementById("whenDim").addEventListener("click",()=>whenModal.classList.remove("show"));
+  document.getElementById("whenOk").addEventListener("click",()=>{
+    if(selS && !selE) selE=selS;
+    meet.span=spanLabel(); whenLabel.textContent=meet.span;
+    whenModal.classList.remove("show");
+  });
   let hostState="none", hostPickedLabel=""; // none → collecting → confirmed
   hostSendBtn.addEventListener("click",()=>{
     const n=includedCount();
     meet.name=document.getElementById("meetName").value.trim()||"새 회의";
-    document.getElementById("hostCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span+" 중";
+    document.getElementById("hostCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span;
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     hostState="collecting"; goStep("hostSent");
   });
