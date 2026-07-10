@@ -143,6 +143,9 @@
   .opt-only{ display:none !important; }
   body[data-persona="optional"] .opt-only{ display:inline-flex !important; }
 
+  .title-2l{ min-height:2.7em; } /* 타이틀이 1줄이어도 2줄 높이 확보 → 탭·콘텐츠 위치 고정 */
+  .noti-item.static{ cursor:default; }
+  .noti-item.static:active{ background:none; }
   .ctx{ font-size:13px; color:var(--ink-3); margin-bottom:10px; }
   .ctx b{ color:var(--ink-2); font-weight:600; }
   .title{ font-size:22px; font-weight:700; letter-spacing:-.02em; margin:0 0 8px; text-wrap:balance; line-height:1.35; }
@@ -388,24 +391,25 @@
   .f-label{ font-size:12px; font-weight:600; color:var(--ink-3); }
   .text-input{
     border:0; background:var(--surface-2); border-radius:12px; padding:13px 14px;
-    font:inherit; font-size:14.5px; color:var(--ink); outline:none; width:100%;
+    font:inherit; font-size:14.5px; font-weight:500; color:var(--ink); outline:none; width:100%;
     transition:box-shadow .18s var(--ease);
   }
   .text-input:focus{ box-shadow:inset 0 0 0 2px var(--blue-weak); }
   .text-input::placeholder{ color:var(--ink-4); }
-  .stepper{ display:inline-flex; align-items:center; align-self:flex-start; background:var(--surface); border-radius:12px; padding:4px; }
+  /* 인풋 3종(목적·길이·언제)은 같은 타이포·같은 바탕으로 */
+  .stepper{ display:inline-flex; align-items:center; align-self:flex-start; background:var(--surface-2); border-radius:12px; padding:4px; }
   .stepper button{
-    width:42px; height:40px; border:0; background:transparent; border-radius:9px;
-    font:inherit; font-size:18px; font-weight:500; color:var(--ink-2); cursor:pointer;
+    width:42px; height:38px; border:0; background:transparent; border-radius:9px;
+    font:inherit; font-size:17px; font-weight:500; color:var(--ink-2); cursor:pointer;
     transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
   }
   .stepper button:active{ scale:.9; background:#fff; }
   .stepper button:disabled{ color:var(--ink-4); cursor:default; }
-  .stepper .val{ min-width:88px; text-align:center; font-size:15px; font-weight:700; color:var(--ink); }
+  .stepper .val{ min-width:88px; text-align:center; font-size:14.5px; font-weight:500; color:var(--ink); }
   .select-btn{
     display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
     border:0; background:var(--surface-2); border-radius:12px; padding:13px 14px;
-    font:inherit; font-size:14.5px; color:var(--ink); cursor:pointer; text-align:left;
+    font:inherit; font-size:14.5px; font-weight:500; color:var(--ink); cursor:pointer; text-align:left;
     transition-property:background-color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
   }
   .select-btn:active{ scale:.98; background:var(--surface); }
@@ -483,7 +487,7 @@
 
   <div class="stage">
     <div class="wrap" id="wrap">
-      <span class="dev-label">참석자 · 은솔</span>
+      <span class="dev-label">참석자 · 은솔 (Product Designer)</span>
       <div class="screen" id="screen">
 
         <!-- STEP 1 · 시간대 -->
@@ -541,6 +545,11 @@
 
         <!-- DONE -->
         <section class="step" id="stepDone" aria-live="polite">
+          <div class="nav">
+            <button class="back" id="doneClose" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
           <div class="done-body">
             <div class="check">
               <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -563,7 +572,7 @@
             </button>
             <div class="profile"><span class="avatar">은</span></div>
           </div>
-          <h1 class="title" id="homeTitle">확인할 요청이<br>있어요</h1>
+          <h1 class="title title-2l" id="homeTitle">확인할 요청이<br>있어요</h1>
           <p class="sub" id="homeSub"></p>
 
           <div class="tabs" role="tablist" aria-label="홈 탭">
@@ -612,7 +621,6 @@
             </button>
           </div>
           <h1 class="title">어떤 회의인가요?</h1>
-          <p class="sub">시간 후보는 정하지 않아도 돼요 — 사정을 모아 찾아드려요.</p>
           <span class="cal">
             <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             모두의 캘린더 빈 시간은 자동으로 반영돼요
@@ -670,6 +678,11 @@
 
         <!-- HOST · 보냈어요 -->
         <section class="step" id="stepHostSent" aria-live="polite">
+          <div class="nav">
+            <button class="back" id="hostSentClose" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
           <div class="done-body">
             <div class="check">
               <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -685,6 +698,11 @@
 
         <!-- HOST · 주최자 결과 -->
         <section class="step" id="stepHost">
+          <div class="nav">
+            <button class="back" id="hostResultsHome" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
           <div class="ctx" id="hostCtx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
           <p class="sub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
@@ -701,6 +719,11 @@
 
         <!-- HOST DONE -->
         <section class="step" id="stepHostDone" aria-live="polite">
+          <div class="nav">
+            <button class="back" id="hostDoneClose" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
           <div class="done-body">
             <div class="check">
               <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -760,14 +783,20 @@
       <span class="badge" id="badge">390px</span>
     </div>
 
-    <!-- 디바이스 2 · 주최자(지연)의 폰 — 마지막 응답이 도착하면 등장 -->
+    <!-- 디바이스 2 · 주최자(지수)의 폰 — 마지막 응답이 도착하면 등장 -->
     <div class="wrap2" id="wrap2" aria-hidden="true">
-      <span class="dev-label">주최자 · 지연</span>
+      <span class="dev-label">주최자 · 지수 (PO)</span>
       <div class="screen">
 
         <section class="step active" id="s2Home">
-          <div class="nav home-nav"><div class="profile"><span class="avatar">지</span></div></div>
-          <h1 class="title" id="s2HomeTitle">사정을 모으고<br>있어요</h1>
+          <div class="nav home-nav">
+            <button class="bell" id="s2Bell" aria-label="알림">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8c-2.9 0-4.6 2.2-4.6 4.6 0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6c0-2.4-1.7-4.6-4.6-4.6zM8.4 15a1.7 1.7 0 003.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="bell-dot" id="s2BellDot" hidden></span>
+            </button>
+            <div class="profile"><span class="avatar">지</span></div>
+          </div>
+          <h1 class="title title-2l" id="s2HomeTitle">사정을 모으고<br>있어요</h1>
           <p class="sub" id="s2HomeSub"></p>
 
           <div class="tabs" role="tablist" aria-label="홈 탭">
@@ -808,6 +837,11 @@
         </section>
 
         <section class="step" id="s2Done" aria-live="polite">
+          <div class="nav">
+            <button class="back" id="s2DoneClose" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
           <div class="done-body">
             <div class="check">
               <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -818,6 +852,17 @@
           <div class="foot">
             <button class="cta" id="s2DoneOk">확인</button>
           </div>
+        </section>
+
+        <!-- 지수의 알림함 -->
+        <section class="step" id="s2Noti" aria-live="polite">
+          <div class="nav">
+            <button class="back" id="s2NotiBack" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <h1 class="title">알림</h1>
+          <div class="content" id="s2NotiList" style="gap:4px;"></div>
         </section>
 
         <button class="notif" id="notif" type="button">
@@ -965,7 +1010,7 @@
   document.getElementById("back2").addEventListener("click",()=>goStep(1,"back"));
   /* ================= 요청 2건 (세션 내 상태 유지) ================= */
   const REQS={
-    kickoff:{ title:"신규 기능 킥오프 · 1시간", who:"지연님", optional:false,
+    kickoff:{ title:"신규 기능 킥오프 · 1시간", who:"지수님", optional:false,
               ctx:"<b>신규 기능 킥오프 · 1시간</b> · 다음 주 중" },
     weekly:{  title:"디자인 위클리 · 30분", who:"수아님", optional:true,
               ctx:"<b>디자인 위클리 · 30분</b> · 다음 주 중" },
@@ -1152,11 +1197,11 @@
     if(currentReq==="kickoff") setTimeout(showDevice2, 800); // 내가 마지막 응답자 → 주최자에게 띠롱
   });
 
-  /* ================= 디바이스 2: 주최자(지연)의 폰 ================= */
+  /* ================= 디바이스 2: 주최자(지수)의 폰 ================= */
   let dev2Shown=false, pick2=0;
-  const s2Els={home:document.getElementById("s2Home"),results:document.getElementById("s2Results"),done:document.getElementById("s2Done")};
+  const s2Els={home:document.getElementById("s2Home"),results:document.getElementById("s2Results"),done:document.getElementById("s2Done"),noti:document.getElementById("s2Noti")};
 
-  // 지연 홈도 허브 문법: 탭 전환 + 상태별 타이틀
+  // 지수 홈도 허브 문법: 탭 전환 + 상태별 타이틀
   let s2Tab="my", s2MyTitle="사정을 모으고<br>있어요";
   const s2HomeTitle=document.getElementById("s2HomeTitle");
   function setS2MyTitle(t){ s2MyTitle=t; if(s2Tab==="my") s2HomeTitle.innerHTML=t; }
@@ -1180,6 +1225,32 @@
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
   }
+
+  // 지수의 알림함
+  const s2Notis=[]; let s2Unread=0;
+  const s2BellDot=document.getElementById("s2BellDot"), s2NotiList=document.getElementById("s2NotiList");
+  function renderNoti2List(){
+    s2BellDot.hidden=s2Unread===0;
+    s2NotiList.replaceChildren();
+    if(!s2Notis.length){
+      const p=document.createElement("p"); p.className="noti-empty";
+      p.textContent="아직 알림이 없어요.\n새 소식이 생기면 알려드릴게요.";
+      s2NotiList.appendChild(p); return;
+    }
+    s2Notis.forEach(n=>{
+      const d=document.createElement("div"); d.className="noti-item static";
+      d.innerHTML="<b>"+n.t+(n.fresh?'<i class="n-dot"></i>':"")+"</b><span>"+n.b+"</span>";
+      s2NotiList.appendChild(d);
+    });
+  }
+  function pushNoti2(t,b){ s2Notis.unshift({t,b,fresh:true}); s2Unread++; renderNoti2List(); }
+  function openNoti2(){
+    renderNoti2List(); s2Go("noti","fwd");
+    s2Notis.forEach(n=>n.fresh=false); s2Unread=0; s2BellDot.hidden=true;
+  }
+  document.getElementById("s2Bell").addEventListener("click", openNoti2);
+  document.getElementById("s2NotiBack").addEventListener("click",()=>s2Go("home","back"));
+  renderNoti2List();
 
   function chime(){ // 띠롱
     try{
@@ -1250,6 +1321,7 @@
     setTimeout(()=>{
       chime();
       setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>s2Go("results","fwd"));
+      pushNoti2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요");
       s2Ready=true;
       setS2MyTitle("이제 시간을<br>정할 수 있어요");
       document.getElementById("s2BadgeMy").classList.add("hot");
@@ -1266,7 +1338,7 @@
     document.getElementById("s2Cta").textContent="재촉했어요 · 답이 오면 알려드릴게요";
     setTimeout(()=>{
       chime();
-      setNotif1("지연님이 기다리고 있어요","신규 기능 킥오프 · 불편한 시간을 알려주세요",()=>openReq("kickoff"));
+      setNotif1("지수님이 기다리고 있어요","신규 기능 킥오프 · 불편한 시간을 알려주세요",()=>openReq("kickoff"));
     }, 450);
   });
   document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home","back"));
@@ -1296,7 +1368,10 @@
     }, 650);
   });
   document.getElementById("again").addEventListener("click",()=>goStep(1,"back"));
-  document.getElementById("doneOk").addEventListener("click",()=>{ renderHome(); goStep("exit","back"); });
+  const goHome=()=>{ renderHome(); goStep("exit","back"); };
+  document.getElementById("doneOk").addEventListener("click", goHome);
+  document.getElementById("doneClose").addEventListener("click", goHome);
+  document.getElementById("s2DoneClose").addEventListener("click",()=>s2Go("home","back"));
 
   /* ================= 주최자: 요청 만들기 ================= */
   const PEOPLE=[
@@ -1430,12 +1505,15 @@
   const goHomeMy=()=>{ homeTab="my"; renderHome(); goStep("exit","back"); };
   document.getElementById("hostSentOk").addEventListener("click", goHomeMy);
   document.getElementById("hostDoneOk").addEventListener("click", goHomeMy);
+  document.getElementById("hostSentClose").addEventListener("click", goHomeMy);
+  document.getElementById("hostDoneClose").addEventListener("click", goHomeMy);
+  document.getElementById("hostResultsHome").addEventListener("click", goHomeMy);
   document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit","back"); });
   document.getElementById("hostBack2").addEventListener("click",()=>goStep("hostCreate","back"));
   document.getElementById("hostNext").addEventListener("click",()=>goStep("hostWho","fwd"));
   document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate","fwd"));
 
-  /* ================= 주최자(지연) 결과 ================= */
+  /* ================= 주최자(지수) 결과 ================= */
   const HOST_TIMES=[
     {t:"목요일 오전 10:00", why:"여섯 명 모두 편한 시간이에요", best:true},
     {t:"수요일 오후 3:00",  why:"한 명이 수요일을 살짝 피하고 싶어 해요"},
@@ -1456,7 +1534,11 @@
     document.getElementById("hostDoneSub").innerHTML=hostPickedLabel+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
     goStep("hostDone");
     const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림
-    setTimeout(()=>{ chime(); setNotif2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel, null); }, first?900:650);
+    setTimeout(()=>{
+      chime();
+      setNotif2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel, null);
+      pushNoti2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel+" · 캘린더에 추가했어요");
+    }, first?900:650);
   });
   document.getElementById("hostAgain").addEventListener("click",()=>goStep("host","back"));
 
