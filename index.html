@@ -251,7 +251,28 @@
     background:var(--blue-weak); color:#1B64DA; font-size:14px; font-weight:600;
     padding:12px; border-radius:12px; min-height:44px; display:flex; align-items:center; justify-content:center;
   }
-  .home-nav{ justify-content:flex-end; }
+  .home-nav{ justify-content:flex-end; gap:10px; }
+  .bell{
+    position:relative; width:36px; height:36px; border:0; border-radius:50%; cursor:pointer;
+    background:var(--surface-2); color:var(--ink-2); display:grid; place-items:center;
+    transition-property:background-color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .bell svg{ width:19px; height:19px; }
+  .bell:active{ scale:.92; }
+  .bell-dot{ position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%; background:var(--red);
+    box-shadow:0 0 0 2px var(--surface-2); }
+  .noti-panel{
+    position:absolute; top:64px; right:20px; z-index:15; width:288px; max-width:calc(100% - 40px);
+    background:#fff; border-radius:16px; padding:8px;
+    box-shadow:0 8px 30px rgba(16,24,40,.16), 0 2px 6px rgba(16,24,40,.08);
+    display:flex; flex-direction:column; gap:2px;
+    animation:fadeUp .25s var(--ease);
+  }
+  .noti-item{ display:flex; flex-direction:column; gap:1px; padding:10px 12px; border-radius:11px; }
+  .noti-item:hover{ background:var(--surface-2); }
+  .noti-item b{ font-size:13px; font-weight:600; color:var(--ink); }
+  .noti-item span{ font-size:12.5px; color:var(--ink-3); line-height:1.45; }
+  .noti-empty{ font-size:12.5px; color:var(--ink-4); text-align:center; padding:18px 10px; margin:0; }
   .profile{ display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:var(--ink-2); }
   .avatar{ width:26px; height:26px; border-radius:50%; background:var(--blue-weak); color:#1B64DA;
     display:grid; place-items:center; font-size:12px; font-weight:700; }
@@ -335,6 +356,28 @@
   }
   .text-input:focus{ box-shadow:inset 0 0 0 2px var(--blue-weak); }
   .text-input::placeholder{ color:var(--ink-4); }
+  .stepper{ display:inline-flex; align-items:center; align-self:flex-start; background:var(--surface); border-radius:12px; padding:4px; }
+  .stepper button{
+    width:42px; height:40px; border:0; background:transparent; border-radius:9px;
+    font:inherit; font-size:18px; font-weight:500; color:var(--ink-2); cursor:pointer;
+    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .stepper button:active{ scale:.9; background:#fff; }
+  .stepper button:disabled{ color:var(--ink-4); cursor:default; }
+  .stepper .val{ min-width:88px; text-align:center; font-size:15px; font-weight:700; color:var(--ink); }
+  .when{ display:flex; gap:8px; }
+  .when button{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+    border:0; background:var(--surface); border-radius:12px; padding:12px 6px; min-height:56px;
+    font:inherit; cursor:pointer;
+    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .when button:active{ scale:.96; }
+  .when button b{ font-size:14px; font-weight:600; color:var(--ink-2); }
+  .when button span{ font-size:11.5px; color:var(--ink-4); }
+  .when button[aria-pressed="true"]{ background:var(--blue-weak); }
+  .when button[aria-pressed="true"] b{ color:#1B64DA; }
+  .when button[aria-pressed="true"] span{ color:#1B64DA; opacity:.75; }
 
   /* 주최자: 추천 시간 카드 */
   .times{ display:flex; flex-direction:column; gap:10px; }
@@ -446,8 +489,13 @@
         <!-- EXITED → 홈 (허브) -->
         <section class="step" id="stepExit" aria-live="polite">
           <div class="nav home-nav">
+            <button class="bell" id="bellBtn" aria-label="알림">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8c-2.9 0-4.6 2.2-4.6 4.6 0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6c0-2.4-1.7-4.6-4.6-4.6zM8.4 15a1.7 1.7 0 003.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="bell-dot" id="bellDot" hidden></span>
+            </button>
             <div class="profile"><span class="avatar">은</span></div>
           </div>
+          <div class="noti-panel" id="notiPanel" hidden></div>
           <h1 class="title" id="homeTitle">확인할 요청이<br>있어요</h1>
           <p class="sub" id="homeSub"></p>
 
@@ -479,17 +527,23 @@
 
           <div class="content" style="gap:18px;">
             <div class="form-field">
-              <span class="f-label">회의 이름</span>
-              <input class="text-input" id="meetName" type="text" value="스프린트 회고" autocomplete="off" />
+              <span class="f-label">회의 목적</span>
+              <input class="text-input" id="meetName" type="text" value="스프린트 회고" placeholder="무엇을 위한 회의인가요?" autocomplete="off" />
             </div>
-            <div class="form-row">
-              <div class="form-field">
-                <span class="f-label">길이</span>
-                <div class="pick" id="durPick"><button type="button" aria-pressed="true">30분</button><button type="button" aria-pressed="false">1시간</button></div>
+            <div class="form-field">
+              <span class="f-label">얼마나 걸려요?</span>
+              <div class="stepper">
+                <button type="button" id="durMinus" aria-label="30분 줄이기">−</button>
+                <span class="val" id="durVal">30분</span>
+                <button type="button" id="durPlus" aria-label="30분 늘리기">＋</button>
               </div>
-              <div class="form-field">
-                <span class="f-label">언제</span>
-                <div class="pick" id="spanPick"><button type="button" aria-pressed="false">이번 주</button><button type="button" aria-pressed="true">다음 주</button></div>
+            </div>
+            <div class="form-field">
+              <span class="f-label">언제쯤이면 좋아요?</span>
+              <div class="when" id="whenPick">
+                <button type="button" aria-pressed="true"><b>다음 주</b><span>7/13 – 7/17</span></button>
+                <button type="button" aria-pressed="false"><b>다다음 주</b><span>7/20 – 7/24</span></button>
+                <button type="button" aria-pressed="false"><b>이번 달 안</b><span>~ 7/31</span></button>
               </div>
             </div>
           </div>
@@ -832,26 +886,16 @@
 
     reqList.replaceChildren();
     ids.forEach(id=>{
-      const r=REQS[id], done=store[id].submitted, fixed=!!r.confirmedAs;
+      const r=REQS[id], done=store[id].submitted;
       const c=document.createElement("button");
-      c.className="req-card"+((done||fixed)?" submitted":""); c.type="button";
+      c.className="req-card"+(done?" submitted":""); c.type="button";
       c.innerHTML='<span class="req-top"><span class="req-title">'+r.title+'</span>'+
         '<span class="req-tag '+(r.optional?'opt':'req')+'">'+(r.optional?'선택 참석':'필수 참석')+'</span></span>'+
-        '<span class="req-meta">'+(fixed?"📅 "+r.confirmedAs+"으로 확정됐어요":done?"✓ 사정을 알려드렸어요 · 다음 주 중":"다음 주 중 · "+r.who+"이 물어봤어요")+'</span>'+
-        '<span class="req-cta">'+(fixed?"캘린더에 추가됐어요":done?"다시 고치기":"불편한 시간 알려주기")+'</span>';
-      if(!fixed) c.addEventListener("click",()=>openReq(id));
-      else c.style.cursor="default";
+        '<span class="req-meta">'+(done?"✓ 사정을 알려드렸어요 · 다음 주 중":"다음 주 중 · "+r.who+"이 물어봤어요")+'</span>'+
+        '<span class="req-cta">'+(done?"다시 고치기":"불편한 시간 알려주기")+'</span>';
+      c.addEventListener("click",()=>openReq(id));
       reqList.appendChild(c);
     });
-
-    // 이미 확정된 회의 — 참석자에게 결과가 어떻게 오는지
-    const f=document.createElement("button");
-    f.className="req-card submitted"; f.type="button"; f.style.cursor="default";
-    f.innerHTML='<span class="req-top"><span class="req-title">디자인 시스템 리뷰 · 1시간</span>'+
-      '<span class="req-tag req">필수 참석</span></span>'+
-      '<span class="req-meta">📅 화요일 오전 11:00으로 확정됐어요</span>'+
-      '<span class="req-cta">캘린더에 추가됐어요</span>';
-    reqList.appendChild(f);
 
     // 내가 잡는 회의
     const myList=document.getElementById("myList");
@@ -875,6 +919,31 @@
   document.querySelectorAll(".tab").forEach(t=>{
     t.addEventListener("click",()=>{ homeTab=t.dataset.tab; renderHome(); });
   });
+
+  /* ================= 알림함 (확정 소식이 쌓이는 곳) ================= */
+  const notis=[{t:"디자인 시스템 리뷰", b:"화요일 오전 11:00으로 확정됐어요 · 캘린더에 추가했어요"}];
+  let unread=1;
+  const bellDot=document.getElementById("bellDot"), notiPanel=document.getElementById("notiPanel");
+  function renderNoti(){
+    bellDot.hidden=unread===0;
+    notiPanel.replaceChildren();
+    if(!notis.length){
+      const p=document.createElement("p"); p.className="noti-empty";
+      p.textContent="아직 알림이 없어요. 새 소식이 생기면 알려드릴게요.";
+      notiPanel.appendChild(p); return;
+    }
+    notis.forEach(n=>{
+      const d=document.createElement("div"); d.className="noti-item";
+      d.innerHTML="<b>"+n.t+"</b><span>"+n.b+"</span>";
+      notiPanel.appendChild(d);
+    });
+  }
+  function pushNoti(t,b){ notis.unshift({t,b}); unread++; renderNoti(); }
+  document.getElementById("bellBtn").addEventListener("click",()=>{
+    notiPanel.hidden=!notiPanel.hidden;
+    if(!notiPanel.hidden){ unread=0; renderNoti(); }
+  });
+  renderNoti();
 
   submit.addEventListener("click",()=>{
     saveLive(); store[currentReq].submitted=true; goStep("done");
@@ -965,7 +1034,7 @@
   const notif1=document.getElementById("notif1");
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     document.getElementById("s2DoneSub").innerHTML=TIMES2[pick2].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
-    REQS.kickoff.confirmedAs=TIMES2[pick2].t; // 참석자 홈에도 확정 상태로
+    pushNoti("신규 기능 킥오프", TIMES2[pick2].t+"으로 확정됐어요 · 캘린더에 추가했어요"); // 알림함에 쌓임
     s2Go("done");
     setTimeout(()=>{ // 참석자에게 확정 알림 띠롱
       chime();
@@ -1024,15 +1093,27 @@
 
   // 회의 정보
   const meet={name:"스프린트 회고", dur:"30분", span:"다음 주"};
-  function bindPick(id, values, key){
-    const btns=[...document.querySelectorAll("#"+id+" button")];
-    btns.forEach((b,i)=>b.addEventListener("click",()=>{
-      btns.forEach(x=>x.setAttribute("aria-pressed","false"));
-      b.setAttribute("aria-pressed","true"); meet[key]=values[i];
-    }));
+
+  // 길이: 30분 단위 스테퍼 (30분 ~ 3시간)
+  let durMin=30;
+  const durVal=document.getElementById("durVal"),
+        durMinus=document.getElementById("durMinus"), durPlus=document.getElementById("durPlus");
+  function fmtDur(m){ return m<60 ? m+"분" : (m%60 ? Math.floor(m/60)+"시간 "+(m%60)+"분" : (m/60)+"시간"); }
+  function renderDur(){
+    meet.dur=fmtDur(durMin); durVal.textContent=meet.dur;
+    durMinus.disabled=durMin<=30; durPlus.disabled=durMin>=180;
   }
-  bindPick("durPick",["30분","1시간"],"dur");
-  bindPick("spanPick",["이번 주","다음 주"],"span");
+  durMinus.addEventListener("click",()=>{ durMin=Math.max(30,durMin-30); renderDur(); });
+  durPlus.addEventListener("click",()=>{ durMin=Math.min(180,durMin+30); renderDur(); });
+  renderDur();
+
+  // 언제: 기간 칩
+  const WHEN=["다음 주","다다음 주","이번 달"];
+  const whenBtns=[...document.querySelectorAll("#whenPick button")];
+  whenBtns.forEach((b,i)=>b.addEventListener("click",()=>{
+    whenBtns.forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); meet.span=WHEN[i];
+  }));
   let hostState="none", hostPickedLabel=""; // none → collecting → confirmed
   hostSendBtn.addEventListener("click",()=>{
     const n=includedCount();
