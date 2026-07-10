@@ -541,6 +541,12 @@
           </div>
         </section>
 
+        <!-- 확정 알림 (주최자가 확정하면 도착) -->
+        <button class="notif" id="notif1" type="button">
+          <span class="notif-icon">🔔</span>
+          <span class="notif-body"><b>회의 시간이 정해졌어요</b>신규 기능 킥오프 · <span id="notif1Time"></span></span>
+        </button>
+
         <!-- 이탈 확인 -->
         <div class="modal" id="exitModal">
           <div class="dim" id="exitDim"></div>
@@ -921,11 +927,18 @@
   notif.addEventListener("click",()=>{ notif.classList.remove("show"); s2Go("results"); });
   document.getElementById("s2Card").addEventListener("click",()=>{ if(dev2Shown){ notif.classList.remove("show"); s2Go("results"); } });
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home"));
+  const notif1=document.getElementById("notif1");
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     document.getElementById("s2DoneSub").innerHTML=TIMES2[pick2].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
     REQS.kickoff.confirmedAs=TIMES2[pick2].t; // 참석자 홈에도 확정 상태로
     s2Go("done");
+    setTimeout(()=>{ // 참석자에게 확정 알림 띠롱
+      chime();
+      document.getElementById("notif1Time").textContent=TIMES2[pick2].t;
+      notif1.classList.add("show");
+    }, 650);
   });
+  notif1.addEventListener("click",()=>{ notif1.classList.remove("show"); renderHome(); goStep("exit"); });
   document.getElementById("again").addEventListener("click",()=>goStep(1));
   document.getElementById("doneOk").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
 
