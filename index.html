@@ -113,7 +113,14 @@
   }
   .step.active{ display:flex; animation:stepIn .4s var(--ease); }
   @keyframes stepIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
-  @media (prefers-reduced-motion:reduce){ .step.active{ animation:none; } }
+  /* 내비 방향 모션: 앞으로 = 오른쪽에서, 뒤로 = 왼쪽에서 */
+  .step.active.nav-fwd{ animation:navFwd .38s var(--ease); }
+  .step.active.nav-back{ animation:navBack .38s var(--ease); }
+  @keyframes navFwd{ from{ opacity:0; transform:translateX(56px); } to{ opacity:1; transform:none; } }
+  @keyframes navBack{ from{ opacity:0; transform:translateX(-56px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){
+    .step.active, .step.active.nav-fwd, .step.active.nav-back{ animation:none; }
+  }
 
   .nav{ height:32px; display:flex; align-items:center; margin-bottom:18px; }
   .back{
@@ -876,9 +883,12 @@
   const screen=document.getElementById("screen");
   const HOST_KEYS=new Set(["hostCreate","hostWho","hostSent","host","hostDone"]);
   let partKey=1, hostKey="hostCreate"; // 역할 전환 시 각자 보던 화면 기억
-  function goStep(k){
-    Object.values(stepEls).forEach(s=>s.classList.remove("active"));
-    stepEls[k].classList.add("active");
+  function goStep(k, dir){ // dir: "fwd"(깊이 들어감) | "back"(얕아짐) | 생략(완료·평행 = 페이드업)
+    Object.values(stepEls).forEach(s=>s.classList.remove("active","nav-fwd","nav-back"));
+    const el=stepEls[k];
+    el.classList.add("active");
+    if(dir==="fwd") el.classList.add("nav-fwd");
+    else if(dir==="back") el.classList.add("nav-back");
     if(HOST_KEYS.has(k)) hostKey=k; else partKey=k;
     screen.scrollTop=0;
   }
@@ -890,8 +900,8 @@
   }
   updateCTA();
 
-  document.getElementById("next1").addEventListener("click",()=>goStep(2));
-  document.getElementById("back2").addEventListener("click",()=>goStep(1));
+  document.getElementById("next1").addEventListener("click",()=>goStep(2,"fwd"));
+  document.getElementById("back2").addEventListener("click",()=>goStep(1,"back"));
   /* ================= 요청 2건 (세션 내 상태 유지) ================= */
   const REQS={
     kickoff:{ title:"신규 기능 킥오프 · 1시간", who:"지연님", optional:false,
@@ -918,7 +928,7 @@
     editor.replaceChildren(editorHint);
     document.body.dataset.persona=r.optional?"optional":"required";
     ctx1.innerHTML=r.ctx;
-    updateCTA(); goStep(1);
+    updateCTA(); goStep(1,"fwd"); // 홈 → 요청 상세: 앞으로
   }
 
   let homeTab="req";
@@ -971,13 +981,20 @@
       c.innerHTML='<span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
         '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · 다섯 명 중 세 명이 답했어요")+'</span>'+
         '<span class="req-cta">'+(done?"확정 내용 보기":"현황 보기")+'</span>';
-      c.addEventListener("click",()=>goStep(done?"hostDone":"host"));
+      c.addEventListener("click",()=>goStep(done?"hostDone":"host","fwd"));
       myList.appendChild(c);
     }
   }
 
   document.querySelectorAll(".tab").forEach(t=>{
-    t.addEventListener("click",()=>{ homeTab=t.dataset.tab; renderHome(); });
+    t.addEventListener("click",()=>{
+      if(homeTab===t.dataset.tab) return;
+      homeTab=t.dataset.tab; renderHome();
+      // 탭 = 동급 전환: 방향 없이 리스트만 가볍게 페이드업
+      const el=homeTab==="req"?reqList:document.getElementById("myList");
+      el.animate([{opacity:0, transform:"translateY(6px)"},{opacity:1, transform:"none"}],
+        {duration:200, easing:"cubic-bezier(0.2,0,0,1)"});
+    });
   });
 
   /* ================= 알림함 (확정 소식이 쌓이는 곳) ================= */
@@ -1000,12 +1017,12 @@
   }
   function pushNoti(t,b){ notis.unshift({t,b,fresh:true}); unread++; renderNoti(); }
   function openNoti(){
-    renderNoti(); goStep("noti");           // 이번 방문엔 새 알림에 파란 점 표시
+    renderNoti(); goStep("noti","fwd");     // 홈 → 알림: 우측에서 밀려 들어옴
     notis.forEach(n=>n.fresh=false);        // 다음 방문부턴 읽음 처리
     unread=0; bellDot.hidden=true;
   }
   document.getElementById("bellBtn").addEventListener("click", openNoti);
-  document.getElementById("notiBack").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
+  document.getElementById("notiBack").addEventListener("click",()=>{ renderHome(); goStep("exit","back"); });
   renderNoti();
 
   submit.addEventListener("click",()=>{
@@ -1016,7 +1033,12 @@
   /* ================= 디바이스 2: 주최자(지연)의 폰 ================= */
   let dev2Shown=false, pick2=0;
   const s2Els={home:document.getElementById("s2Home"),results:document.getElementById("s2Results"),done:document.getElementById("s2Done")};
-  function s2Go(k){ Object.values(s2Els).forEach(s=>s.classList.remove("active")); s2Els[k].classList.add("active"); }
+  function s2Go(k, dir){
+    Object.values(s2Els).forEach(s=>s.classList.remove("active","nav-fwd","nav-back"));
+    const el=s2Els[k]; el.classList.add("active");
+    if(dir==="fwd") el.classList.add("nav-fwd");
+    else if(dir==="back") el.classList.add("nav-back");
+  }
 
   function chime(){ // 띠롱
     try{
@@ -1085,16 +1107,16 @@
     TIMES2=buildTimes2(); pick2=0; renderTimes2();
     setTimeout(()=>{
       chime();
-      setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>s2Go("results"));
+      setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>s2Go("results","fwd"));
       document.getElementById("s2HomeTitle").innerHTML="이제 시간을<br>정할 수 있어요";
       document.getElementById("s2Meta").textContent="✓ 다섯 명 모두 사정을 알려줬어요";
       document.getElementById("s2Cta").style.display="flex";
     }, first?650:200);
   }
   notif.addEventListener("click",()=>{ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
-  document.getElementById("s2Card").addEventListener("click",()=>{ if(dev2Shown && !dev2Confirmed){ notif.classList.remove("show"); s2Go("results"); } });
-  document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home"));
-  document.getElementById("s2Back").addEventListener("click",()=>s2Go("home"));
+  document.getElementById("s2Card").addEventListener("click",()=>{ if(dev2Shown && !dev2Confirmed){ notif.classList.remove("show"); s2Go("results","fwd"); } });
+  document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home","back"));
+  document.getElementById("s2Back").addEventListener("click",()=>s2Go("home","back"));
   const notif1=document.getElementById("notif1");
   let dev2Confirmed=false;
   document.getElementById("s2Confirm").addEventListener("click",()=>{
@@ -1112,8 +1134,8 @@
     }, 650);
   });
   notif1.addEventListener("click",()=>{ notif1.classList.remove("show"); openNoti(); });
-  document.getElementById("again").addEventListener("click",()=>goStep(1));
-  document.getElementById("doneOk").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
+  document.getElementById("again").addEventListener("click",()=>goStep(1,"back"));
+  document.getElementById("doneOk").addEventListener("click",()=>{ renderHome(); goStep("exit","back"); });
 
   /* ================= 주최자: 요청 만들기 ================= */
   const PEOPLE=[
@@ -1243,14 +1265,14 @@
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     hostState="collecting"; goStep("hostSent");
   });
-  document.getElementById("hostPreview").addEventListener("click",()=>goStep("host"));
-  const goHomeMy=()=>{ homeTab="my"; renderHome(); goStep("exit"); };
+  document.getElementById("hostPreview").addEventListener("click",()=>goStep("host","fwd"));
+  const goHomeMy=()=>{ homeTab="my"; renderHome(); goStep("exit","back"); };
   document.getElementById("hostSentOk").addEventListener("click", goHomeMy);
   document.getElementById("hostDoneOk").addEventListener("click", goHomeMy);
-  document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
-  document.getElementById("hostBack2").addEventListener("click",()=>goStep("hostCreate"));
-  document.getElementById("hostNext").addEventListener("click",()=>goStep("hostWho"));
-  document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate"));
+  document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit","back"); });
+  document.getElementById("hostBack2").addEventListener("click",()=>goStep("hostCreate","back"));
+  document.getElementById("hostNext").addEventListener("click",()=>goStep("hostWho","fwd"));
+  document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate","fwd"));
 
   /* ================= 주최자(지연) 결과 ================= */
   const HOST_TIMES=[
@@ -1275,7 +1297,7 @@
     const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림
     setTimeout(()=>{ chime(); setNotif2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel, null); }, first?900:650);
   });
-  document.getElementById("hostAgain").addEventListener("click",()=>goStep("host"));
+  document.getElementById("hostAgain").addEventListener("click",()=>goStep("host","back"));
 
   /* ================= 이탈 확인 ================= */
   const exitModal=document.getElementById("exitModal");
@@ -1290,7 +1312,7 @@
     DAYS.forEach(d=>{ dayVals[d]=0; renderDayChip(d); dayBtns[d].setAttribute("aria-pressed","false"); });
     activeDay=null; editor.replaceChildren(editorHint);
     store[currentReq]={time:[0,0,0],days:emptyDays(),submitted:false};
-    updateCTA(); closeExit(); renderHome(); goStep("exit");
+    updateCTA(); closeExit(); renderHome(); goStep("exit","back");
   });
 
   /* ================= showcase: 참석 유형 ================= */
