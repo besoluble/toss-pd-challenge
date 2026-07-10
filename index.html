@@ -388,7 +388,8 @@
   .cal-head button:disabled{ color:var(--line); cursor:default; }
   .cal-week{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center;
     font-size:11.5px; font-weight:600; color:var(--ink-4); margin-bottom:4px; }
-  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); row-gap:3px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); grid-auto-rows:38px; row-gap:3px;
+    min-height:243px; align-content:start; } /* 항상 6주 높이 = 38*6 + 3*5 — 달 넘겨도 시트 높이 고정 */
   .cal-day{
     height:38px; border:0; background:none; font:inherit; font-size:13.5px; color:var(--ink);
     cursor:pointer; border-radius:10px; position:relative;
