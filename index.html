@@ -303,6 +303,19 @@
   }
   .pick button:active{ scale:.95; }
   .pick button[aria-pressed="true"]{ background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(16,24,40,.10); }
+  .p-right{ display:flex; align-items:center; gap:8px; }
+  .p-minus{
+    position:relative; width:32px; height:32px; border:0; border-radius:50%; cursor:pointer;
+    background:var(--surface); color:var(--ink-3); font-size:16px; font-weight:600; line-height:1;
+    display:grid; place-items:center;
+    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .p-minus::after{ content:""; position:absolute; inset:-5px; border-radius:50%; }
+  .p-minus:active{ scale:.9; }
+  .person.excluded .p-name, .person.excluded .p-role{ color:var(--ink-4); }
+  .person.excluded .p-name{ text-decoration:line-through; text-decoration-color:var(--ink-4); }
+  .person.excluded .pick{ opacity:.35; pointer-events:none; }
+  .person.excluded .p-minus{ background:var(--blue-weak); color:#1B64DA; }
 
   /* 주최자: 추천 시간 카드 */
   .times{ display:flex; flex-direction:column; gap:10px; }
@@ -442,6 +455,10 @@
           <div class="ctx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
           <h1 class="title">누구와 함께하는<br>회의인가요?</h1>
           <p class="sub">꼭 와야 하는 사람만 필수로 정해 주세요.<br>시간 후보는 정하지 않아도 돼요 — 사정을 모아 찾아드려요.</p>
+          <span class="cal">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            모두의 캘린더 빈 시간은 자동으로 반영돼요
+          </span>
 
           <div class="content">
             <div class="people" id="people"></div>
@@ -459,7 +476,7 @@
               <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <h2>사정을 물어봤어요!</h2>
-            <p>다섯 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.</p>
+            <p id="sentSub">다섯 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.</p>
           </div>
           <div class="foot">
             <button class="foot-link" id="hostPreview">사정이 다 모이면 이렇게 보여요 →</button>
@@ -892,18 +909,41 @@
     {name:"최분석", role:"데이터 분석가", req:false},
   ];
   const people=document.getElementById("people");
+  const hostSendBtn=document.getElementById("hostSend");
+  const KO_N=["영","한","두","세","네","다섯"];
+  function includedCount(){ return PEOPLE.filter(p=>p.included!==false).length; }
+  function updateHostCta(){
+    const n=includedCount();
+    hostSendBtn.textContent=n>0?n+"명에게 사정 물어보기":"물어볼 사람을 골라 주세요";
+    hostSendBtn.disabled=n===0;
+    hostSendBtn.style.opacity=n===0?".5":"";
+  }
   PEOPLE.forEach(p=>{
+    p.included=true;
     const row=document.createElement("div"); row.className="person";
     row.innerHTML='<div class="p-info"><span class="p-name">'+p.name+'</span><span class="p-role">'+p.role+'</span></div>'+
-      '<div class="pick"><button type="button" data-v="req">필수</button><button type="button" data-v="opt">선택</button></div>';
-    const btns=row.querySelectorAll(".pick button");
+      '<div class="p-right"><div class="pick"><button type="button">필수</button><button type="button">선택</button></div>'+
+      '<button type="button" class="p-minus" aria-label="회의에서 제외">－</button></div>';
+    const btns=row.querySelectorAll(".pick button"), minus=row.querySelector(".p-minus");
     function renderPick(){ btns[0].setAttribute("aria-pressed", p.req?"true":"false"); btns[1].setAttribute("aria-pressed", p.req?"false":"true"); }
     btns[0].addEventListener("click",()=>{ p.req=true; renderPick(); });
     btns[1].addEventListener("click",()=>{ p.req=false; renderPick(); });
+    minus.addEventListener("click",()=>{
+      p.included=!p.included;
+      row.classList.toggle("excluded", !p.included);
+      minus.textContent=p.included?"－":"＋";
+      minus.setAttribute("aria-label", p.included?"회의에서 제외":"다시 포함");
+      updateHostCta();
+    });
     renderPick(); people.appendChild(row);
   });
+  updateHostCta();
   let hostState="none", hostPickedLabel=""; // none → collecting → confirmed
-  document.getElementById("hostSend").addEventListener("click",()=>{ hostState="collecting"; goStep("hostSent"); });
+  hostSendBtn.addEventListener("click",()=>{
+    const n=includedCount();
+    document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
+    hostState="collecting"; goStep("hostSent");
+  });
   document.getElementById("hostPreview").addEventListener("click",()=>goStep("host"));
   document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
   document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate"));
