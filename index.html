@@ -83,6 +83,9 @@
   }
   .handle:hover::before, .wrap.dragging .handle::before, .wrap2.dragging .handle::before{ background:rgba(25,31,40,.32); }
   .handle.left{ left:-27px; } .handle.right{ right:-27px; }
+  /* 듀얼 모드: 마주보는 안쪽 핸들은 숨기고 바깥 모서리로만 각자 조절 */
+  body.dual .wrap .handle.right{ display:none; }
+  body.dual .wrap2 .handle.left{ display:none; }
 
   .badge{
     position:absolute; top:10px; left:50%; translate:-50%; z-index:4;
@@ -879,6 +882,7 @@
   function showDevice2(){
     if(dev2Shown) return; dev2Shown=true;
     TIMES2=buildTimes2(); pick2=0; renderTimes2();
+    document.body.classList.add("dual");
     wrap2.classList.add("on"); wrap2.setAttribute("aria-hidden","false");
     setWidth(wrap.offsetWidth,true); // 좁아진 공간에 맞춰 디바이스1 조정
     setTimeout(()=>{
