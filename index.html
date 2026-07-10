@@ -746,12 +746,24 @@
         <section class="step active" id="s2Home">
           <div class="nav home-nav"><div class="profile"><span class="avatar">지</span></div></div>
           <h1 class="title" id="s2HomeTitle">사정을 모으고<br>있어요</h1>
-          <div class="content" style="gap:12px;">
-            <button class="req-card" id="s2Card" type="button">
-              <span class="req-top"><span class="req-title">신규 기능 킥오프 · 1시간</span></span>
-              <span class="req-meta" id="s2Meta">다섯 명 중 네 명이 사정을 알려줬어요</span>
-              <span class="req-cta" id="s2Cta" style="display:none;">추천 시간 보러 가기</span>
-            </button>
+          <p class="sub" id="s2HomeSub"></p>
+
+          <div class="tabs" role="tablist" aria-label="홈 탭">
+            <button class="tab" role="tab" aria-selected="false" data-s2tab="req">답할 요청<span class="tab-badge">0</span></button>
+            <button class="tab" role="tab" aria-selected="true"  data-s2tab="my">내가 잡는 회의<span class="tab-badge" id="s2BadgeMy">1</span></button>
+          </div>
+
+          <div class="content" style="margin-top:16px; gap:12px;">
+            <div id="s2ReqList" style="display:none;flex-direction:column;gap:12px;">
+              <p class="empty-hint">지금은 답할 요청이 없어요.</p>
+            </div>
+            <div id="s2MyList" style="display:flex;flex-direction:column;gap:12px;">
+              <button class="req-card" id="s2Card" type="button">
+                <span class="req-top"><span class="req-title">신규 기능 킥오프 · 1시간</span></span>
+                <span class="req-meta" id="s2Meta">다섯 명 중 네 명이 사정을 알려줬어요</span>
+                <span class="req-cta" id="s2Cta" style="display:none;">추천 시간 보러 가기</span>
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1121,6 +1133,25 @@
   /* ================= 디바이스 2: 주최자(지연)의 폰 ================= */
   let dev2Shown=false, pick2=0;
   const s2Els={home:document.getElementById("s2Home"),results:document.getElementById("s2Results"),done:document.getElementById("s2Done")};
+
+  // 지연 홈도 허브 문법: 탭 전환 + 상태별 타이틀
+  let s2Tab="my", s2MyTitle="사정을 모으고<br>있어요";
+  const s2HomeTitle=document.getElementById("s2HomeTitle");
+  function setS2MyTitle(t){ s2MyTitle=t; if(s2Tab==="my") s2HomeTitle.innerHTML=t; }
+  document.querySelectorAll("[data-s2tab]").forEach(t=>{
+    t.addEventListener("click",()=>{
+      if(s2Tab===t.dataset.s2tab) return;
+      s2Tab=t.dataset.s2tab;
+      document.querySelectorAll("[data-s2tab]").forEach(x=>x.setAttribute("aria-selected", x.dataset.s2tab===s2Tab?"true":"false"));
+      const req=document.getElementById("s2ReqList"), my=document.getElementById("s2MyList");
+      req.style.display=s2Tab==="req"?"flex":"none";
+      my.style.display=s2Tab==="my"?"flex":"none";
+      s2HomeTitle.innerHTML=s2Tab==="req"?"모두 답했어요!":s2MyTitle;
+      const el=s2Tab==="req"?req:my;
+      el.animate([{opacity:0, transform:"translateY(6px)"},{opacity:1, transform:"none"}],
+        {duration:200, easing:"cubic-bezier(0.2,0,0,1)"});
+    });
+  });
   function s2Go(k, dir){
     Object.values(s2Els).forEach(s=>s.classList.remove("active","nav-fwd","nav-back"));
     const el=s2Els[k]; el.classList.add("active");
@@ -1196,7 +1227,8 @@
     setTimeout(()=>{
       chime();
       setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>s2Go("results","fwd"));
-      document.getElementById("s2HomeTitle").innerHTML="이제 시간을<br>정할 수 있어요";
+      setS2MyTitle("이제 시간을<br>정할 수 있어요");
+      document.getElementById("s2BadgeMy").classList.add("hot");
       document.getElementById("s2Meta").textContent="✓ 다섯 명 모두 사정을 알려줬어요";
       document.getElementById("s2Cta").style.display="flex";
     }, first?650:200);
@@ -1212,7 +1244,8 @@
     kickoffConfirmedAt=TIMES2[pick2].t; // 내 캘린더에 반영
     pushNoti("신규 기능 킥오프", TIMES2[pick2].t+"으로 확정됐어요 · 캘린더에 추가했어요"); // 알림함에 쌓임
     dev2Confirmed=true;
-    document.getElementById("s2HomeTitle").innerHTML="회의가<br>잡혔어요!";
+    setS2MyTitle("회의가<br>잡혔어요!");
+    document.getElementById("s2BadgeMy").classList.remove("hot");
     document.getElementById("s2Meta").textContent="✓ "+TIMES2[pick2].t+" 확정 · 모두에게 알렸어요";
     document.getElementById("s2Cta").style.display="none";
     s2Go("done");
