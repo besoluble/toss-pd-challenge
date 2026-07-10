@@ -612,7 +612,7 @@
 
         <button class="notif" id="notif" type="button">
           <span class="notif-icon">🔔</span>
-          <span class="notif-body"><b>모두의 사정이 모였어요</b>신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span>
+          <span class="notif-body"><b id="notif2Title">모두의 사정이 모였어요</b><span id="notif2Body">신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span></span>
         </button>
       </div>
       <button class="handle left"  id="hL2" aria-label="왼쪽으로 크기 조절"></button>
@@ -910,21 +910,31 @@
   }
 
   const notif=document.getElementById("notif");
-  function showDevice2(){
-    if(dev2Shown) return; dev2Shown=true;
-    TIMES2=buildTimes2(); pick2=0; renderTimes2();
+  let notif2Tap=null;
+  function setNotif2(title, body, onTap){
+    document.getElementById("notif2Title").textContent=title;
+    document.getElementById("notif2Body").textContent=body;
+    notif2Tap=onTap; notif.classList.add("show");
+  }
+  function revealDevice2(){
+    if(dev2Shown) return false; dev2Shown=true;
     document.body.classList.add("dual");
     wrap2.classList.add("on"); wrap2.setAttribute("aria-hidden","false");
     setWidth(wrap.offsetWidth,true); // 좁아진 공간에 맞춰 디바이스1 조정
+    return true;
+  }
+  function showDevice2(){ // 킥오프: 마지막 사정 도착
+    const first=revealDevice2();
+    TIMES2=buildTimes2(); pick2=0; renderTimes2();
     setTimeout(()=>{
       chime();
-      notif.classList.add("show");
+      setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>s2Go("results"));
       document.getElementById("s2HomeTitle").innerHTML="이제 시간을<br>정할 수 있어요";
       document.getElementById("s2Meta").textContent="✓ 다섯 명 모두 사정을 알려줬어요";
       document.getElementById("s2Cta").style.display="flex";
-    }, 650);
+    }, first?650:200);
   }
-  notif.addEventListener("click",()=>{ notif.classList.remove("show"); s2Go("results"); });
+  notif.addEventListener("click",()=>{ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
   document.getElementById("s2Card").addEventListener("click",()=>{ if(dev2Shown){ notif.classList.remove("show"); s2Go("results"); } });
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home"));
   const notif1=document.getElementById("notif1");
@@ -1049,6 +1059,8 @@
     hostState="confirmed"; hostPickedLabel=HOST_TIMES[hostPick].t;
     document.getElementById("hostDoneSub").innerHTML=hostPickedLabel+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
     goStep("hostDone");
+    const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림
+    setTimeout(()=>{ chime(); setNotif2("회의 시간이 정해졌어요","스프린트 회고 · "+hostPickedLabel, null); }, first?900:650);
   });
   document.getElementById("hostAgain").addEventListener("click",()=>goStep("host"));
 
