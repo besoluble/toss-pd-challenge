@@ -477,7 +477,7 @@
             모두의 캘린더 빈 시간은 자동으로 반영돼요
           </span>
 
-          <div class="content" style="gap:16px;">
+          <div class="content" style="gap:18px;">
             <div class="form-field">
               <span class="f-label">회의 이름</span>
               <input class="text-input" id="meetName" type="text" value="스프린트 회고" autocomplete="off" />
@@ -492,10 +492,25 @@
                 <div class="pick" id="spanPick"><button type="button" aria-pressed="false">이번 주</button><button type="button" aria-pressed="true">다음 주</button></div>
               </div>
             </div>
-            <div class="form-field" style="margin-top:4px;">
-              <span class="f-label">함께할 사람 · 꼭 와야 하는 사람만 필수로 정해 주세요</span>
-              <div class="people" id="people"></div>
-            </div>
+          </div>
+
+          <div class="foot">
+            <button class="cta" id="hostNext">다음</button>
+          </div>
+        </section>
+
+        <!-- HOST · 누구와 (인원 지정) -->
+        <section class="step" id="stepHostWho">
+          <div class="nav">
+            <button class="back" id="hostBack2" aria-label="이전으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <h1 class="title">누구와 함께하는<br>회의인가요?</h1>
+          <p class="sub">꼭 와야 하는 사람만 필수로 정해 주세요.</p>
+
+          <div class="content" style="gap:12px;">
+            <div class="people" id="people"></div>
             <div class="invite-line">
               <button class="invite-btn" id="inviteBtn">＋ 다른 팀에서 초대하기</button>
               <span class="invite-note" id="inviteNote">지금은 우리 팀만 초대할 수 있어요</span>
@@ -743,9 +758,9 @@
 
   /* ================= 스텝 이동 & CTA ================= */
   const stepEls={1:document.getElementById("step1"),2:document.getElementById("step2"),done:document.getElementById("stepDone"),exit:document.getElementById("stepExit"),
-    hostCreate:document.getElementById("stepHostCreate"),hostSent:document.getElementById("stepHostSent"),host:document.getElementById("stepHost"),hostDone:document.getElementById("stepHostDone")};
+    hostCreate:document.getElementById("stepHostCreate"),hostWho:document.getElementById("stepHostWho"),hostSent:document.getElementById("stepHostSent"),host:document.getElementById("stepHost"),hostDone:document.getElementById("stepHostDone")};
   const screen=document.getElementById("screen");
-  const HOST_KEYS=new Set(["hostCreate","hostSent","host","hostDone"]);
+  const HOST_KEYS=new Set(["hostCreate","hostWho","hostSent","host","hostDone"]);
   let partKey=1, hostKey="hostCreate"; // 역할 전환 시 각자 보던 화면 기억
   function goStep(k){
     Object.values(stepEls).forEach(s=>s.classList.remove("active"));
@@ -1028,6 +1043,8 @@
   });
   document.getElementById("hostPreview").addEventListener("click",()=>goStep("host"));
   document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
+  document.getElementById("hostBack2").addEventListener("click",()=>goStep("hostCreate"));
+  document.getElementById("hostNext").addEventListener("click",()=>goStep("hostWho"));
   document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate"));
 
   /* ================= 주최자(지연) 결과 ================= */
