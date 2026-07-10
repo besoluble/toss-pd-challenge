@@ -756,16 +756,26 @@
 
     reqList.replaceChildren();
     ids.forEach(id=>{
-      const r=REQS[id], done=store[id].submitted;
+      const r=REQS[id], done=store[id].submitted, fixed=!!r.confirmedAs;
       const c=document.createElement("button");
-      c.className="req-card"+(done?" submitted":""); c.type="button";
+      c.className="req-card"+((done||fixed)?" submitted":""); c.type="button";
       c.innerHTML='<span class="req-top"><span class="req-title">'+r.title+'</span>'+
         '<span class="req-tag '+(r.optional?'opt':'req')+'">'+(r.optional?'선택 참석':'필수 참석')+'</span></span>'+
-        '<span class="req-meta">'+(done?"✓ 사정을 알려드렸어요 · 다음 주 중":"다음 주 중 · "+r.who+"이 물어봤어요")+'</span>'+
-        '<span class="req-cta">'+(done?"다시 고치기":"불편한 시간 알려주기")+'</span>';
-      c.addEventListener("click",()=>openReq(id));
+        '<span class="req-meta">'+(fixed?"📅 "+r.confirmedAs+"으로 확정됐어요":done?"✓ 사정을 알려드렸어요 · 다음 주 중":"다음 주 중 · "+r.who+"이 물어봤어요")+'</span>'+
+        '<span class="req-cta">'+(fixed?"캘린더에 추가됐어요":done?"다시 고치기":"불편한 시간 알려주기")+'</span>';
+      if(!fixed) c.addEventListener("click",()=>openReq(id));
+      else c.style.cursor="default";
       reqList.appendChild(c);
     });
+
+    // 이미 확정된 회의 — 참석자에게 결과가 어떻게 오는지
+    const f=document.createElement("button");
+    f.className="req-card submitted"; f.type="button"; f.style.cursor="default";
+    f.innerHTML='<span class="req-top"><span class="req-title">디자인 시스템 리뷰 · 1시간</span>'+
+      '<span class="req-tag req">필수 참석</span></span>'+
+      '<span class="req-meta">📅 화요일 오전 11:00으로 확정됐어요</span>'+
+      '<span class="req-cta">캘린더에 추가됐어요</span>';
+    reqList.appendChild(f);
 
     // 내가 잡는 회의
     const myList=document.getElementById("myList");
@@ -867,6 +877,7 @@
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home"));
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     document.getElementById("s2DoneSub").innerHTML=TIMES2[pick2].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
+    REQS.kickoff.confirmedAs=TIMES2[pick2].t; // 참석자 홈에도 확정 상태로
     s2Go("done");
   });
   document.getElementById("again").addEventListener("click",()=>goStep(1));
