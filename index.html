@@ -83,7 +83,7 @@
 
   /* ================= app (한 화면 한 스텝) ================= */
   .step{
-    display:none; height:100%; width:100%; max-width:440px; margin:0 auto;
+    display:none; position:relative; height:100%; width:100%; max-width:440px; margin:0 auto;
     padding:24px 24px 24px;
     flex-direction:column;
   }
@@ -239,16 +239,26 @@
     background:var(--blue-weak); color:#1B64DA; font-size:14px; font-weight:600;
     padding:12px; border-radius:12px; min-height:44px; display:flex; align-items:center; justify-content:center;
   }
-  .req-card.submitted .req-kind{ color:var(--ink-3); }
-  .req-card.submitted .req-cta{ background:var(--surface); color:var(--ink-2); }
-  .add-meet{
-    display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
-    border:0; font:inherit; font-size:14px; font-weight:600; color:var(--ink-3); cursor:pointer;
-    background:var(--surface-2); border-radius:16px; padding:18px; min-height:56px;
-    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  .home-label{ font-size:14.5px; font-weight:700; color:var(--ink); letter-spacing:-.01em; margin-bottom:2px; }
+  .req-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; }
+  .req-tag{
+    display:inline-flex; align-items:center; flex:none; font-size:11.5px; font-weight:700;
+    padding:4px 9px; border-radius:7px;
   }
-  .add-meet:active{ scale:.98; background:var(--surface); }
-  .add-meet:hover{ color:var(--ink-2); }
+  .req-tag.req{ background:var(--blue-weak); color:#1B64DA; }
+  .req-tag.opt{ background:var(--surface); color:var(--ink-2); }
+  .req-card.submitted .req-tag{ opacity:.7; }
+  .req-card.submitted .req-cta{ background:var(--surface); color:var(--ink-2); }
+  .fab{
+    position:absolute; right:20px; bottom:22px; z-index:6;
+    display:inline-flex; align-items:center; gap:6px;
+    border:0; font:inherit; font-size:14px; font-weight:600; color:#fff; cursor:pointer;
+    background:var(--blue); border-radius:999px; padding:14px 20px; min-height:48px;
+    box-shadow:0 6px 16px rgba(49,130,246,.35);
+    transition-property:background-color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .fab:active{ scale:.95; background:var(--blue-press); }
+  .empty-hint{ font-size:13px; color:var(--ink-4); padding:6px 2px; margin:0; }
 
   /* 주최자: 참석자 지정 */
   .people{ display:flex; flex-direction:column; }
@@ -387,14 +397,15 @@
         <section class="step" id="stepExit" aria-live="polite">
           <div class="nav"></div>
           <h1 class="title" id="homeTitle">확인할 요청이<br>있어요</h1>
-          <p class="sub" id="homeSub">잊지 않게 여기 두었어요.</p>
+          <p class="sub" id="homeSub"></p>
 
           <div class="content" style="gap:12px;">
-            <div class="sec-label">답할 요청</div>
+            <div class="home-label">답할 요청</div>
             <div id="reqList" style="display:flex;flex-direction:column;gap:12px;"></div>
-            <div class="sec-label" style="margin-top:16px;">내가 잡는 회의</div>
+            <div class="home-label" style="margin-top:18px;">내가 잡는 회의</div>
             <div id="myList" style="display:flex;flex-direction:column;gap:12px;"></div>
           </div>
+          <button class="fab" id="fabNew">＋ 새 회의 잡기</button>
         </section>
 
         <!-- HOST · 요청 만들기 (판단만: 누구 + 무게) -->
@@ -646,14 +657,14 @@
     const ids=Object.keys(REQS);
     const pending=ids.filter(id=>!store[id].submitted).length;
     homeTitle.innerHTML=pending?"확인할 요청이<br>있어요":"모두 답했어요!";
-    homeSub.textContent=pending?"잊지 않게 여기 두었어요.":"알려준 사정은 시간 정할 때 반영돼요.";
+    homeSub.textContent=pending?"":"알려준 사정은 시간 정할 때 반영돼요.";
     reqList.replaceChildren();
     ids.forEach(id=>{
       const r=REQS[id], done=store[id].submitted;
       const c=document.createElement("button");
       c.className="req-card"+(done?" submitted":""); c.type="button";
-      c.innerHTML='<span class="req-kind">회의 시간 정하기'+(r.optional?' · 선택 참석':'')+'</span>'+
-        '<span class="req-title">'+r.title+'</span>'+
+      c.innerHTML='<span class="req-top"><span class="req-title">'+r.title+'</span>'+
+        '<span class="req-tag '+(r.optional?'opt':'req')+'">'+(r.optional?'선택 참석':'필수 참석')+'</span></span>'+
         '<span class="req-meta">'+(done?"✓ 사정을 알려드렸어요 · 다음 주 중":"다음 주 중 · "+r.who+"이 물어봤어요")+'</span>'+
         '<span class="req-cta">'+(done?"다시 고치기":"불편한 시간 알려주기")+'</span>';
       c.addEventListener("click",()=>openReq(id));
@@ -664,16 +675,14 @@
     const myList=document.getElementById("myList");
     myList.replaceChildren();
     if(hostState==="none"){
-      const a=document.createElement("button"); a.className="add-meet"; a.type="button";
-      a.textContent="+ 새 회의 잡기";
-      a.addEventListener("click",()=>goStep("hostCreate"));
-      myList.appendChild(a);
+      const p=document.createElement("p"); p.className="empty-hint";
+      p.textContent="아직 직접 잡는 회의가 없어요.";
+      myList.appendChild(p);
     }else{
       const done=hostState==="confirmed";
       const c=document.createElement("button");
       c.className="req-card"+(done?" submitted":""); c.type="button";
-      c.innerHTML='<span class="req-kind">내가 잡는 회의</span>'+
-        '<span class="req-title">스프린트 회고 · 30분</span>'+
+      c.innerHTML='<span class="req-title">스프린트 회고 · 30분</span>'+
         '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · 다섯 명 중 세 명이 답했어요")+'</span>'+
         '<span class="req-cta">'+(done?"확정 내용 보기":"현황 보기")+'</span>';
       c.addEventListener("click",()=>goStep(done?"hostDone":"host"));
@@ -708,6 +717,7 @@
   document.getElementById("hostSend").addEventListener("click",()=>{ hostState="collecting"; goStep("hostSent"); });
   document.getElementById("hostPreview").addEventListener("click",()=>goStep("host"));
   document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
+  document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate"));
 
   /* ================= 주최자(지연) 결과 ================= */
   const HOST_TIMES=[
