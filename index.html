@@ -264,6 +264,7 @@
   .noti-item{ display:flex; flex-direction:column; gap:2px; padding:14px 4px; }
   .noti-item + .noti-item{ box-shadow:0 -1px 0 var(--surface); }
   .noti-item b{ font-size:14.5px; font-weight:600; color:var(--ink); }
+  .noti-item .n-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--blue); margin-left:6px; vertical-align:1.5px; }
   .noti-item span{ font-size:13px; color:var(--ink-3); line-height:1.5; }
   .noti-empty{ font-size:13.5px; color:var(--ink-4); text-align:center; padding:48px 10px; margin:0; line-height:1.6; }
   .profile{ display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:var(--ink-2); }
@@ -590,6 +591,7 @@
           </div>
           <div class="foot">
             <button class="foot-link" id="hostPreview">사정이 다 모이면 이렇게 보여요 →</button>
+            <button class="cta" id="hostSentOk">확인</button>
           </div>
         </section>
 
@@ -620,6 +622,7 @@
           </div>
           <div class="foot">
             <button class="foot-link" id="hostAgain">다시 고르기</button>
+            <button class="cta" id="hostDoneOk">확인</button>
           </div>
         </section>
 
@@ -689,6 +692,9 @@
             </div>
             <h2>회의를 확정했어요!</h2>
             <p id="s2DoneSub"></p>
+          </div>
+          <div class="foot">
+            <button class="cta" id="s2DoneOk">확인</button>
           </div>
         </section>
 
@@ -924,7 +930,7 @@
   });
 
   /* ================= 알림함 (확정 소식이 쌓이는 곳) ================= */
-  const notis=[{t:"디자인 시스템 리뷰", b:"화요일 오전 11:00으로 확정됐어요 · 캘린더에 추가했어요"}];
+  const notis=[{t:"디자인 시스템 리뷰", b:"화요일 오전 11:00으로 확정됐어요 · 캘린더에 추가했어요", fresh:true}];
   let unread=1;
   const bellDot=document.getElementById("bellDot"), notiList=document.getElementById("notiList");
   function renderNoti(){
@@ -937,12 +943,16 @@
     }
     notis.forEach(n=>{
       const d=document.createElement("div"); d.className="noti-item";
-      d.innerHTML="<b>"+n.t+"</b><span>"+n.b+"</span>";
+      d.innerHTML="<b>"+n.t+(n.fresh?'<i class="n-dot"></i>':"")+"</b><span>"+n.b+"</span>";
       notiList.appendChild(d);
     });
   }
-  function pushNoti(t,b){ notis.unshift({t,b}); unread++; renderNoti(); }
-  function openNoti(){ unread=0; renderNoti(); goStep("noti"); }
+  function pushNoti(t,b){ notis.unshift({t,b,fresh:true}); unread++; renderNoti(); }
+  function openNoti(){
+    renderNoti(); goStep("noti");           // 이번 방문엔 새 알림에 파란 점 표시
+    notis.forEach(n=>n.fresh=false);        // 다음 방문부턴 읽음 처리
+    unread=0; bellDot.hidden=true;
+  }
   document.getElementById("bellBtn").addEventListener("click", openNoti);
   document.getElementById("notiBack").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
   renderNoti();
@@ -1031,12 +1041,18 @@
     }, first?650:200);
   }
   notif.addEventListener("click",()=>{ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
-  document.getElementById("s2Card").addEventListener("click",()=>{ if(dev2Shown){ notif.classList.remove("show"); s2Go("results"); } });
+  document.getElementById("s2Card").addEventListener("click",()=>{ if(dev2Shown && !dev2Confirmed){ notif.classList.remove("show"); s2Go("results"); } });
+  document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home"));
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home"));
   const notif1=document.getElementById("notif1");
+  let dev2Confirmed=false;
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     document.getElementById("s2DoneSub").innerHTML=TIMES2[pick2].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
     pushNoti("신규 기능 킥오프", TIMES2[pick2].t+"으로 확정됐어요 · 캘린더에 추가했어요"); // 알림함에 쌓임
+    dev2Confirmed=true;
+    document.getElementById("s2HomeTitle").innerHTML="회의가<br>잡혔어요!";
+    document.getElementById("s2Meta").textContent="✓ "+TIMES2[pick2].t+" 확정 · 모두에게 알렸어요";
+    document.getElementById("s2Cta").style.display="none";
     s2Go("done");
     setTimeout(()=>{ // 참석자에게 확정 알림 띠롱
       chime();
@@ -1125,6 +1141,9 @@
     hostState="collecting"; goStep("hostSent");
   });
   document.getElementById("hostPreview").addEventListener("click",()=>goStep("host"));
+  const goHomeMy=()=>{ homeTab="my"; renderHome(); goStep("exit"); };
+  document.getElementById("hostSentOk").addEventListener("click", goHomeMy);
+  document.getElementById("hostDoneOk").addEventListener("click", goHomeMy);
   document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
   document.getElementById("hostBack2").addEventListener("click",()=>goStep("hostCreate"));
   document.getElementById("hostNext").addEventListener("click",()=>goStep("hostWho"));
