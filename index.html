@@ -222,7 +222,23 @@
     animation:pop .45s var(--ease) both; }
   @keyframes pop{ 0%{ scale:.4; opacity:0; } 60%{ scale:1.06; } 100%{ scale:1; opacity:1; } }
   .check svg{ width:32px; height:32px; }
-  .check.soft{ background:var(--surface); font-size:28px; }
+
+  /* 받은 요청 카드 */
+  .req-card{
+    display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%;
+    border:0; text-align:left; font:inherit; cursor:pointer;
+    background:var(--surface-2); border-radius:18px; padding:20px 20px 18px;
+    transition-property:background-color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .req-card:active{ scale:.98; background:var(--surface); }
+  .req-kind{ font-size:12px; font-weight:600; color:var(--blue); margin-bottom:2px; }
+  .req-title{ font-size:16px; font-weight:700; color:var(--ink); }
+  .req-meta{ font-size:13px; color:var(--ink-3); }
+  .req-cta{
+    margin-top:14px; align-self:stretch; text-align:center;
+    background:var(--blue-weak); color:#1B64DA; font-size:14px; font-weight:600;
+    padding:12px; border-radius:12px; min-height:44px; display:flex; align-items:center; justify-content:center;
+  }
   .done-body h2{ font-size:21px; font-weight:700; margin:0; text-wrap:balance; }
   .done-body p{ font-size:14.5px; color:var(--ink-3); margin:0; line-height:1.55; text-wrap:pretty; }
 
@@ -270,7 +286,6 @@
           </div>
           <div class="ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
           <h1 class="title">불편한 시간만<br>알려주세요</h1>
-          <p class="sub">괜찮으면 그냥 넘겨도 돼요.</p>
           <span class="cal">
             <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             캘린더에 있는 일정은 이미 빼뒀어요
@@ -283,7 +298,7 @@
 
           <div class="foot">
             <button class="foot-link">이 중에 없는 사정이 있어요</button>
-            <button class="cta" id="next1">다음</button>
+            <button class="cta" id="next1">다 편해요</button>
           </div>
         </section>
 
@@ -294,8 +309,7 @@
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
-          <h1 class="title">불편한 요일도<br>있나요?</h1>
-          <p class="sub">요일을 누르고 세기를 정하면 돼요. 없으면 그냥 넘어가요.</p>
+          <h1 class="title">다음 주 불편한 요일이<br>있나요?</h1>
 
           <div class="content">
             <div class="week" id="week"></div>
@@ -319,23 +333,27 @@
             <div class="check">
               <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
-            <h2 id="doneTitle">다 정했어요!</h2>
-            <p>시간이 정해지면 가장 먼저 알려드릴게요.</p>
+            <h2 id="doneTitle">잘 반영할게요!</h2>
+            <p id="doneSub">이제 기다리기만 하면 돼요.<br>시간이 정해지면 알려드릴게요.</p>
           </div>
           <div class="foot">
             <button class="foot-link" id="again">다시 고치기</button>
           </div>
         </section>
 
-        <!-- EXITED -->
+        <!-- EXITED → 받은 요청 (홈) -->
         <section class="step" id="stepExit" aria-live="polite">
-          <div class="done-body">
-            <div class="check soft">👋</div>
-            <h2>다음에 알려줘도 돼요</h2>
-            <p>캘린더에 있는 일정은 이미 반영돼 있어요.<br>시간이 정해지면 알려드릴게요.</p>
-          </div>
-          <div class="foot">
-            <button class="foot-link" id="reenter">다시 알려주기</button>
+          <div class="nav"></div>
+          <h1 class="title">확인할 요청이<br>있어요</h1>
+          <p class="sub">잊지 않게 여기 두었어요.</p>
+
+          <div class="content">
+            <button class="req-card" id="reenter">
+              <span class="req-kind">회의 시간 정하기</span>
+              <span class="req-title">신규 기능 킥오프 · 1시간</span>
+              <span class="req-meta">다음 주 중 · 지연님이 물어봤어요</span>
+              <span class="req-cta">불편한 시간 알려주기</span>
+            </button>
           </div>
         </section>
 
@@ -383,6 +401,8 @@
       fill.style.width=step===0?"0%":pos(p);
       el.classList.toggle("on", step>0&&step<3);
       el.classList.toggle("max", step===3);
+      el.setAttribute("aria-valuenow", step);
+      el.setAttribute("aria-valuetext", STEPS[step].label);
     }
     function set(n, silent){ n=Math.max(0,Math.min(3,n)); if(n===step){layout();return;} step=n; layout(); if(!silent) onChange&&onChange(step); }
     function fromX(cx){ const r=el.getBoundingClientRect(); return Math.round(Math.max(0,Math.min(1,(cx-r.left-11)/(r.width-22)))*3); }
@@ -431,7 +451,7 @@
 
   function buildEditor(){
     dayRow=document.createElement("div"); dayRow.className="row";
-    dayRow.innerHTML='<div class="row-head"><div class="row-name">📅 <span id="dayName"></span></div><div class="state"></div></div>';
+    dayRow.innerHTML='<div class="row-head"><div class="row-name"><span id="dayName"></span></div><div class="state"></div></div>';
     dayStateEl=dayRow.querySelector(".state"); dayNameEl=dayRow.querySelector("#dayName");
     daySlider=makeSlider(0, s=>{ if(activeDay){ dayVals[activeDay]=s; renderDayChip(activeDay); renderEditorState(s); updateCTA(); } });
     dayRow.appendChild(daySlider.el);
@@ -441,14 +461,19 @@
     dayStateEl.className="state "+(s===3?"max":s>0?"on":"");
   }
   function selectDay(d){
-    if(activeDay===d){ // 다시 누르면 편집 닫기
+    if(activeDay===d){ // 다시 누르면 끄기 (편해요로 리셋)
+      dayVals[d]=0; renderDayChip(d);
       dayBtns[d].setAttribute("aria-pressed","false");
-      activeDay=null; editor.replaceChildren(editorHint); return;
+      activeDay=null; updateCTA();
+      editorHint.textContent = DAYS.some(x=>dayVals[x]>0)
+        ? "요일을 누르면 다시 고칠 수 있어요"
+        : "불편한 요일이 있으면 눌러 주세요";
+      editor.replaceChildren(editorHint); return;
     }
     if(activeDay) dayBtns[activeDay].setAttribute("aria-pressed","false");
     activeDay=d; dayBtns[d].setAttribute("aria-pressed","true");
     if(!dayRow) buildEditor();
-    if(dayVals[d]===0){ dayVals[d]=2; } // 첫 선택은 '웬만하면'
+    if(dayVals[d]===0){ dayVals[d]=1; } // 첫 선택은 '살짝'부터
     dayNameEl.textContent=d+"요일";
     daySlider.set(dayVals[d], true);
     renderEditorState(dayVals[d]); renderDayChip(d); updateCTA();
@@ -470,15 +495,25 @@
     stepEls[k].classList.add("active");
     screen.scrollTop=0;
   }
-  const submit=document.getElementById("submit"), doneTitle=document.getElementById("doneTitle");
+  const submit=document.getElementById("submit"), doneTitle=document.getElementById("doneTitle"), next1=document.getElementById("next1");
   function anySet(){ return timeState.some(s=>s>0)||DAYS.some(d=>dayVals[d]>0); }
-  function updateCTA(){ submit.textContent=anySet()?"다 정했어요":"다 편해요"; }
+  function updateCTA(){
+    submit.textContent=anySet()?"다 정했어요":"다 편해요";
+    next1.textContent=timeState.some(s=>s>0)?"다음":"다 편해요";
+  }
   updateCTA();
 
   document.getElementById("next1").addEventListener("click",()=>goStep(2));
   document.getElementById("back2").addEventListener("click",()=>goStep(1));
+  const doneSub=document.getElementById("doneSub");
   submit.addEventListener("click",()=>{
-    doneTitle.textContent=anySet()?"다 정했어요!":"알겠어요!";
+    if(anySet()){
+      doneTitle.textContent="잘 반영할게요!";
+      doneSub.innerHTML="이제 기다리기만 하면 돼요.<br>시간이 정해지면 알려드릴게요.";
+    }else{
+      doneTitle.textContent="알겠어요!";
+      doneSub.innerHTML="아무 때나 괜찮다는 것도 큰 도움이 돼요.<br>시간이 정해지면 알려드릴게요.";
+    }
     goStep("done");
   });
   document.getElementById("again").addEventListener("click",()=>goStep(1));
