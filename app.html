@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>불편한 시간만 알려주세요</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --blue:#3182F6; --blue-press:#2272EB; --blue-weak:#E8F2FE;
+    --red:#F04452; --red-weak:#FDECEE;
+    --ink:#191F28; --ink-2:#4E5968; --ink-3:#8B95A1; --ink-4:#B0B8C1;
+    --line:#E5E8EB; --surface:#F2F4F6; --surface-2:#F7F8FA; --card:#fff;
+    --ease:cubic-bezier(0.2,0,0,1);
+    --shadow-card:0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06), 0 24px 48px rgba(16,24,40,.05);
+    --shadow-handle:0 1px 2px rgba(16,24,40,.14), 0 2px 6px rgba(16,24,40,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; background:var(--surface); color:var(--ink);
+    font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    font-variant-numeric:tabular-nums;
+    min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+  }
+  .stage{ width:100%; flex:1; display:flex; flex-direction:column; align-items:center; }
+
+  .app{
+    width:100%; max-width:440px; background:var(--card); color:var(--ink);
+    margin:auto 0; padding:26px 20px 34px;
+    display:flex; flex-direction:column; gap:26px;
+    border-radius:24px; box-shadow:var(--shadow-card);
+  }
+  @media (max-width:480px){
+    body{ background:var(--card); }
+    .app{ margin:0; border-radius:0; box-shadow:none; min-height:100dvh; }
+  }
+
+  .reveal{ opacity:0; transform:translateY(8px); animation:fadeUp .5s var(--ease) forwards; }
+  @keyframes fadeUp{ to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ .reveal{ animation:none; opacity:1; transform:none; } }
+
+  .banner{
+    display:none; gap:10px; align-items:flex-start;
+    background:var(--blue-weak); color:#1B64DA; border-radius:14px; padding:14px 16px;
+    font-size:13.5px; line-height:1.5;
+  }
+  .banner.show{ display:flex; }
+  .banner b{ color:#1B64DA; font-weight:700; }
+  .banner .em{ font-size:16px; line-height:1.4; }
+
+  .ctx{ display:flex; flex-direction:column; gap:2px; }
+  .ctx .m{ font-size:15px; font-weight:600; color:var(--ink-2); }
+  .ctx .s{ font-size:13px; color:var(--ink-3); }
+  .title{ font-size:23px; font-weight:700; letter-spacing:-.02em; margin:14px 0 8px; text-wrap:balance; line-height:1.32; }
+  .cal{
+    display:inline-flex; align-items:center; gap:7px; align-self:flex-start;
+    background:var(--surface-2); color:var(--ink-2); border-radius:999px; padding:8px 13px 8px 11px;
+    font-size:13px; font-weight:500;
+  }
+  .cal svg{ width:16px; height:16px; flex:none; }
+  .subhelp{ font-size:14.5px; color:var(--ink-3); margin-top:10px; text-wrap:pretty; line-height:1.5; }
+
+  .section{ display:flex; flex-direction:column; gap:16px; }
+  .sec-label{ font-size:13px; font-weight:600; color:#6B7684; letter-spacing:.01em; }
+  .sec-help{ font-size:13px; color:var(--ink-3); margin-top:-8px; }
+
+  .row{ display:flex; flex-direction:column; gap:9px; }
+  .row-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .row-name{ display:flex; align-items:center; gap:7px; font-size:15px; font-weight:500; }
+  .row-name .rng{ font-size:13px; color:var(--ink-3); font-weight:400; }
+  .state{ font-size:13px; font-weight:600; color:var(--ink-3); transition:color .2s var(--ease); white-space:nowrap; }
+  .state.on{ color:var(--blue); }
+  .state.max{ color:var(--red); }
+
+  .slider{ position:relative; height:40px; touch-action:none; cursor:pointer; user-select:none; }
+  .slider .track{ position:absolute; left:0; right:0; top:17px; height:6px; border-radius:3px; background:var(--line); }
+  .slider .fill{ position:absolute; left:0; top:17px; height:6px; border-radius:3px; background:var(--blue);
+    width:0; transition:width .18s var(--ease), background-color .18s var(--ease); }
+  .slider .dot{ position:absolute; top:16px; width:8px; height:8px; margin-left:-4px; border-radius:50%;
+    background:var(--line); transition:background-color .18s var(--ease); }
+  .slider .handle{ position:absolute; top:9px; width:22px; height:22px; margin-left:-11px; border-radius:50%;
+    background:#fff; box-shadow:var(--shadow-handle); border:2px solid var(--line);
+    transition:left .18s var(--ease), border-color .18s var(--ease), scale .15s var(--ease); }
+  .slider .handle::after{ content:""; position:absolute; inset:-11px; border-radius:50%; }
+  .slider.dragging .handle{ transition:border-color .18s var(--ease), scale .15s var(--ease); scale:1.12; }
+  .slider.on .handle{ border-color:var(--blue); }
+  .slider.max .fill{ background:var(--red); }
+  .slider.max .handle{ border-color:var(--red); }
+  .ends{ display:flex; justify-content:space-between; margin-top:-2px; }
+  .ends span{ font-size:11px; color:var(--ink-4); }
+  .ends span:last-child{ color:var(--ink-3); }
+
+  .maxnote{
+    display:none; gap:8px; align-items:flex-start; margin-top:2px;
+    background:var(--red-weak); color:#C82D3A; border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.45;
+  }
+  .maxnote.show{ display:flex; }
+
+  .week{ display:flex; gap:8px; }
+  .day{
+    flex:1; min-height:52px; border:0; background:var(--surface); color:var(--ink); border-radius:12px;
+    font:inherit; font-size:15px; font-weight:500; cursor:pointer; position:relative;
+    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .day:active{ scale:.96; }
+  .day[data-tone="blue"]{ background:var(--blue-weak); color:#1B64DA; font-weight:600; }
+  .day[data-tone="red"]{ background:var(--red-weak); color:#C82D3A; font-weight:600; }
+  .day .tag{ display:block; font-size:10px; font-weight:600; margin-top:3px; opacity:.85; }
+  .day-sliders{ display:flex; flex-direction:column; gap:16px; margin-top:4px; }
+  .day-sliders:empty{ display:none; }
+
+  .escape{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:none; border:0; font:inherit; color:var(--ink-2); font-size:14px; font-weight:500;
+    padding:10px 2px; cursor:pointer; text-align:left; width:100%; min-height:44px;
+    transition:color .18s var(--ease);
+  }
+  .escape:hover{ color:var(--ink); }
+  .escape .arw{ color:var(--ink-4); }
+
+  .privacy{ display:flex; gap:9px; align-items:flex-start; background:var(--surface-2); border-radius:12px;
+    padding:14px; color:var(--ink-3); font-size:13px; line-height:1.5; }
+  .privacy .lock{ font-size:14px; line-height:1.4; }
+  .privacy b{ color:var(--ink-2); font-weight:600; }
+
+  .cta{
+    border:0; width:100%; background:var(--blue); color:#fff; font:inherit; font-size:16px; font-weight:600;
+    padding:17px; border-radius:16px; cursor:pointer; min-height:56px;
+    box-shadow:0 4px 14px rgba(49,130,246,.28);
+    transition-property:background-color,scale,box-shadow; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .cta:active{ scale:.96; background:var(--blue-press); }
+
+  .done{ display:none; flex-direction:column; align-items:center; text-align:center; gap:14px; padding:48px 12px; margin:auto 0; }
+  .done.show{ display:flex; }
+  .done .check{ width:64px; height:64px; border-radius:50%; background:var(--blue-weak); display:grid; place-items:center;
+    animation:pop .45s var(--ease) both; }
+  @keyframes pop{ 0%{ scale:.4; opacity:0; } 60%{ scale:1.06; } 100%{ scale:1; opacity:1; } }
+  .done .check svg{ width:32px; height:32px; }
+  .done h2{ font-size:20px; font-weight:700; margin:0; text-wrap:balance; }
+  .done p{ font-size:14.5px; color:var(--ink-3); margin:0; line-height:1.55; text-wrap:pretty; }
+  .done .again{ margin-top:6px; background:none; border:0; color:var(--blue); font:inherit; font-size:14px; font-weight:600; cursor:pointer; padding:8px; min-height:44px; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <main class="app" id="app">
+    <div class="banner reveal" id="banner" style="animation-delay:.02s">
+      <span class="em">🙌</span>
+      <span><b>민수님은 꼭 안 와도 괜찮아요.</b><br>부담 없이 편하게 알려주면 돼요.</span>
+    </div>
+
+    <header class="reveal" style="animation-delay:.05s">
+      <div class="ctx">
+        <span class="m">신규 기능 킥오프 · 1시간</span>
+        <span class="s">다음 주 중에 잡을 거예요</span>
+      </div>
+      <h1 class="title">불편한 시간만 알려주세요</h1>
+      <span class="cal">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        캘린더에 있는 일정은 이미 빼뒀어요
+      </span>
+      <p class="subhelp">그 외에 불편한 시간만요. 괜찮으면 그냥 넘겨도 돼요.</p>
+    </header>
+
+    <section class="section reveal" style="animation-delay:.13s">
+      <div class="sec-label">시간대</div>
+      <div id="timeRows"></div>
+    </section>
+
+    <section class="section reveal" style="animation-delay:.21s">
+      <div class="sec-label">요일</div>
+      <div class="sec-help">불편한 요일이 있으면 눌러서 세기를 정해요</div>
+      <div class="week" id="week"></div>
+      <div class="day-sliders" id="daySliders"></div>
+    </section>
+
+    <div class="reveal" style="animation-delay:.28s; display:flex; flex-direction:column; gap:16px;">
+      <button class="escape">이 중에 없는 사정이 있어요 <span class="arw">→</span></button>
+      <div class="privacy">
+        <span class="lock">🔒</span>
+        <span><b>고른 내용은 아무에게도 안 보여요.</b> 시간 정하는 데만 써요.</span>
+      </div>
+      <button class="cta" id="cta">다 편해요</button>
+    </div>
+  </main>
+
+  <section class="done" id="done" aria-live="polite">
+    <div class="check">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h2 id="doneTitle">다 정했어요!</h2>
+    <p>시간이 정해지면 가장 먼저 알려드릴게요.</p>
+    <button class="again" id="again">다시 고치기</button>
+  </section>
+</div>
+
+<script>
+(function(){
+  const STEPS = [
+    {label:"편해요"}, {label:"살짝 피하고 싶어요"}, {label:"웬만하면 피하고 싶어요"}, {label:"안 돼요"},
+  ];
+  function makeSlider(initial, onChange){
+    const el = document.createElement("div");
+    el.className = "slider";
+    el.innerHTML = '<div class="track"></div><div class="fill"></div>'+
+      '<div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>'+
+      '<div class="handle"></div>';
+    const fill=el.querySelector(".fill"), handle=el.querySelector(".handle"), dots=[...el.querySelectorAll(".dot")];
+    let step=initial;
+    function layout(){
+      const p=step/3;
+      dots.forEach((d,i)=>{ d.style.left=(i/3*100)+"%"; d.style.background=(i===step&&step>0)?(step===3?"var(--red)":"var(--blue)"):"var(--line)"; });
+      handle.style.left=(p*100)+"%";
+      fill.style.width=step===0?"0%":(p*100)+"%";
+      el.classList.toggle("on", step>0&&step<3);
+      el.classList.toggle("max", step===3);
+    }
+    function set(n){ n=Math.max(0,Math.min(3,n)); if(n===step){layout();return;} step=n; layout(); onChange&&onChange(step); }
+    function fromX(cx){ const r=el.getBoundingClientRect(); return Math.round(Math.max(0,Math.min(1,(cx-r.left)/r.width))*3); }
+    let drag=false;
+    el.addEventListener("pointerdown", e=>{ drag=true; el.classList.add("dragging"); el.setPointerCapture(e.pointerId); set(fromX(e.clientX)); });
+    el.addEventListener("pointermove", e=>{ if(drag) set(fromX(e.clientX)); });
+    const stop=()=>{ drag=false; el.classList.remove("dragging"); };
+    el.addEventListener("pointerup",stop); el.addEventListener("pointercancel",stop);
+    el.tabIndex=0; el.setAttribute("role","slider"); el.setAttribute("aria-valuemin","0"); el.setAttribute("aria-valuemax","3");
+    el.addEventListener("keydown", e=>{ if(e.key==="ArrowRight"||e.key==="ArrowUp"){set(step+1);e.preventDefault();} if(e.key==="ArrowLeft"||e.key==="ArrowDown"){set(step-1);e.preventDefault();} });
+    layout();
+    return { el, get:()=>step, set };
+  }
+
+  const TIME_ITEMS=[
+    {emoji:"🍽",name:"점심 직후",range:"12–2시",init:2},
+    {emoji:"🌅",name:"이른 아침",range:"9시 이전",init:0},
+    {emoji:"🌙",name:"늦은 오후",range:"5시 이후",init:0},
+  ];
+  const timeRows=document.getElementById("timeRows");
+  timeRows.style.display="flex"; timeRows.style.flexDirection="column"; timeRows.style.gap="18px";
+  const timeState=[];
+  TIME_ITEMS.forEach((it,idx)=>{
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML='<div class="row-head"><div class="row-name">'+it.emoji+' <span>'+it.name+'</span> <span class="rng">'+it.range+'</span></div><div class="state"></div></div>'+
+      '<div class="ends"><span>편해요</span><span>안 돼요</span></div>'+
+      '<div class="maxnote">⛔ 이 시간엔 회의를 잡지 않아요. 정말 안 되는 시간에만 골라 주세요.</div>';
+    const stateEl=row.querySelector(".state"), maxnote=row.querySelector(".maxnote"), ends=row.querySelector(".ends");
+    const slider=makeSlider(it.init, step=>{ timeState[idx]=step; render(step); updateCTA(); });
+    row.insertBefore(slider.el, ends);
+    function render(step){ stateEl.textContent=STEPS[step].label; stateEl.className="state "+(step===3?"max":step>0?"on":""); maxnote.classList.toggle("show",step===3); }
+    render(it.init); timeState[idx]=it.init; timeRows.appendChild(row);
+  });
+
+  const DAYS=["월","화","수","목","금"];
+  const week=document.getElementById("week"), daySliders=document.getElementById("daySliders");
+  const dayState={};
+  DAYS.forEach(d=>{ const b=document.createElement("button"); b.className="day"; b.type="button"; b.innerHTML=d+'<span class="tag" hidden></span>'; b.addEventListener("click",()=>toggleDay(d,b)); week.appendChild(b); });
+  function toggleDay(day,btn){
+    if(dayState[day]){ dayState[day].row.remove(); delete dayState[day]; btn.removeAttribute("data-tone"); btn.querySelector(".tag").hidden=true; updateCTA(); return; }
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML='<div class="row-head"><div class="row-name">📅 <span>'+day+'요일</span></div><div class="state"></div></div>'+
+      '<div class="ends"><span>편해요</span><span>안 돼요</span></div>'+
+      '<div class="maxnote">⛔ 이 요일엔 회의를 잡지 않아요. 정말 안 되는 요일에만 골라 주세요.</div>';
+    const stateEl=row.querySelector(".state"), ends=row.querySelector(".ends"), maxnote=row.querySelector(".maxnote");
+    const slider=makeSlider(2, step=>{ dayState[day].step=step; renderDay(day,btn,stateEl,maxnote); updateCTA(); });
+    row.insertBefore(slider.el, ends); daySliders.appendChild(row);
+    dayState[day]={step:2,row,stateEl,maxnote}; renderDay(day,btn,stateEl,maxnote); updateCTA();
+  }
+  function renderDay(day,btn,stateEl,maxnote){
+    const step=dayState[day].step;
+    stateEl.textContent=STEPS[step].label; stateEl.className="state "+(step===3?"max":step>0?"on":""); maxnote.classList.toggle("show",step===3);
+    const tone=step===3?"red":step>0?"blue":""; if(tone) btn.dataset.tone=tone; else btn.removeAttribute("data-tone");
+    const tag=btn.querySelector(".tag"); tag.hidden=step===0; tag.textContent=step===3?"안 돼요":step===2?"웬만하면":step===1?"살짝":"";
+  }
+
+  const cta=document.getElementById("cta");
+  function anySet(){ return timeState.some(s=>s>0)||Object.keys(dayState).length>0; }
+  function updateCTA(){ cta.textContent=anySet()?"다 정했어요":"다 편해요"; }
+  updateCTA();
+
+  const app=document.getElementById("app"), done=document.getElementById("done"), doneTitle=document.getElementById("doneTitle");
+  cta.addEventListener("click", ()=>{
+    doneTitle.textContent=anySet()?"다 정했어요!":"알겠어요!";
+    app.classList.add("hidden"); done.classList.add("show");
+    (window.scrollTo?window.scrollTo({top:0,behavior:"smooth"}):0);
+  });
+  document.getElementById("again").addEventListener("click", ()=>{ done.classList.remove("show"); app.classList.remove("hidden"); });
+
+  // persona controlled by the showcase shell
+  const banner=document.getElementById("banner");
+  function setPersona(p){ banner.classList.toggle("show", p==="optional"); }
+  window.addEventListener("message", e=>{ if(e.data&&e.data.type==="persona") setPersona(e.data.value); });
+  const q=new URLSearchParams(location.search).get("persona"); if(q) setPersona(q);
+})();
+</script>
+</body>
+</html>

@@ -3,389 +3,192 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>회의 시간, 불편한 것만 알려주세요</title>
-<meta name="description" content="보이지 않는 사정을 선명하게 — 회의 시간 조율 참석자 화면" />
+<title>회의 시간, 불편한 것만 알려주세요 — 참석자 화면</title>
+<meta name="description" content="보이지 않는 사정을 선명하게 — 회의 시간 조율 참석자 화면 (반응형 showcase)" />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <style>
   :root{
-    --blue:#3182F6; --blue-press:#2272EB; --blue-weak:#E8F2FE;
-    --red:#F04452; --red-weak:#FDECEE;
-    --ink:#191F28; --ink-2:#4E5968; --ink-3:#8B95A1; --ink-4:#B0B8C1;
-    --line:#E5E8EB; --surface:#F2F4F6; --surface-2:#F7F8FA; --card:#fff;
+    --ink:#191F28; --ink-2:#4E5968; --ink-3:#8B95A1; --ink-4:#AEB6C0;
+    --blue:#3182F6;
     --ease:cubic-bezier(0.2,0,0,1);
-    --shadow-card:0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06), 0 24px 48px rgba(16,24,40,.05);
-    --shadow-handle:0 1px 2px rgba(16,24,40,.14), 0 2px 6px rgba(16,24,40,.10);
   }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html{ -webkit-text-size-adjust:100%; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
   body{
-    margin:0; background:var(--surface); color:var(--ink);
+    margin:0; color:var(--ink);
     font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     font-variant-numeric:tabular-nums;
-    min-height:100dvh; display:flex; flex-direction:column; align-items:center;
-    padding:0;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #F4F6F9 0%, rgba(244,246,249,0) 60%),
+      linear-gradient(180deg, #EAEEF3 0%, #E4E9F0 100%);
+    display:flex; flex-direction:column; height:100dvh; overflow:hidden;
   }
-  /* ---------- responsive stage ---------- */
-  .stage{ width:100%; flex:1; display:flex; flex-direction:column; align-items:center; }
-  .toolbar{
-    width:100%; max-width:440px; padding:14px 20px 0; display:flex; gap:8px; align-items:center;
-    justify-content:center;
+
+  /* ---------- top bar ---------- */
+  .top{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:16px 22px; z-index:2;
   }
-  .seg{ display:inline-flex; background:var(--surface-2); border-radius:12px; padding:4px; gap:2px; }
+  .brand{ display:flex; flex-direction:column; gap:1px; margin-right:auto; }
+  .brand .t{ font-size:14px; font-weight:700; letter-spacing:-.01em; }
+  .brand .s{ font-size:12px; color:var(--ink-3); }
+  .controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .lbl{ font-size:11px; font-weight:600; color:var(--ink-4); margin-right:2px; }
+
+  .seg{ display:inline-flex; background:rgba(255,255,255,.7); backdrop-filter:blur(8px);
+    border-radius:12px; padding:4px; gap:2px; box-shadow:0 1px 2px rgba(16,24,40,.06); }
   .seg button{
+    display:inline-flex; align-items:center; gap:6px; min-height:40px;
     border:0; background:transparent; color:var(--ink-3); font:inherit; font-size:13px; font-weight:600;
-    padding:7px 14px; border-radius:9px; cursor:pointer;
+    padding:6px 12px; border-radius:9px; cursor:pointer;
     transition-property:background-color,color,scale; transition-duration:.18s; transition-timing-function:var(--ease);
   }
+  .seg button svg{ width:15px; height:15px; }
   .seg button:active{ scale:.96; }
-  .seg button[aria-selected="true"]{ background:var(--card); color:var(--ink); box-shadow:0 1px 2px rgba(16,24,40,.08); }
+  .seg button[aria-selected="true"]{ background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(16,24,40,.12); }
 
-  .app{
-    width:100%; max-width:440px; background:var(--card); color:var(--ink);
-    margin:14px 0 40px; padding:26px 20px 30px;
-    display:flex; flex-direction:column; gap:26px;
-    border-radius:24px; box-shadow:var(--shadow-card);
-  }
-  @media (max-width:480px){
-    body{ background:var(--card); }
-    .app{ margin:0; border-radius:0; box-shadow:none; min-height:calc(100dvh - 48px); padding-bottom:40px; }
-    .toolbar{ padding-top:12px; }
-  }
+  /* ---------- stage ---------- */
+  .viewport{ flex:1; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    overflow:hidden; padding:8px 24px 12px; }
+  .scaler{ transform-origin:center center; will-change:transform;
+    transition:transform .38s var(--ease); }
 
-  /* ---------- enter stagger ---------- */
-  .reveal{ opacity:0; transform:translateY(8px); animation:fadeUp .5s var(--ease) forwards; }
+  .device{ position:relative; display:flex; flex-direction:column; }
+  /* phone / tablet bezel */
+  .device.phone{ background:#0B0C0E; padding:14px; border-radius:52px;
+    box-shadow:0 2px 6px rgba(16,24,40,.18), 0 30px 60px rgba(16,24,40,.28), inset 0 0 0 1.5px rgba(255,255,255,.06); }
+  .device.phone .screen{ border-radius:38px; overflow:hidden; background:#fff; } /* concentric: 52-14 */
+  /* browser chrome */
+  .device.browser{ background:#fff; border-radius:16px; overflow:hidden;
+    box-shadow:0 2px 6px rgba(16,24,40,.10), 0 30px 60px rgba(16,24,40,.20); }
+  .device .chrome{ display:none; height:44px; align-items:center; gap:8px; padding:0 14px; background:#F1F3F6;
+    box-shadow:inset 0 -1px 0 rgba(16,24,40,.05); }
+  .device.browser .chrome{ display:flex; }
+  .device .dots{ display:flex; gap:7px; }
+  .device .dots i{ width:11px; height:11px; border-radius:50%; display:block; }
+  .device .dots i:nth-child(1){ background:#FF5F57; } .device .dots i:nth-child(2){ background:#FEBC2E; } .device .dots i:nth-child(3){ background:#28C840; }
+  .device .url{ flex:1; max-width:340px; margin:0 auto; height:26px; border-radius:8px; background:#fff;
+    display:flex; align-items:center; justify-content:center; gap:6px; font-size:11.5px; color:var(--ink-3);
+    box-shadow:inset 0 0 0 1px rgba(16,24,40,.06); }
+  .device .url svg{ width:11px; height:11px; }
+  .device.browser .screen{ overflow:hidden; background:#fff; }
+
+  iframe{ display:block; border:0; background:#fff; }
+
+  .caption{ margin-top:14px; display:flex; align-items:center; gap:8px; color:var(--ink-3); font-size:12px; }
+  .caption .dim{ font-variant-numeric:tabular-nums; color:var(--ink-4); font-weight:500; }
+  .caption .sep{ color:var(--ink-4); }
+
+  .reveal{ opacity:0; transform:translateY(8px); animation:fadeUp .55s var(--ease) forwards; }
   @keyframes fadeUp{ to{ opacity:1; transform:none; } }
-  @media (prefers-reduced-motion:reduce){ .reveal{ animation:none; opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ .reveal{ animation:none; opacity:1; transform:none; } .scaler{ transition:none; } }
 
-  /* ---------- banner (선택자) ---------- */
-  .banner{
-    display:none; gap:10px; align-items:flex-start;
-    background:var(--blue-weak); color:#1B64DA; border-radius:14px; padding:14px 16px;
-    font-size:13.5px; line-height:1.5;
+  @media (max-width:640px){
+    .top{ padding:12px 14px; gap:10px; }
+    .brand{ width:100%; margin:0; }
+    .controls{ width:100%; justify-content:space-between; }
+    .lbl{ display:none; }
+    .caption{ display:none; }
   }
-  .banner.show{ display:flex; }
-  .banner b{ color:#1B64DA; font-weight:700; }
-  .banner .em{ font-size:16px; line-height:1.4; }
-
-  /* ---------- header ---------- */
-  .ctx{ display:flex; flex-direction:column; gap:2px; }
-  .ctx .m{ font-size:15px; font-weight:600; color:var(--ink-2); }
-  .ctx .s{ font-size:13px; color:var(--ink-3); }
-  .title{ font-size:23px; font-weight:700; letter-spacing:-.02em; margin:14px 0 8px; text-wrap:balance; line-height:1.32; }
-  .cal{
-    display:inline-flex; align-items:center; gap:7px; align-self:flex-start;
-    background:var(--surface-2); color:var(--ink-2); border-radius:999px; padding:8px 13px 8px 11px;
-    font-size:13px; font-weight:500;
-  }
-  .cal svg{ width:16px; height:16px; flex:none; }
-  .subhelp{ font-size:14.5px; color:var(--ink-3); margin-top:10px; text-wrap:pretty; line-height:1.5; }
-
-  /* ---------- section ---------- */
-  .section{ display:flex; flex-direction:column; gap:16px; }
-  .sec-label{ font-size:13px; font-weight:600; color:#6B7684; letter-spacing:.01em; }
-  .sec-help{ font-size:13px; color:var(--ink-3); margin-top:-8px; }
-
-  /* ---------- slider row ---------- */
-  .row{ display:flex; flex-direction:column; gap:9px; }
-  .row-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .row-name{ display:flex; align-items:center; gap:7px; font-size:15px; font-weight:500; }
-  .row-name .rng{ font-size:13px; color:var(--ink-3); font-weight:400; }
-  .state{ font-size:13px; font-weight:600; color:var(--ink-3); transition:color .2s var(--ease); white-space:nowrap; }
-  .state.on{ color:var(--blue); }
-  .state.max{ color:var(--red); }
-
-  .slider{ position:relative; height:40px; touch-action:none; cursor:pointer; user-select:none; }
-  .slider .track{ position:absolute; left:0; right:0; top:17px; height:6px; border-radius:3px; background:var(--line); }
-  .slider .fill{ position:absolute; left:0; top:17px; height:6px; border-radius:3px; background:var(--blue);
-    width:0; transition:width .18s var(--ease), background-color .18s var(--ease); }
-  .slider .dot{ position:absolute; top:16px; width:8px; height:8px; margin-left:-4px; border-radius:50%;
-    background:var(--line); transition:background-color .18s var(--ease); }
-  .slider .handle{ position:absolute; top:9px; width:22px; height:22px; margin-left:-11px; border-radius:50%;
-    background:#fff; box-shadow:var(--shadow-handle); border:2px solid var(--line);
-    transition:left .18s var(--ease), border-color .18s var(--ease), scale .15s var(--ease); }
-  .slider .handle::after{ content:""; position:absolute; inset:-11px; border-radius:50%; } /* 44px hit area */
-  .slider.dragging .handle{ transition:border-color .18s var(--ease), scale .15s var(--ease); scale:1.12; }
-  .slider.on .handle{ border-color:var(--blue); }
-  .slider.max .fill{ background:var(--red); }
-  .slider.max .handle{ border-color:var(--red); }
-  .ends{ display:flex; justify-content:space-between; margin-top:-2px; }
-  .ends span{ font-size:11px; color:var(--ink-4); }
-  .ends span:last-child{ color:var(--ink-3); }
-
-  .maxnote{
-    display:none; gap:8px; align-items:flex-start; margin-top:2px;
-    background:var(--red-weak); color:#C82D3A; border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.45;
-  }
-  .maxnote.show{ display:flex; }
-
-  /* ---------- week strip ---------- */
-  .week{ display:flex; gap:8px; }
-  .day{
-    flex:1; min-height:52px; border:0; background:var(--surface); color:var(--ink); border-radius:12px;
-    font:inherit; font-size:15px; font-weight:500; cursor:pointer; position:relative;
-    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
-  }
-  .day:active{ scale:.96; }
-  .day[data-tone="blue"]{ background:var(--blue-weak); color:#1B64DA; font-weight:600; }
-  .day[data-tone="red"]{ background:var(--red-weak); color:#C82D3A; font-weight:600; }
-  .day .tag{ display:block; font-size:10px; font-weight:600; margin-top:3px; opacity:.85; }
-  .day-sliders{ display:flex; flex-direction:column; gap:16px; margin-top:4px; }
-  .day-sliders:empty{ display:none; }
-
-  /* ---------- escape link ---------- */
-  .escape{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    background:none; border:0; font:inherit; color:var(--ink-2); font-size:14px; font-weight:500;
-    padding:8px 2px; cursor:pointer; text-align:left; width:100%;
-    transition:color .18s var(--ease);
-  }
-  .escape:hover{ color:var(--ink); }
-  .escape .arw{ color:var(--ink-4); }
-
-  /* ---------- privacy ---------- */
-  .privacy{ display:flex; gap:9px; align-items:flex-start; background:var(--surface-2); border-radius:12px;
-    padding:14px; color:var(--ink-3); font-size:13px; line-height:1.5; }
-  .privacy .lock{ font-size:14px; line-height:1.4; }
-  .privacy b{ color:var(--ink-2); font-weight:600; }
-
-  /* ---------- CTA ---------- */
-  .cta{
-    border:0; width:100%; background:var(--blue); color:#fff; font:inherit; font-size:16px; font-weight:600;
-    padding:17px; border-radius:16px; cursor:pointer; min-height:56px;
-    box-shadow:0 4px 14px rgba(49,130,246,.28);
-    transition-property:background-color,scale,box-shadow; transition-duration:.16s; transition-timing-function:var(--ease);
-  }
-  .cta:active{ scale:.97; background:var(--blue-press); }
-
-  /* ---------- done state ---------- */
-  .done{ display:none; flex-direction:column; align-items:center; text-align:center; gap:14px; padding:40px 12px 20px; }
-  .done.show{ display:flex; }
-  .done .check{ width:64px; height:64px; border-radius:50%; background:var(--blue-weak); display:grid; place-items:center;
-    animation:pop .45s var(--ease) both; }
-  @keyframes pop{ 0%{ scale:.4; opacity:0; } 60%{ scale:1.06; } 100%{ scale:1; opacity:1; } }
-  .done .check svg{ width:32px; height:32px; }
-  .done h2{ font-size:20px; font-weight:700; margin:0; text-wrap:balance; }
-  .done p{ font-size:14.5px; color:var(--ink-3); margin:0; line-height:1.55; text-wrap:pretty; }
-  .done .again{ margin-top:6px; background:none; border:0; color:var(--blue); font:inherit; font-size:14px; font-weight:600; cursor:pointer; padding:8px; }
-  .hidden{ display:none !important; }
-
-  .foot{ width:100%; max-width:440px; text-align:center; color:var(--ink-4); font-size:11.5px; padding:0 0 24px; }
 </style>
 </head>
 <body>
-<div class="stage">
-  <div class="toolbar reveal">
-    <div class="seg" role="tablist" aria-label="참석 유형 미리보기">
-      <button role="tab" aria-selected="true"  data-persona="required">필수 참석자</button>
-      <button role="tab" aria-selected="false" data-persona="optional">선택 참석자</button>
+  <div class="top reveal">
+    <div class="brand">
+      <span class="t">불편한 시간만 알려주세요</span>
+      <span class="s">회의 시간 조율 · 참석자 화면</span>
+    </div>
+    <div class="controls">
+      <span class="lbl">참석 유형</span>
+      <div class="seg" id="personaSeg" role="tablist" aria-label="참석 유형">
+        <button role="tab" aria-selected="true"  data-persona="required">필수</button>
+        <button role="tab" aria-selected="false" data-persona="optional">선택</button>
+      </div>
+      <span class="lbl">디바이스</span>
+      <div class="seg" id="deviceSeg" role="tablist" aria-label="디바이스">
+        <button role="tab" aria-selected="true" data-device="mobile">
+          <svg viewBox="0 0 20 20" fill="none"><rect x="6" y="2.5" width="8" height="15" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="14.5" r=".9" fill="currentColor"/></svg>모바일</button>
+        <button role="tab" aria-selected="false" data-device="tablet">
+          <svg viewBox="0 0 20 20" fill="none"><rect x="3.5" y="3" width="13" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="14.6" r=".9" fill="currentColor"/></svg>태블릿</button>
+        <button role="tab" aria-selected="false" data-device="desktop">
+          <svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="3.5" width="15" height="10" rx="1.8" stroke="currentColor" stroke-width="1.6"/><path d="M7 16.5h6M10 13.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>데스크톱</button>
+      </div>
     </div>
   </div>
 
-  <main class="app" id="app">
-    <div class="banner reveal" id="banner" style="animation-delay:.02s">
-      <span class="em">🙌</span>
-      <span><b>민수님은 꼭 안 와도 괜찮아요.</b><br>부담 없이 편하게 알려주면 돼요.</span>
-    </div>
-
-    <header class="reveal" style="animation-delay:.05s">
-      <div class="ctx">
-        <span class="m">신규 기능 킥오프 · 1시간</span>
-        <span class="s">다음 주 중에 잡을 거예요</span>
+  <div class="viewport">
+    <div class="scaler reveal" id="scaler" style="animation-delay:.08s">
+      <div class="device phone" id="device">
+        <div class="chrome">
+          <span class="dots"><i></i><i></i><i></i></span>
+          <span class="url">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M4 5.5V4a2 2 0 114 0v1.5M3.2 5.5h5.6v4H3.2z" stroke="#8B95A1" stroke-width="1"/></svg>
+            besoluble.github.io/toss-pd-challenge
+          </span>
+        </div>
+        <iframe id="frame" class="screen" src="app.html" title="참석자 화면" scrolling="yes"></iframe>
       </div>
-      <h1 class="title">불편한 시간만 알려주세요</h1>
-      <span class="cal">
-        <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        캘린더에 있는 일정은 이미 빼뒀어요
-      </span>
-      <p class="subhelp">그 외에 불편한 시간만요. 괜찮으면 그냥 넘겨도 돼요.</p>
-    </header>
-
-    <section class="section reveal" style="animation-delay:.13s">
-      <div class="sec-label">시간대</div>
-      <div id="timeRows"></div>
-    </section>
-
-    <section class="section reveal" style="animation-delay:.21s">
-      <div class="sec-label">요일</div>
-      <div class="sec-help">불편한 요일이 있으면 눌러서 세기를 정해요</div>
-      <div class="week" id="week"></div>
-      <div class="day-sliders" id="daySliders"></div>
-    </section>
-
-    <div class="reveal" style="animation-delay:.28s; display:flex; flex-direction:column; gap:16px;">
-      <button class="escape">이 중에 없는 사정이 있어요 <span class="arw">→</span></button>
-      <div class="privacy">
-        <span class="lock">🔒</span>
-        <span><b>고른 내용은 아무에게도 안 보여요.</b> 시간 정하는 데만 써요.</span>
-      </div>
-      <button class="cta" id="cta">다 편해요</button>
     </div>
-  </main>
-
-  <section class="done" id="done" aria-live="polite">
-    <div class="check">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <h2 id="doneTitle">다 정했어요!</h2>
-    <p>시간이 정해지면 가장 먼저 알려드릴게요.</p>
-    <button class="again" id="again">다시 고치기</button>
-  </section>
-
-  <div class="foot">보이지 않는 사정을 선명하게 — 회의 시간 조율</div>
-</div>
+    <div class="caption" id="caption"></div>
+  </div>
 
 <script>
 (function(){
-  const STEPS = [
-    {label:"편해요",              tone:"off"},
-    {label:"살짝 피하고 싶어요",   tone:"on"},
-    {label:"웬만하면 피하고 싶어요",tone:"on"},
-    {label:"안 돼요",             tone:"max"},
-  ];
+  const DEVICES = {
+    mobile:  { w:390,  h:800,  chrome:"phone",   name:"모바일",   maxUp:1.35 },
+    tablet:  { w:810,  h:1040, chrome:"phone",   name:"태블릿",   maxUp:1.0 },
+    desktop: { w:1280, h:800,  chrome:"browser", name:"데스크톱", maxUp:1.0 },
+  };
+  const device = document.getElementById("device");
+  const frame  = document.getElementById("frame");
+  const scaler = document.getElementById("scaler");
+  const viewport = document.querySelector(".viewport");
+  const caption = document.getElementById("caption");
+  let current = "mobile", persona = "required";
 
-  // Build one slider control. onChange(step) fires on change.
-  function makeSlider(initial, onChange){
-    const el = document.createElement("div");
-    el.className = "slider";
-    el.innerHTML = '<div class="track"></div><div class="fill"></div>'+
-      '<div class="dot" data-i="0"></div><div class="dot" data-i="1"></div>'+
-      '<div class="dot" data-i="2"></div><div class="dot" data-i="3"></div>'+
-      '<div class="handle"></div>';
-    const fill = el.querySelector(".fill");
-    const handle = el.querySelector(".handle");
-    const dots = [...el.querySelectorAll(".dot")];
-    let step = initial;
-
-    function layout(){
-      const p = step/3;
-      // position dots by percentage of usable width (handle is 22px, keep inside)
-      dots.forEach((d,i)=>{ d.style.left = (i/3*100)+"%"; d.style.background = (i===step && step>0) ? (step===3?"var(--red)":"var(--blue)") : "var(--line)"; });
-      handle.style.left = (p*100)+"%";
-      fill.style.width = step===0 ? "0%" : (p*100)+"%";
-      el.classList.toggle("on", step>0 && step<3);
-      el.classList.toggle("max", step===3);
-    }
-    function set(next){ next=Math.max(0,Math.min(3,next)); if(next===step){layout();return;} step=next; layout(); onChange&&onChange(step); }
-    function fromClientX(cx){ const r=el.getBoundingClientRect(); const ratio=(cx-r.left)/r.width; return Math.round(Math.max(0,Math.min(1,ratio))*3); }
-
-    let dragging=false;
-    el.addEventListener("pointerdown", e=>{ dragging=true; el.classList.add("dragging"); el.setPointerCapture(e.pointerId); set(fromClientX(e.clientX)); });
-    el.addEventListener("pointermove", e=>{ if(dragging) set(fromClientX(e.clientX)); });
-    const stop=()=>{ dragging=false; el.classList.remove("dragging"); };
-    el.addEventListener("pointerup", stop); el.addEventListener("pointercancel", stop);
-    el.setAttribute("tabindex","0"); el.setAttribute("role","slider"); el.setAttribute("aria-valuemin","0"); el.setAttribute("aria-valuemax","3");
-    el.addEventListener("keydown", e=>{ if(e.key==="ArrowRight"||e.key==="ArrowUp"){set(step+1);e.preventDefault();} if(e.key==="ArrowLeft"||e.key==="ArrowDown"){set(step-1);e.preventDefault();} });
-
-    layout();
-    return { el, get:()=>step, set };
+  function apply(key){
+    const d = DEVICES[key]; current = key;
+    device.classList.remove("phone","browser");
+    device.classList.add(d.chrome);
+    frame.style.width  = d.w + "px";
+    frame.style.height = d.h + "px";
+    caption.innerHTML = '<span class="dim">'+d.w+' × '+d.h+'</span><span class="sep">·</span>'+d.name+' 미리보기';
+    fit();
+  }
+  function fit(){
+    // natural (unscaled) device size
+    const ow = device.offsetWidth, oh = device.offsetHeight;
+    const availW = viewport.clientWidth  - 8;
+    const availH = viewport.clientHeight - 64; // leave room for caption
+    const d = DEVICES[current];
+    const scale = Math.min(availW/ow, availH/oh, d.maxUp);
+    scaler.style.transform = "scale(" + Math.max(0.2, scale) + ")";
   }
 
-  // ---- 시간대 rows ----
-  const TIME_ITEMS = [
-    {emoji:"🍽", name:"점심 직후", range:"12–2시", init:2},
-    {emoji:"🌅", name:"이른 아침", range:"9시 이전", init:0},
-    {emoji:"🌙", name:"늦은 오후", range:"5시 이후", init:0},
-  ];
-  const timeRows = document.getElementById("timeRows");
-  timeRows.style.display="flex"; timeRows.style.flexDirection="column"; timeRows.style.gap="18px";
-  const timeState = [];
-
-  TIME_ITEMS.forEach((it, idx)=>{
-    const row=document.createElement("div"); row.className="row";
-    row.innerHTML =
-      '<div class="row-head"><div class="row-name">'+it.emoji+' <span>'+it.name+'</span> <span class="rng">'+it.range+'</span></div>'+
-      '<div class="state"></div></div>'+
-      '<div class="ends"><span>편해요</span><span>안 돼요</span></div>'+
-      '<div class="maxnote">⛔ 이 시간엔 회의를 잡지 않아요. 정말 안 되는 시간에만 골라 주세요.</div>';
-    const stateEl=row.querySelector(".state");
-    const maxnote=row.querySelector(".maxnote");
-    const ends=row.querySelector(".ends");
-    const slider=makeSlider(it.init, step=>{ timeState[idx]=step; render(step); updateCTA(); });
-    row.insertBefore(slider.el, ends);
-    function render(step){
-      stateEl.textContent = STEPS[step].label;
-      stateEl.className = "state "+(step===3?"max":step>0?"on":"");
-      maxnote.classList.toggle("show", step===3);
-    }
-    render(it.init); timeState[idx]=it.init;
-    timeRows.appendChild(row);
-  });
-
-  // ---- 요일 ----
-  const DAYS=["월","화","수","목","금"];
-  const week=document.getElementById("week");
-  const daySliders=document.getElementById("daySliders");
-  const dayState={}; // day -> {step, els}
-
-  DAYS.forEach(d=>{
-    const btn=document.createElement("button"); btn.className="day"; btn.type="button";
-    btn.innerHTML = d+'<span class="tag" hidden></span>';
-    btn.addEventListener("click", ()=>toggleDay(d, btn));
-    week.appendChild(btn);
-  });
-
-  function toggleDay(day, btn){
-    if(dayState[day]){ removeDay(day, btn); return; }
-    // add: open at 웬만하면(2) — matches the common soft-day case
-    const row=document.createElement("div"); row.className="row";
-    row.innerHTML='<div class="row-head"><div class="row-name">📅 <span>'+day+'요일</span></div><div class="state"></div></div>'+
-      '<div class="ends"><span>편해요</span><span>안 돼요</span></div>'+
-      '<div class="maxnote">⛔ 이 요일엔 회의를 잡지 않아요. 정말 안 되는 요일에만 골라 주세요.</div>';
-    const stateEl=row.querySelector(".state"), ends=row.querySelector(".ends"), maxnote=row.querySelector(".maxnote");
-    const slider=makeSlider(2, step=>{ dayState[day].step=step; renderDay(day,btn,stateEl,maxnote); updateCTA(); });
-    row.insertBefore(slider.el, ends);
-    daySliders.appendChild(row);
-    dayState[day]={step:2, row, stateEl, maxnote, btn};
-    renderDay(day,btn,stateEl,maxnote);
-    updateCTA();
-  }
-  function removeDay(day, btn){
-    dayState[day].row.remove(); delete dayState[day];
-    btn.dataset.tone=""; btn.removeAttribute("data-tone");
-    const tag=btn.querySelector(".tag"); tag.hidden=true;
-    updateCTA();
-  }
-  function renderDay(day,btn,stateEl,maxnote){
-    const step=dayState[day].step;
-    stateEl.textContent=STEPS[step].label;
-    stateEl.className="state "+(step===3?"max":step>0?"on":"");
-    maxnote.classList.toggle("show", step===3);
-    const tone = step===3?"red": step>0?"blue":"";
-    if(tone) btn.dataset.tone=tone; else btn.removeAttribute("data-tone");
-    const tag=btn.querySelector(".tag");
-    tag.hidden = step===0;
-    tag.textContent = step===3?"안 돼요": step===2?"웬만하면": step===1?"살짝":"";
-  }
-
-  // ---- CTA dynamic label ----
-  const cta=document.getElementById("cta");
-  function anySet(){ return timeState.some(s=>s>0) || Object.keys(dayState).length>0; }
-  function updateCTA(){ cta.textContent = anySet() ? "다 정했어요" : "다 편해요"; }
-  updateCTA();
-
-  // ---- submit ----
-  const app=document.getElementById("app"), done=document.getElementById("done"),
-        doneTitle=document.getElementById("doneTitle"), toolbar=document.querySelector(".toolbar");
-  cta.addEventListener("click", ()=>{
-    doneTitle.textContent = anySet() ? "다 정했어요!" : "알겠어요!";
-    app.classList.add("hidden"); toolbar.classList.add("hidden"); done.classList.add("show");
-    window.scrollTo({top:0,behavior:"smooth"});
-  });
-  document.getElementById("again").addEventListener("click", ()=>{
-    done.classList.remove("show"); app.classList.remove("hidden"); toolbar.classList.remove("hidden");
-  });
-
-  // ---- persona toggle (선택자 배너) ----
-  const banner=document.getElementById("banner");
-  document.querySelectorAll(".seg button").forEach(b=>{
+  // device selector
+  document.querySelectorAll("#deviceSeg button").forEach(b=>{
     b.addEventListener("click", ()=>{
-      document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-selected","false"));
+      document.querySelectorAll("#deviceSeg button").forEach(x=>x.setAttribute("aria-selected","false"));
       b.setAttribute("aria-selected","true");
-      banner.classList.toggle("show", b.dataset.persona==="optional");
+      apply(b.dataset.device);
     });
   });
+  // persona selector -> postMessage into iframe
+  function pushPersona(){ try{ frame.contentWindow.postMessage({type:"persona",value:persona},"*"); }catch(e){} }
+  document.querySelectorAll("#personaSeg button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      document.querySelectorAll("#personaSeg button").forEach(x=>x.setAttribute("aria-selected","false"));
+      b.setAttribute("aria-selected","true");
+      persona = b.dataset.persona; pushPersona();
+    });
+  });
+
+  frame.addEventListener("load", pushPersona);
+  let rt; window.addEventListener("resize", ()=>{ clearTimeout(rt); rt=setTimeout(fit, 60); });
+  apply("mobile");
+  window.addEventListener("load", fit);
 })();
 </script>
 </body>
