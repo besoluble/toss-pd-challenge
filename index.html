@@ -268,7 +268,25 @@
   .bell:active{ scale:.92; }
   .bell-dot{ position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%; background:var(--red);
     box-shadow:0 0 0 2px var(--surface-2); }
-  .noti-item{ display:flex; flex-direction:column; gap:2px; padding:14px 4px; }
+  /* 주간 캘린더 뷰 */
+  .cv{ margin-top:16px; display:flex; flex-direction:column; min-height:0; }
+  .cv-days{ display:grid; grid-template-columns:32px repeat(5,1fr); margin-bottom:6px; }
+  .cv-days span{ text-align:center; font-size:11px; font-weight:600; color:var(--ink-3); }
+  .cv-days b{ display:block; font-size:14.5px; font-weight:700; color:var(--ink); margin-top:1px; }
+  .cv-body{ display:grid; grid-template-columns:32px repeat(5,1fr); }
+  .cv-gut div{ height:44px; font-size:10.5px; color:var(--ink-4); text-align:right; padding-right:6px; transform:translateY(-6px); }
+  .cv-col{ position:relative; height:396px; border-left:1px solid var(--surface);
+    background-image:linear-gradient(var(--surface) 1px, transparent 1px); background-size:100% 44px; }
+  .cv-ev{ position:absolute; left:2px; right:2px; border-radius:7px; padding:3px 5px;
+    font-size:10px; line-height:1.3; overflow:hidden; }
+  .cv-ev.busy{ background:var(--surface); color:var(--ink-3); font-weight:500; }
+  .cv-ev.fixed{ background:var(--blue); color:#fff; font-weight:600; }
+  .cv-ev.flash{ animation:evFlash .9s var(--ease) 2; }
+  @keyframes evFlash{ 0%,100%{ box-shadow:none; } 50%{ box-shadow:0 0 0 3px var(--blue-weak), 0 4px 12px rgba(49,130,246,.35); } }
+
+  .noti-item{ display:flex; flex-direction:column; gap:2px; padding:14px 4px; border-radius:12px; cursor:pointer;
+    transition:background-color .16s var(--ease); }
+  .noti-item:active{ background:var(--surface-2); }
   .noti-item + .noti-item{ box-shadow:0 -1px 0 var(--surface); }
   .noti-item b{ font-size:14.5px; font-weight:600; color:var(--ink); }
   .noti-item .n-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--blue); margin-left:6px; vertical-align:1.5px; }
@@ -375,7 +393,7 @@
   .select-btn:active{ scale:.98; background:var(--surface); }
   .select-btn svg{ width:18px; height:18px; color:var(--ink-4); flex:none; }
 
-  .preset-row{ display:flex; gap:8px; margin:2px 0 16px; }
+  .preset-row{ display:flex; gap:8px; margin:14px 0 18px; }
   .preset{
     flex:1; border:0; background:var(--surface); border-radius:10px; padding:10px 6px; min-height:40px;
     font:inherit; font-size:13px; font-weight:600; color:var(--ink-2); cursor:pointer;
@@ -551,6 +569,21 @@
           </div>
           <h1 class="title">알림</h1>
           <div class="content" id="notiList" style="gap:4px;"></div>
+        </section>
+
+        <!-- 내 캘린더 (주간 뷰) -->
+        <section class="step" id="stepCal">
+          <div class="nav">
+            <button class="back" id="calBack" aria-label="뒤로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <h1 class="title" style="font-size:20px; margin:0 0 4px;">내 캘린더</h1>
+          <p class="sub">7월 13일 – 17일 · 다음 주</p>
+          <div class="cv">
+            <div class="cv-days" id="cvDays"></div>
+            <div class="cv-body" id="cvBody"></div>
+          </div>
         </section>
 
         <!-- HOST · 요청 만들기 (판단만: 누구 + 무게) -->
@@ -878,7 +911,7 @@
   }
 
   /* ================= 스텝 이동 & CTA ================= */
-  const stepEls={1:document.getElementById("step1"),2:document.getElementById("step2"),done:document.getElementById("stepDone"),exit:document.getElementById("stepExit"),noti:document.getElementById("stepNoti"),
+  const stepEls={1:document.getElementById("step1"),2:document.getElementById("step2"),done:document.getElementById("stepDone"),exit:document.getElementById("stepExit"),noti:document.getElementById("stepNoti"),cal:document.getElementById("stepCal"),
     hostCreate:document.getElementById("stepHostCreate"),hostWho:document.getElementById("stepHostWho"),hostSent:document.getElementById("stepHostSent"),host:document.getElementById("stepHost"),hostDone:document.getElementById("stepHostDone")};
   const screen=document.getElementById("screen");
   const HOST_KEYS=new Set(["hostCreate","hostWho","hostSent","host","hostDone"]);
@@ -981,7 +1014,7 @@
       c.innerHTML='<span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
         '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · 다섯 명 중 세 명이 답했어요")+'</span>'+
         '<span class="req-cta">'+(done?"확정 내용 보기":"현황 보기")+'</span>';
-      c.addEventListener("click",()=>goStep(done?"hostDone":"host","fwd"));
+      c.addEventListener("click",()=>{ if(done) openCalView("exit","mymeet"); else goStep("host","fwd"); });
       myList.appendChild(c);
     }
   }
@@ -1012,10 +1045,71 @@
     notis.forEach(n=>{
       const d=document.createElement("div"); d.className="noti-item";
       d.innerHTML="<b>"+n.t+(n.fresh?'<i class="n-dot"></i>':"")+"</b><span>"+n.b+"</span>";
+      d.addEventListener("click",()=>openCalView("noti", n.t==="신규 기능 킥오프"?"kickoff":"review")); // 확정 일정 → 캘린더에서 확인
       notiList.appendChild(d);
     });
   }
   function pushNoti(t,b){ notis.unshift({t,b,fresh:true}); unread++; renderNoti(); }
+
+  /* ================= 내 캘린더 (주간 뷰) ================= */
+  const MY_EVENTS=[ // 캘린더에 이미 있던 일정 = 시스템이 자동으로 뺀 하드 제약
+    {d:0,s:10,  e:10.5,t:"데일리 스탠드업"},
+    {d:0,s:14,  e:15,  t:"UI 리뷰"},
+    {d:1,s:10,  e:10.5,t:"데일리 스탠드업"},
+    {d:1,s:14.5,e:15.5,t:"유저 인터뷰"},
+    {d:2,s:10,  e:10.5,t:"데일리 스탠드업"},
+    {d:2,s:13,  e:14,  t:"디자인 챕터 위클리"},
+    {d:3,s:12,  e:13,  t:"점심 약속"},
+    {d:3,s:15,  e:16,  t:"리드 1:1"},
+    {d:4,s:10,  e:10.5,t:"데일리 스탠드업"},
+    {d:4,s:16,  e:17,  t:"주간 공유회"},
+  ];
+  const TIME_COORD={ // 추천 시간 문자열 → [요일, 시작시각]
+    "목요일 오전 10:00":[3,10], "수요일 오후 3:00":[2,15], "금요일 오후 1:00":[4,13],
+    "수요일 오전 9:00":[2,9], "화요일 오후 5:30":[1,17.5],
+  };
+  let kickoffConfirmedAt=null, calFrom="exit";
+  function buildCalView(focus){
+    const days=document.getElementById("cvDays"), body=document.getElementById("cvBody");
+    days.replaceChildren();
+    days.appendChild(document.createElement("span"));
+    [["월",13],["화",14],["수",15],["목",16],["금",17]].forEach(([w,n])=>{
+      const s=document.createElement("span"); s.innerHTML=w+"<b>"+n+"</b>"; days.appendChild(s);
+    });
+    body.replaceChildren();
+    const gut=document.createElement("div"); gut.className="cv-gut";
+    for(let h=9;h<18;h++){ const l=document.createElement("div"); l.textContent=h+"시"; gut.appendChild(l); }
+    body.appendChild(gut);
+    const events=MY_EVENTS.map(e=>({...e,kind:"busy"}));
+    events.push({d:1,s:11,e:12,t:"디자인 시스템 리뷰",kind:"fixed",key:"review"});
+    if(kickoffConfirmedAt && TIME_COORD[kickoffConfirmedAt]){
+      const [d,s]=TIME_COORD[kickoffConfirmedAt];
+      events.push({d,s,e:s+1,t:"신규 기능 킥오프",kind:"fixed",key:"kickoff"});
+    }
+    if(hostState==="confirmed" && TIME_COORD[hostPickedLabel]){
+      const [d,s]=TIME_COORD[hostPickedLabel];
+      events.push({d,s,e:s+durMin/60,t:meet.name,kind:"fixed",key:"mymeet"});
+    }
+    for(let d=0; d<5; d++){
+      const col=document.createElement("div"); col.className="cv-col";
+      events.filter(e=>e.d===d).forEach(e=>{
+        const ev=document.createElement("div");
+        ev.className="cv-ev "+e.kind+(focus && e.key===focus?" flash":"");
+        ev.style.top=((e.s-9)*44+1)+"px";
+        ev.style.height=((e.e-e.s)*44-2)+"px";
+        ev.textContent=e.t;
+        col.appendChild(ev);
+      });
+      body.appendChild(col);
+    }
+  }
+  function openCalView(from, focus){
+    calFrom=from; buildCalView(focus); goStep("cal","fwd");
+  }
+  document.getElementById("calBack").addEventListener("click",()=>{
+    if(calFrom==="noti"){ goStep("noti","back"); }
+    else { renderHome(); goStep("exit","back"); }
+  });
   function openNoti(){
     renderNoti(); goStep("noti","fwd");     // 홈 → 알림: 우측에서 밀려 들어옴
     notis.forEach(n=>n.fresh=false);        // 다음 방문부턴 읽음 처리
@@ -1121,6 +1215,7 @@
   let dev2Confirmed=false;
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     document.getElementById("s2DoneSub").innerHTML=TIMES2[pick2].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
+    kickoffConfirmedAt=TIMES2[pick2].t; // 내 캘린더에 반영
     pushNoti("신규 기능 킥오프", TIMES2[pick2].t+"으로 확정됐어요 · 캘린더에 추가했어요"); // 알림함에 쌓임
     dev2Confirmed=true;
     document.getElementById("s2HomeTitle").innerHTML="회의가<br>잡혔어요!";
