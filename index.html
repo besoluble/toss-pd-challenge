@@ -40,6 +40,15 @@
 
   .stage{ flex:1; display:flex; justify-content:center; gap:28px; padding:8px 36px 24px; overflow:visible; min-height:0; }
 
+  /* 듀얼 모드: 토글 대신 디바이스별 역할 라벨 */
+  .dev-label{
+    position:absolute; top:-27px; left:50%; translate:-50%; white-space:nowrap;
+    font-size:12px; font-weight:600; color:var(--ink-3); display:none;
+  }
+  body.dual .dev-label{ display:block; }
+  body.dual .topbar{ display:none; }
+  body.dual .stage{ padding-top:44px; }
+
   /* 디바이스 2 (주최자 폰) */
   .wrap2{ position:relative; width:390px; max-width:100%; height:100%; flex:none; display:none;
     opacity:0; transform:translateX(36px) scale(.97); }
@@ -217,6 +226,17 @@
     transform:translateY(24px); opacity:0; transition:transform .3s var(--ease), opacity .3s var(--ease);
   }
   .modal.show .sheet{ transform:none; opacity:1; }
+  /* 프레임이 넓으면 시트 → 중앙 다이얼로그 (반응형 모달) */
+  @container screen (min-width:720px){
+    .sheet{
+      bottom:auto; top:50%; left:50%; right:auto; translate:-50% -50%;
+      width:420px; max-width:calc(100% - 64px);
+      border-radius:24px; padding:28px 26px 26px;
+      transform:translateY(14px) scale(.97);
+    }
+    .modal.show .sheet{ transform:none; }
+  }
+
   .sheet h3{ font-size:18px; font-weight:700; margin:0 0 6px; }
   .sheet p{ font-size:14px; color:var(--ink-3); margin:0 0 20px; line-height:1.5; }
   .sheet .btns{ display:flex; gap:10px; }
@@ -463,6 +483,7 @@
 
   <div class="stage">
     <div class="wrap" id="wrap">
+      <span class="dev-label">참석자 · 은솔</span>
       <div class="screen" id="screen">
 
         <!-- STEP 1 · 시간대 -->
@@ -693,10 +714,10 @@
           </div>
         </section>
 
-        <!-- 확정 알림 (주최자가 확정하면 도착) -->
+        <!-- 참석자 알림 토스트 (재촉·확정) -->
         <button class="notif" id="notif1" type="button">
           <span class="notif-icon">🔔</span>
-          <span class="notif-body"><b>회의 시간이 정해졌어요</b>신규 기능 킥오프 · <span id="notif1Time"></span></span>
+          <span class="notif-body"><b id="notif1Title"></b><span id="notif1Body"></span></span>
         </button>
 
         <!-- 기간 선택 시트 -->
@@ -741,6 +762,7 @@
 
     <!-- 디바이스 2 · 주최자(지연)의 폰 — 마지막 응답이 도착하면 등장 -->
     <div class="wrap2" id="wrap2" aria-hidden="true">
+      <span class="dev-label">주최자 · 지연</span>
       <div class="screen">
 
         <section class="step active" id="s2Home">
@@ -761,7 +783,7 @@
               <button class="req-card" id="s2Card" type="button">
                 <span class="req-top"><span class="req-title">신규 기능 킥오프 · 1시간</span></span>
                 <span class="req-meta" id="s2Meta">다섯 명 중 네 명이 사정을 알려줬어요</span>
-                <span class="req-cta" id="s2Cta" style="display:none;">추천 시간 보러 가기</span>
+                <span class="req-cta" id="s2Cta">살짝 재촉하기</span>
               </button>
             </div>
           </div>
@@ -1020,7 +1042,7 @@
       c.innerHTML='<span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
         '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · 다섯 명 중 세 명이 답했어요")+'</span>'+
         '<span class="req-cta">'+(done?"확정 내용 보기":"현황 보기")+'</span>';
-      c.addEventListener("click",()=>{ if(done) openCalView("exit","mymeet"); else goStep("host","fwd"); });
+      c.addEventListener("click",()=>{ if(done) openCalView("exit","mymeet"); else goStep("hostSent","fwd"); }); // 모으는 중엔 현황(결과 아님)
       myList.appendChild(c);
     }
   }
@@ -1214,6 +1236,7 @@
     document.getElementById("notif2Body").textContent=body;
     notif2Tap=onTap; notif.classList.add("show");
   }
+  let s2Ready=false, poked=false;
   function revealDevice2(){
     if(dev2Shown) return false; dev2Shown=true;
     document.body.classList.add("dual");
@@ -1227,17 +1250,35 @@
     setTimeout(()=>{
       chime();
       setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>s2Go("results","fwd"));
+      s2Ready=true;
       setS2MyTitle("이제 시간을<br>정할 수 있어요");
       document.getElementById("s2BadgeMy").classList.add("hot");
       document.getElementById("s2Meta").textContent="✓ 다섯 명 모두 사정을 알려줬어요";
-      document.getElementById("s2Cta").style.display="flex";
+      document.getElementById("s2Cta").textContent="추천 시간 보러 가기";
     }, first?650:200);
   }
   notif.addEventListener("click",()=>{ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
-  document.getElementById("s2Card").addEventListener("click",()=>{ if(dev2Shown && !dev2Confirmed){ notif.classList.remove("show"); s2Go("results","fwd"); } });
+  document.getElementById("s2Card").addEventListener("click",()=>{
+    if(dev2Confirmed) return;
+    if(s2Ready){ notif.classList.remove("show"); s2Go("results","fwd"); return; }
+    if(poked) return; // 아직 안 모임 → 살짝 재촉하기
+    poked=true;
+    document.getElementById("s2Cta").textContent="재촉했어요 · 답이 오면 알려드릴게요";
+    setTimeout(()=>{
+      chime();
+      setNotif1("지연님이 기다리고 있어요","신규 기능 킥오프 · 불편한 시간을 알려주세요",()=>openReq("kickoff"));
+    }, 450);
+  });
   document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home","back"));
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home","back"));
   const notif1=document.getElementById("notif1");
+  let notif1Tap=null;
+  function setNotif1(t,b,onTap){
+    document.getElementById("notif1Title").textContent=t;
+    document.getElementById("notif1Body").textContent=b;
+    notif1Tap=onTap; notif1.classList.add("show");
+  }
+  notif1.addEventListener("click",()=>{ notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
   let dev2Confirmed=false;
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     document.getElementById("s2DoneSub").innerHTML=TIMES2[pick2].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
@@ -1251,11 +1292,9 @@
     s2Go("done");
     setTimeout(()=>{ // 참석자에게 확정 알림 띠롱
       chime();
-      document.getElementById("notif1Time").textContent=TIMES2[pick2].t;
-      notif1.classList.add("show");
+      setNotif1("회의 시간이 정해졌어요","신규 기능 킥오프 · "+TIMES2[pick2].t, openNoti);
     }, 650);
   });
-  notif1.addEventListener("click",()=>{ notif1.classList.remove("show"); openNoti(); });
   document.getElementById("again").addEventListener("click",()=>goStep(1,"back"));
   document.getElementById("doneOk").addEventListener("click",()=>{ renderHome(); goStep("exit","back"); });
 
