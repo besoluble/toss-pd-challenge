@@ -239,6 +239,39 @@
     background:var(--blue-weak); color:#1B64DA; font-size:14px; font-weight:600;
     padding:12px; border-radius:12px; min-height:44px; display:flex; align-items:center; justify-content:center;
   }
+  .req-card.submitted .req-kind{ color:var(--ink-3); }
+  .req-card.submitted .req-cta{ background:var(--surface); color:var(--ink-2); }
+
+  /* 주최자: 참석자 지정 */
+  .people{ display:flex; flex-direction:column; }
+  .person{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; }
+  .p-info{ display:flex; flex-direction:column; gap:1px; }
+  .p-name{ font-size:15px; font-weight:500; color:var(--ink); }
+  .p-role{ font-size:12px; color:var(--ink-3); }
+  .pick{ display:inline-flex; background:var(--surface); border-radius:10px; padding:2px; gap:2px; }
+  .pick button{
+    border:0; background:transparent; color:var(--ink-3); font:inherit; font-size:12.5px; font-weight:600;
+    padding:7px 12px; border-radius:8px; cursor:pointer; min-height:34px;
+    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .pick button:active{ scale:.95; }
+  .pick button[aria-pressed="true"]{ background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(16,24,40,.10); }
+
+  /* 주최자: 추천 시간 카드 */
+  .times{ display:flex; flex-direction:column; gap:10px; }
+  .time-card{
+    display:flex; flex-direction:column; align-items:flex-start; gap:3px; width:100%;
+    border:0; text-align:left; font:inherit; cursor:pointer;
+    background:var(--surface-2); border-radius:16px; padding:15px 16px;
+    transition-property:background-color,box-shadow,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .time-card:active{ scale:.98; }
+  .time-card[aria-checked="true"]{ background:var(--blue-weak); box-shadow:inset 0 0 0 2px var(--blue); }
+  .tc-top{ display:flex; align-items:center; gap:8px; }
+  .tc-time{ font-size:16px; font-weight:700; color:var(--ink); }
+  .tc-pill{ font-size:11px; font-weight:700; color:#fff; background:var(--blue); padding:3px 8px; border-radius:999px; }
+  .tc-why{ font-size:13px; color:var(--ink-3); }
+  .time-card[aria-checked="true"] .tc-why{ color:var(--ink-2); }
   .done-body h2{ font-size:21px; font-weight:700; margin:0; text-wrap:balance; }
   .done-body p{ font-size:14.5px; color:var(--ink-3); margin:0; line-height:1.55; text-wrap:pretty; }
 
@@ -255,10 +288,10 @@
 </head>
 <body data-persona="required">
   <div class="topbar">
-    <span class="lbl">참석 유형</span>
-    <div class="seg" id="personaSeg" role="tablist" aria-label="참석 유형">
-      <button role="tab" aria-selected="true"  data-persona="required">필수</button>
-      <button role="tab" aria-selected="false" data-persona="optional">선택</button>
+    <span class="lbl">역할</span>
+    <div class="seg" id="personaSeg" role="tablist" aria-label="역할">
+      <button role="tab" aria-selected="true"  data-persona="part">참석자</button>
+      <button role="tab" aria-selected="false" data-persona="host">주최자</button>
     </div>
     <span class="lbl device-ctl">디바이스</span>
     <div class="seg device-ctl" id="deviceSeg" role="tablist" aria-label="디바이스">
@@ -282,9 +315,9 @@
           </div>
           <div class="banner">
             <span>🙌</span>
-            <span><b>민수님은 꼭 안 와도 괜찮아요.</b><br>부담 없이 편하게 알려주면 돼요.</span>
+            <span><b>꼭 안 와도 괜찮은 회의예요.</b><br>부담 없이 편하게 알려주면 돼요.</span>
           </div>
-          <div class="ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
+          <div class="ctx" id="ctx1"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
           <h1 class="title">불편한 시간만<br>알려주세요</h1>
           <span class="cal">
             <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -333,27 +366,80 @@
             <div class="check">
               <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
-            <h2 id="doneTitle">잘 반영할게요!</h2>
-            <p id="doneSub">이제 기다리기만 하면 돼요.<br>시간이 정해지면 알려드릴게요.</p>
+            <h2>잘 반영할게요!</h2>
+            <p>시간이 정해지면 알려드릴게요.</p>
           </div>
           <div class="foot">
             <button class="foot-link" id="again">다시 고치기</button>
+            <button class="cta" id="doneOk">확인</button>
           </div>
         </section>
 
         <!-- EXITED → 받은 요청 (홈) -->
         <section class="step" id="stepExit" aria-live="polite">
           <div class="nav"></div>
-          <h1 class="title">확인할 요청이<br>있어요</h1>
-          <p class="sub">잊지 않게 여기 두었어요.</p>
+          <h1 class="title" id="homeTitle">확인할 요청이<br>있어요</h1>
+          <p class="sub" id="homeSub">잊지 않게 여기 두었어요.</p>
+
+          <div class="content" id="reqList" style="gap:12px;"></div>
+        </section>
+
+        <!-- HOST · 요청 만들기 (판단만: 누구 + 무게) -->
+        <section class="step" id="stepHostCreate">
+          <div class="ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
+          <h1 class="title">누구와 함께하는<br>회의인가요?</h1>
+          <p class="sub">꼭 와야 하는 사람만 필수로 정해 주세요.<br>시간 후보는 정하지 않아도 돼요 — 사정을 모아 찾아드려요.</p>
 
           <div class="content">
-            <button class="req-card" id="reenter">
-              <span class="req-kind">회의 시간 정하기</span>
-              <span class="req-title">신규 기능 킥오프 · 1시간</span>
-              <span class="req-meta">다음 주 중 · 지연님이 물어봤어요</span>
-              <span class="req-cta">불편한 시간 알려주기</span>
-            </button>
+            <div class="people" id="people"></div>
+          </div>
+
+          <div class="foot">
+            <button class="cta" id="hostSend">사정 물어보기</button>
+          </div>
+        </section>
+
+        <!-- HOST · 보냈어요 -->
+        <section class="step" id="stepHostSent" aria-live="polite">
+          <div class="done-body">
+            <div class="check">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2>사정을 물어봤어요!</h2>
+            <p>다섯 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.</p>
+          </div>
+          <div class="foot">
+            <button class="foot-link" id="hostPreview">사정이 다 모이면 이렇게 보여요 →</button>
+          </div>
+        </section>
+
+        <!-- HOST · 주최자(지연) 결과 -->
+        <section class="step" id="stepHost">
+          <div class="ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
+          <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
+          <p class="sub">여섯 명의 캘린더와 알려준 사정을 반영했어요.</p>
+
+          <div class="content">
+            <div class="times" id="times" role="radiogroup" aria-label="추천 시간"></div>
+          </div>
+
+          <div class="foot">
+            <p class="privacy">누가 어떤 사정을 알렸는지는 주최자에게도 안 보여요</p>
+            <button class="cta" id="hostConfirm">이 시간으로 확정하기</button>
+          </div>
+        </section>
+
+        <!-- HOST DONE -->
+        <section class="step" id="stepHostDone" aria-live="polite">
+          <div class="done-body">
+            <div class="check">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2>회의를 확정했어요!</h2>
+            <p id="hostDoneSub">모두에게 알릴게요.</p>
+          </div>
+          <div class="foot">
+            <button class="foot-link" id="hostAgain">다시 고르기</button>
           </div>
         </section>
 
@@ -488,14 +574,18 @@
   }
 
   /* ================= 스텝 이동 & CTA ================= */
-  const stepEls={1:document.getElementById("step1"),2:document.getElementById("step2"),done:document.getElementById("stepDone"),exit:document.getElementById("stepExit")};
+  const stepEls={1:document.getElementById("step1"),2:document.getElementById("step2"),done:document.getElementById("stepDone"),exit:document.getElementById("stepExit"),
+    hostCreate:document.getElementById("stepHostCreate"),hostSent:document.getElementById("stepHostSent"),host:document.getElementById("stepHost"),hostDone:document.getElementById("stepHostDone")};
   const screen=document.getElementById("screen");
+  const HOST_KEYS=new Set(["hostCreate","hostSent","host","hostDone"]);
+  let partKey=1, hostKey="hostCreate"; // 역할 전환 시 각자 보던 화면 기억
   function goStep(k){
     Object.values(stepEls).forEach(s=>s.classList.remove("active"));
     stepEls[k].classList.add("active");
+    if(HOST_KEYS.has(k)) hostKey=k; else partKey=k;
     screen.scrollTop=0;
   }
-  const submit=document.getElementById("submit"), doneTitle=document.getElementById("doneTitle"), next1=document.getElementById("next1");
+  const submit=document.getElementById("submit"), next1=document.getElementById("next1");
   function anySet(){ return timeState.some(s=>s>0)||DAYS.some(d=>dayVals[d]>0); }
   function updateCTA(){
     submit.textContent=anySet()?"다 정했어요":"다 편해요";
@@ -505,18 +595,101 @@
 
   document.getElementById("next1").addEventListener("click",()=>goStep(2));
   document.getElementById("back2").addEventListener("click",()=>goStep(1));
-  const doneSub=document.getElementById("doneSub");
-  submit.addEventListener("click",()=>{
-    if(anySet()){
-      doneTitle.textContent="잘 반영할게요!";
-      doneSub.innerHTML="이제 기다리기만 하면 돼요.<br>시간이 정해지면 알려드릴게요.";
-    }else{
-      doneTitle.textContent="알겠어요!";
-      doneSub.innerHTML="아무 때나 괜찮다는 것도 큰 도움이 돼요.<br>시간이 정해지면 알려드릴게요.";
-    }
-    goStep("done");
-  });
+  /* ================= 요청 2건 (세션 내 상태 유지) ================= */
+  const REQS={
+    kickoff:{ title:"신규 기능 킥오프 · 1시간", who:"지연님", optional:false,
+              ctx:"<b>신규 기능 킥오프 · 1시간</b> · 다음 주 중" },
+    weekly:{  title:"디자인 위클리 · 30분", who:"수아님", optional:true,
+              ctx:"<b>디자인 위클리 · 30분</b> · 다음 주 중" },
+  };
+  const emptyDays=()=>{const o={};DAYS.forEach(d=>o[d]=0);return o;};
+  const store={ kickoff:{time:[0,0,0],days:emptyDays(),submitted:false},
+                weekly:{time:[0,0,0],days:emptyDays(),submitted:false} };
+  let currentReq="kickoff";
+
+  const homeTitle=document.getElementById("homeTitle"), homeSub=document.getElementById("homeSub"),
+        reqList=document.getElementById("reqList"), ctx1=document.getElementById("ctx1");
+
+  function saveLive(){ const s=store[currentReq]; s.time=[...timeState]; s.days={...dayVals}; }
+  function openReq(id){
+    saveLive();
+    currentReq=id; const s=store[id], r=REQS[id];
+    TIME_ITEMS.forEach((_,i)=>{ timeCtl[i].slider.set(s.time[i],true); timeCtl[i].render(s.time[i]); timeState[i]=s.time[i]; });
+    DAYS.forEach(d=>{ dayVals[d]=s.days[d]; renderDayChip(d); dayBtns[d].setAttribute("aria-pressed","false"); });
+    activeDay=null;
+    editorHint.textContent=DAYS.some(d=>s.days[d]>0)?"요일을 누르면 다시 고칠 수 있어요":"불편한 요일이 있으면 눌러 주세요";
+    editor.replaceChildren(editorHint);
+    document.body.dataset.persona=r.optional?"optional":"required";
+    ctx1.innerHTML=r.ctx;
+    updateCTA(); goStep(1);
+  }
+
+  function renderHome(){
+    const ids=Object.keys(REQS);
+    const pending=ids.filter(id=>!store[id].submitted).length;
+    homeTitle.innerHTML=pending?"확인할 요청이<br>있어요":"모두 답했어요!";
+    homeSub.textContent=pending?"잊지 않게 여기 두었어요.":"알려준 사정은 시간 정할 때 반영돼요.";
+    reqList.replaceChildren();
+    ids.forEach(id=>{
+      const r=REQS[id], done=store[id].submitted;
+      const c=document.createElement("button");
+      c.className="req-card"+(done?" submitted":""); c.type="button";
+      c.innerHTML='<span class="req-kind">회의 시간 정하기'+(r.optional?' · 선택 참석':'')+'</span>'+
+        '<span class="req-title">'+r.title+'</span>'+
+        '<span class="req-meta">'+(done?"✓ 사정을 알려드렸어요 · 다음 주 중":"다음 주 중 · "+r.who+"이 물어봤어요")+'</span>'+
+        '<span class="req-cta">'+(done?"다시 고치기":"불편한 시간 알려주기")+'</span>';
+      c.addEventListener("click",()=>openReq(id));
+      reqList.appendChild(c);
+    });
+  }
+
+  submit.addEventListener("click",()=>{ saveLive(); store[currentReq].submitted=true; goStep("done"); });
   document.getElementById("again").addEventListener("click",()=>goStep(1));
+  document.getElementById("doneOk").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
+
+  /* ================= 주최자: 요청 만들기 ================= */
+  const PEOPLE=[
+    {name:"수아", role:"프로덕트 디자이너", req:true},
+    {name:"민수", role:"프론트엔드 개발자", req:true},
+    {name:"도윤", role:"서버 개발자", req:true},
+    {name:"하린", role:"프로덕트 오너", req:true},
+    {name:"최분석", role:"데이터 분석가", req:false},
+  ];
+  const people=document.getElementById("people");
+  PEOPLE.forEach(p=>{
+    const row=document.createElement("div"); row.className="person";
+    row.innerHTML='<div class="p-info"><span class="p-name">'+p.name+'</span><span class="p-role">'+p.role+'</span></div>'+
+      '<div class="pick"><button type="button" data-v="req">필수</button><button type="button" data-v="opt">선택</button></div>';
+    const btns=row.querySelectorAll(".pick button");
+    function renderPick(){ btns[0].setAttribute("aria-pressed", p.req?"true":"false"); btns[1].setAttribute("aria-pressed", p.req?"false":"true"); }
+    btns[0].addEventListener("click",()=>{ p.req=true; renderPick(); });
+    btns[1].addEventListener("click",()=>{ p.req=false; renderPick(); });
+    renderPick(); people.appendChild(row);
+  });
+  document.getElementById("hostSend").addEventListener("click",()=>goStep("hostSent"));
+  document.getElementById("hostPreview").addEventListener("click",()=>goStep("host"));
+
+  /* ================= 주최자(지연) 결과 ================= */
+  const HOST_TIMES=[
+    {t:"목요일 오전 10:00", why:"여섯 명 모두 편한 시간이에요", best:true},
+    {t:"수요일 오후 3:00",  why:"한 명이 수요일을 살짝 피하고 싶어 해요"},
+    {t:"금요일 오후 1:00",  why:"두 명이 점심 직후를 웬만하면 피하고 싶어 해요"},
+  ];
+  const times=document.getElementById("times"); let hostPick=0;
+  HOST_TIMES.forEach((h,i)=>{
+    const c=document.createElement("button"); c.className="time-card"; c.type="button"; c.setAttribute("role","radio");
+    c.innerHTML='<span class="tc-top"><span class="tc-time">'+h.t+'</span>'+(h.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
+      '<span class="tc-why">'+h.why+'</span>';
+    c.addEventListener("click",()=>{ hostPick=i; renderTimes(); });
+    times.appendChild(c);
+  });
+  function renderTimes(){ [...times.children].forEach((c,i)=>c.setAttribute("aria-checked", i===hostPick?"true":"false")); }
+  renderTimes();
+  document.getElementById("hostConfirm").addEventListener("click",()=>{
+    document.getElementById("hostDoneSub").innerHTML=HOST_TIMES[hostPick].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
+    goStep("hostDone");
+  });
+  document.getElementById("hostAgain").addEventListener("click",()=>goStep("host"));
 
   /* ================= 이탈 확인 ================= */
   const exitModal=document.getElementById("exitModal");
@@ -530,21 +703,19 @@
     timeCtl.forEach((c,i)=>{ c.slider.set(0,true); c.render(0); timeState[i]=0; });
     DAYS.forEach(d=>{ dayVals[d]=0; renderDayChip(d); dayBtns[d].setAttribute("aria-pressed","false"); });
     activeDay=null; editor.replaceChildren(editorHint);
-    updateCTA(); closeExit(); goStep("exit");
+    store[currentReq]={time:[0,0,0],days:emptyDays(),submitted:false};
+    updateCTA(); closeExit(); renderHome(); goStep("exit");
   });
-  document.getElementById("reenter").addEventListener("click",()=>goStep(1));
 
   /* ================= showcase: 참석 유형 ================= */
   document.querySelectorAll("#personaSeg button").forEach(b=>{
     b.addEventListener("click", ()=>{
       document.querySelectorAll("#personaSeg button").forEach(x=>x.setAttribute("aria-selected","false"));
       b.setAttribute("aria-selected","true");
-      document.body.dataset.persona=b.dataset.persona;
+      if(b.dataset.persona==="host"){ goStep(hostKey); }
+      else{ if(partKey==="exit") renderHome(); goStep(partKey); }
     });
   });
-  const q=new URLSearchParams(location.search).get("persona");
-  if(q==="optional"){ document.body.dataset.persona="optional";
-    document.querySelectorAll("#personaSeg button").forEach(x=>x.setAttribute("aria-selected", x.dataset.persona==="optional"?"true":"false")); }
 
   /* ================= showcase: 디바이스 ================= */
   const wrap=document.getElementById("wrap"), badge=document.getElementById("badge"), stage=document.querySelector(".stage");
