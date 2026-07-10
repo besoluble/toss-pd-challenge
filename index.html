@@ -63,14 +63,14 @@
   .notif-body{ font-size:12.5px; color:var(--ink-2); line-height:1.45; }
   .notif-body b{ display:block; font-size:13px; color:var(--ink); }
   .wrap{ position:relative; width:390px; max-width:100%; height:100%; }
-  .wrap.anim{ transition:width .38s var(--ease); }
+  .wrap.anim, .wrap2.anim{ transition:width .38s var(--ease); }
   .screen{
     position:relative; height:100%; overflow:hidden;
     background:#fff; border-radius:22px;
     box-shadow:0 1px 2px rgba(16,24,40,.06), 0 16px 40px rgba(16,24,40,.12);
     container-type:inline-size; container-name:screen;
   }
-  .wrap.dragging .screen{ pointer-events:none; }
+  .wrap.dragging .screen, .wrap2.dragging .screen{ pointer-events:none; }
 
   .handle{
     position:absolute; top:50%; translate:0 -50%; width:22px; height:72px; border:0; padding:0;
@@ -81,7 +81,7 @@
     width:5px; height:48px; border-radius:999px; background:rgba(25,31,40,.14);
     transition:background-color .18s var(--ease);
   }
-  .handle:hover::before, .wrap.dragging .handle::before{ background:rgba(25,31,40,.32); }
+  .handle:hover::before, .wrap.dragging .handle::before, .wrap2.dragging .handle::before{ background:rgba(25,31,40,.32); }
   .handle.left{ left:-27px; } .handle.right{ right:-27px; }
 
   .badge{
@@ -90,7 +90,7 @@
     padding:5px 10px; border-radius:8px; pointer-events:none;
     opacity:0; transition:opacity .18s var(--ease);
   }
-  .wrap.dragging .badge{ opacity:1; }
+  .wrap.dragging .badge, .wrap2.dragging .badge{ opacity:1; }
 
   @media (max-width:640px){
     body{ background:#fff; }
@@ -392,7 +392,7 @@
           </div>
 
           <div class="foot">
-            <p class="privacy">🔒 고른 내용은 아무에게도 안 보여요 · 시간 정하는 데만 써요</p>
+            <p class="privacy">🔒 고른 내용은 익명으로 시간 정할 때만 써요</p>
             <button class="cta" id="submit">다 편해요</button>
           </div>
         </section>
@@ -564,6 +564,9 @@
           <span class="notif-body"><b>모두의 사정이 모였어요</b>신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span>
         </button>
       </div>
+      <button class="handle left"  id="hL2" aria-label="왼쪽으로 크기 조절"></button>
+      <button class="handle right" id="hR2" aria-label="오른쪽으로 크기 조절"></button>
+      <span class="badge" id="badge2">390px</span>
     </div>
   </div>
 
@@ -945,29 +948,36 @@
 
   /* ================= showcase: 디바이스 ================= */
   const wrap=document.getElementById("wrap"), badge=document.getElementById("badge"), stage=document.querySelector(".stage");
-  const wrap2=document.getElementById("wrap2");
-  const MIN=320;
-  const avail=()=>stage.clientWidth-72-(wrap2.classList.contains("on")?390+28:0);
-  const clamp=w=>Math.round(Math.max(MIN, Math.min(avail(), w)));
-  function setWidth(w, animate){
-    w=clamp(w);
-    if(animate){ wrap.classList.add("anim"); wrap.addEventListener("transitionend",()=>wrap.classList.remove("anim"),{once:true}); }
-    wrap.style.width=w+"px";
-    badge.textContent=w+"px";
+  const wrap2=document.getElementById("wrap2"), badge2=document.getElementById("badge2");
+  const MIN=320, GAP=28, PAD=72;
+  const availFor=el=>{
+    let other=0;
+    if(el===wrap && wrap2.classList.contains("on")) other=wrap2.offsetWidth+GAP;
+    if(el===wrap2) other=wrap.offsetWidth+GAP;
+    return stage.clientWidth-PAD-other;
+  };
+  function setW(el, bd, w, animate){
+    w=Math.round(Math.max(MIN, Math.min(availFor(el), w)));
+    if(animate){ el.classList.add("anim"); el.addEventListener("transitionend",()=>el.classList.remove("anim"),{once:true}); }
+    el.style.width=w+"px";
+    bd.textContent=w+"px";
   }
-  function attachDrag(h, dir){
+  const setWidth=(w,a)=>setW(wrap,badge,w,a);
+  function attachDrag(h, dir, el, bd){
     h.addEventListener("pointerdown", e=>{
       e.preventDefault(); h.setPointerCapture(e.pointerId);
-      const sx=e.clientX, sw=wrap.offsetWidth;
-      wrap.classList.add("dragging"); wrap.classList.remove("anim");
-      const mv=ev=>setWidth(sw+(ev.clientX-sx)*2*dir, false);
-      const up=()=>{ wrap.classList.remove("dragging"); h.removeEventListener("pointermove",mv); h.removeEventListener("pointerup",up); h.removeEventListener("pointercancel",up); };
+      const sx=e.clientX, sw=el.offsetWidth;
+      el.classList.add("dragging"); el.classList.remove("anim");
+      const mv=ev=>setW(el, bd, sw+(ev.clientX-sx)*2*dir, false);
+      const up=()=>{ el.classList.remove("dragging"); h.removeEventListener("pointermove",mv); h.removeEventListener("pointerup",up); h.removeEventListener("pointercancel",up); };
       h.addEventListener("pointermove",mv); h.addEventListener("pointerup",up); h.addEventListener("pointercancel",up);
     });
   }
-  attachDrag(document.getElementById("hR"),1);
-  attachDrag(document.getElementById("hL"),-1);
-  let rt; window.addEventListener("resize", ()=>{ clearTimeout(rt); rt=setTimeout(()=>{ if(window.innerWidth>640) setWidth(wrap.offsetWidth,false); },80); });
+  attachDrag(document.getElementById("hR"),1,wrap,badge);
+  attachDrag(document.getElementById("hL"),-1,wrap,badge);
+  attachDrag(document.getElementById("hR2"),1,wrap2,badge2);
+  attachDrag(document.getElementById("hL2"),-1,wrap2,badge2);
+  let rt; window.addEventListener("resize", ()=>{ clearTimeout(rt); rt=setTimeout(()=>{ if(window.innerWidth>640){ setW(wrap,badge,wrap.offsetWidth,false); if(wrap2.classList.contains("on")) setW(wrap2,badge2,wrap2.offsetWidth,false); } },80); });
   if(window.innerWidth>640) setWidth(390,false);
 
   // 첫 화면 = 허브(홈)
