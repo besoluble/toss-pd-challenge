@@ -322,24 +322,19 @@
     transition:color .18s var(--ease);
   }
   .invite-btn:hover{ color:var(--blue-press); }
-  .invite-box{ display:flex; flex-direction:column; gap:6px; }
-  .invite-box[hidden]{ display:none; }
-  .invite-input{
+  .invite-line{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .invite-note{ font-size:12.5px; color:var(--ink-4); opacity:0; transition:opacity .3s var(--ease); text-align:right; }
+  .invite-note.show{ opacity:1; }
+  .form-field{ display:flex; flex-direction:column; gap:7px; }
+  .form-row{ display:flex; gap:24px; }
+  .f-label{ font-size:12px; font-weight:600; color:var(--ink-3); }
+  .text-input{
     border:0; background:var(--surface-2); border-radius:12px; padding:13px 14px;
-    font:inherit; font-size:14px; color:var(--ink); outline:none; width:100%;
+    font:inherit; font-size:14.5px; color:var(--ink); outline:none; width:100%;
     transition:box-shadow .18s var(--ease);
   }
-  .invite-input:focus{ box-shadow:inset 0 0 0 2px var(--blue-weak); }
-  .invite-input::placeholder{ color:var(--ink-4); }
-  .invite-row{
-    display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%;
-    border:0; background:none; font:inherit; text-align:left; cursor:pointer;
-    padding:9px 6px; border-radius:10px; min-height:48px;
-    transition:background-color .16s var(--ease);
-  }
-  .invite-row:active{ background:var(--surface-2); }
-  .invite-add{ color:var(--blue); font-size:13px; font-weight:600; flex:none; }
-  .invite-empty{ font-size:13px; color:var(--ink-4); padding:8px 6px; margin:0; }
+  .text-input:focus{ box-shadow:inset 0 0 0 2px var(--blue-weak); }
+  .text-input::placeholder{ color:var(--ink-4); }
 
   /* 주최자: 추천 시간 카드 */
   .times{ display:flex; flex-direction:column; gap:10px; }
@@ -475,20 +470,35 @@
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
-          <div class="ctx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
-          <h1 class="title">누구와 함께하는<br>회의인가요?</h1>
-          <p class="sub">꼭 와야 하는 사람만 필수로 정해 주세요.<br>시간 후보는 정하지 않아도 돼요 — 사정을 모아 찾아드려요.</p>
+          <h1 class="title">어떤 회의인가요?</h1>
+          <p class="sub">시간 후보는 정하지 않아도 돼요 — 사정을 모아 찾아드려요.</p>
           <span class="cal">
             <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             모두의 캘린더 빈 시간은 자동으로 반영돼요
           </span>
 
-          <div class="content">
-            <div class="people" id="people"></div>
-            <button class="invite-btn" id="inviteBtn">＋ 다른 팀에서 초대하기</button>
-            <div class="invite-box" id="inviteBox" hidden>
-              <input class="invite-input" id="inviteInput" type="text" placeholder="이름이나 팀으로 검색" autocomplete="off" />
-              <div class="invite-results" id="inviteResults"></div>
+          <div class="content" style="gap:16px;">
+            <div class="form-field">
+              <span class="f-label">회의 이름</span>
+              <input class="text-input" id="meetName" type="text" value="스프린트 회고" autocomplete="off" />
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <span class="f-label">길이</span>
+                <div class="pick" id="durPick"><button type="button" aria-pressed="true">30분</button><button type="button" aria-pressed="false">1시간</button></div>
+              </div>
+              <div class="form-field">
+                <span class="f-label">언제</span>
+                <div class="pick" id="spanPick"><button type="button" aria-pressed="false">이번 주</button><button type="button" aria-pressed="true">다음 주</button></div>
+              </div>
+            </div>
+            <div class="form-field" style="margin-top:4px;">
+              <span class="f-label">함께할 사람 · 꼭 와야 하는 사람만 필수로 정해 주세요</span>
+              <div class="people" id="people"></div>
+            </div>
+            <div class="invite-line">
+              <button class="invite-btn" id="inviteBtn">＋ 다른 팀에서 초대하기</button>
+              <span class="invite-note" id="inviteNote">지금은 우리 팀만 초대할 수 있어요</span>
             </div>
           </div>
 
@@ -513,9 +523,9 @@
 
         <!-- HOST · 주최자 결과 -->
         <section class="step" id="stepHost">
-          <div class="ctx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
+          <div class="ctx" id="hostCtx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
-          <p class="sub">여섯 명의 캘린더와 알려준 사정을 반영했어요.</p>
+          <p class="sub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
 
           <div class="content">
             <div class="times" id="times" role="radiogroup" aria-label="추천 시간"></div>
@@ -839,7 +849,7 @@
       const done=hostState==="confirmed";
       const c=document.createElement("button");
       c.className="req-card"+(done?" submitted":""); c.type="button";
-      c.innerHTML='<span class="req-title">스프린트 회고 · 30분</span>'+
+      c.innerHTML='<span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
         '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · 다섯 명 중 세 명이 답했어요")+'</span>'+
         '<span class="req-cta">'+(done?"확정 내용 보기":"현황 보기")+'</span>';
       c.addEventListener("click",()=>goStep(done?"hostDone":"host"));
@@ -992,46 +1002,27 @@
   PEOPLE.forEach(addPersonRow);
   updateHostCta();
 
-  // 다른 팀에서 초대하기 (사내 검색)
-  const DIRECTORY=[
-    {name:"지연", role:"프로덕트 오너 · 홈팀"},
-    {name:"라온", role:"iOS 개발자 · 송금팀"},
-    {name:"세인", role:"서버 개발자 · 정산팀"},
-    {name:"무진", role:"데이터 분석가 · 증권팀"},
-    {name:"윤",   role:"프로덕트 디자이너 · 카드팀"},
-  ];
-  const inviteBox=document.getElementById("inviteBox"), inviteInput=document.getElementById("inviteInput"),
-        inviteResults=document.getElementById("inviteResults");
-  function renderInvite(q){
-    inviteResults.replaceChildren();
-    const list=DIRECTORY
-      .filter(d=>!PEOPLE.some(p=>p.name===d.name))
-      .filter(d=>!q || d.name.includes(q) || d.role.includes(q));
-    if(!list.length){
-      const p=document.createElement("p"); p.className="invite-empty";
-      p.textContent=q?"검색 결과가 없어요":"모두 이미 초대했어요";
-      inviteResults.appendChild(p); return;
-    }
-    list.forEach(d=>{
-      const b=document.createElement("button"); b.className="invite-row"; b.type="button";
-      b.innerHTML='<span class="p-info"><span class="p-name">'+d.name+'</span><span class="p-role">'+d.role+'</span></span>'+
-        '<span class="invite-add">추가</span>';
-      b.addEventListener("click",()=>{
-        const np={name:d.name, role:d.role, req:false, included:true};
-        PEOPLE.push(np); addPersonRow(np); updateHostCta();
-        inviteInput.value=""; renderInvite("");
-      });
-      inviteResults.appendChild(b);
-    });
-  }
+  // 다른 팀 초대: 아직 미지원 — 현재 가능한 범위 안내
   document.getElementById("inviteBtn").addEventListener("click",()=>{
-    inviteBox.hidden=!inviteBox.hidden;
-    if(!inviteBox.hidden){ renderInvite(""); inviteInput.focus(); }
+    document.getElementById("inviteNote").classList.add("show");
   });
-  inviteInput.addEventListener("input",()=>renderInvite(inviteInput.value.trim()));
+
+  // 회의 정보
+  const meet={name:"스프린트 회고", dur:"30분", span:"다음 주"};
+  function bindPick(id, values, key){
+    const btns=[...document.querySelectorAll("#"+id+" button")];
+    btns.forEach((b,i)=>b.addEventListener("click",()=>{
+      btns.forEach(x=>x.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true"); meet[key]=values[i];
+    }));
+  }
+  bindPick("durPick",["30분","1시간"],"dur");
+  bindPick("spanPick",["이번 주","다음 주"],"span");
   let hostState="none", hostPickedLabel=""; // none → collecting → confirmed
   hostSendBtn.addEventListener("click",()=>{
     const n=includedCount();
+    meet.name=document.getElementById("meetName").value.trim()||"새 회의";
+    document.getElementById("hostCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span+" 중";
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     hostState="collecting"; goStep("hostSent");
   });
@@ -1060,7 +1051,7 @@
     document.getElementById("hostDoneSub").innerHTML=hostPickedLabel+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
     goStep("hostDone");
     const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림
-    setTimeout(()=>{ chime(); setNotif2("회의 시간이 정해졌어요","스프린트 회고 · "+hostPickedLabel, null); }, first?900:650);
+    setTimeout(()=>{ chime(); setNotif2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel, null); }, first?900:650);
   });
   document.getElementById("hostAgain").addEventListener("click",()=>goStep("host"));
 
