@@ -241,6 +241,14 @@
   }
   .req-card.submitted .req-kind{ color:var(--ink-3); }
   .req-card.submitted .req-cta{ background:var(--surface); color:var(--ink-2); }
+  .add-meet{
+    display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    border:0; font:inherit; font-size:14px; font-weight:600; color:var(--ink-3); cursor:pointer;
+    background:var(--surface-2); border-radius:16px; padding:18px; min-height:56px;
+    transition-property:background-color,color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
+  }
+  .add-meet:active{ scale:.98; background:var(--surface); }
+  .add-meet:hover{ color:var(--ink-2); }
 
   /* 주최자: 참석자 지정 */
   .people{ display:flex; flex-direction:column; }
@@ -381,12 +389,22 @@
           <h1 class="title" id="homeTitle">확인할 요청이<br>있어요</h1>
           <p class="sub" id="homeSub">잊지 않게 여기 두었어요.</p>
 
-          <div class="content" id="reqList" style="gap:12px;"></div>
+          <div class="content" style="gap:12px;">
+            <div class="sec-label">답할 요청</div>
+            <div id="reqList" style="display:flex;flex-direction:column;gap:12px;"></div>
+            <div class="sec-label" style="margin-top:16px;">내가 잡는 회의</div>
+            <div id="myList" style="display:flex;flex-direction:column;gap:12px;"></div>
+          </div>
         </section>
 
         <!-- HOST · 요청 만들기 (판단만: 누구 + 무게) -->
         <section class="step" id="stepHostCreate">
-          <div class="ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
+          <div class="nav">
+            <button class="back" id="hostBack" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="ctx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
           <h1 class="title">누구와 함께하는<br>회의인가요?</h1>
           <p class="sub">꼭 와야 하는 사람만 필수로 정해 주세요.<br>시간 후보는 정하지 않아도 돼요 — 사정을 모아 찾아드려요.</p>
 
@@ -413,9 +431,9 @@
           </div>
         </section>
 
-        <!-- HOST · 주최자(지연) 결과 -->
+        <!-- HOST · 주최자 결과 -->
         <section class="step" id="stepHost">
-          <div class="ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
+          <div class="ctx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
           <p class="sub">여섯 명의 캘린더와 알려준 사정을 반영했어요.</p>
 
@@ -641,6 +659,26 @@
       c.addEventListener("click",()=>openReq(id));
       reqList.appendChild(c);
     });
+
+    // 내가 잡는 회의
+    const myList=document.getElementById("myList");
+    myList.replaceChildren();
+    if(hostState==="none"){
+      const a=document.createElement("button"); a.className="add-meet"; a.type="button";
+      a.textContent="+ 새 회의 잡기";
+      a.addEventListener("click",()=>goStep("hostCreate"));
+      myList.appendChild(a);
+    }else{
+      const done=hostState==="confirmed";
+      const c=document.createElement("button");
+      c.className="req-card"+(done?" submitted":""); c.type="button";
+      c.innerHTML='<span class="req-kind">내가 잡는 회의</span>'+
+        '<span class="req-title">스프린트 회고 · 30분</span>'+
+        '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · 다섯 명 중 세 명이 답했어요")+'</span>'+
+        '<span class="req-cta">'+(done?"확정 내용 보기":"현황 보기")+'</span>';
+      c.addEventListener("click",()=>goStep(done?"hostDone":"host"));
+      myList.appendChild(c);
+    }
   }
 
   submit.addEventListener("click",()=>{ saveLive(); store[currentReq].submitted=true; goStep("done"); });
@@ -666,8 +704,10 @@
     btns[1].addEventListener("click",()=>{ p.req=false; renderPick(); });
     renderPick(); people.appendChild(row);
   });
-  document.getElementById("hostSend").addEventListener("click",()=>goStep("hostSent"));
+  let hostState="none", hostPickedLabel=""; // none → collecting → confirmed
+  document.getElementById("hostSend").addEventListener("click",()=>{ hostState="collecting"; goStep("hostSent"); });
   document.getElementById("hostPreview").addEventListener("click",()=>goStep("host"));
+  document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit"); });
 
   /* ================= 주최자(지연) 결과 ================= */
   const HOST_TIMES=[
@@ -686,7 +726,8 @@
   function renderTimes(){ [...times.children].forEach((c,i)=>c.setAttribute("aria-checked", i===hostPick?"true":"false")); }
   renderTimes();
   document.getElementById("hostConfirm").addEventListener("click",()=>{
-    document.getElementById("hostDoneSub").innerHTML=HOST_TIMES[hostPick].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
+    hostState="confirmed"; hostPickedLabel=HOST_TIMES[hostPick].t;
+    document.getElementById("hostDoneSub").innerHTML=hostPickedLabel+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
     goStep("hostDone");
   });
   document.getElementById("hostAgain").addEventListener("click",()=>goStep("host"));
