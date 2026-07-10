@@ -316,6 +316,30 @@
   .person.excluded .p-name{ text-decoration:line-through; text-decoration-color:var(--ink-4); }
   .person.excluded .pick{ opacity:.35; pointer-events:none; }
   .person.excluded .p-minus{ background:var(--blue-weak); color:#1B64DA; }
+  .invite-btn{
+    background:none; border:0; font:inherit; font-size:14px; font-weight:600; color:var(--blue);
+    padding:10px 0; min-height:44px; text-align:left; cursor:pointer;
+    transition:color .18s var(--ease);
+  }
+  .invite-btn:hover{ color:var(--blue-press); }
+  .invite-box{ display:flex; flex-direction:column; gap:6px; }
+  .invite-box[hidden]{ display:none; }
+  .invite-input{
+    border:0; background:var(--surface-2); border-radius:12px; padding:13px 14px;
+    font:inherit; font-size:14px; color:var(--ink); outline:none; width:100%;
+    transition:box-shadow .18s var(--ease);
+  }
+  .invite-input:focus{ box-shadow:inset 0 0 0 2px var(--blue-weak); }
+  .invite-input::placeholder{ color:var(--ink-4); }
+  .invite-row{
+    display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%;
+    border:0; background:none; font:inherit; text-align:left; cursor:pointer;
+    padding:9px 6px; border-radius:10px; min-height:48px;
+    transition:background-color .16s var(--ease);
+  }
+  .invite-row:active{ background:var(--surface-2); }
+  .invite-add{ color:var(--blue); font-size:13px; font-weight:600; flex:none; }
+  .invite-empty{ font-size:13px; color:var(--ink-4); padding:8px 6px; margin:0; }
 
   /* 주최자: 추천 시간 카드 */
   .times{ display:flex; flex-direction:column; gap:10px; }
@@ -461,6 +485,11 @@
 
           <div class="content">
             <div class="people" id="people"></div>
+            <button class="invite-btn" id="inviteBtn">＋ 다른 팀에서 초대하기</button>
+            <div class="invite-box" id="inviteBox" hidden>
+              <input class="invite-input" id="inviteInput" type="text" placeholder="이름이나 팀으로 검색" autocomplete="off" />
+              <div class="invite-results" id="inviteResults"></div>
+            </div>
           </div>
 
           <div class="foot">
@@ -918,8 +947,8 @@
     hostSendBtn.disabled=n===0;
     hostSendBtn.style.opacity=n===0?".5":"";
   }
-  PEOPLE.forEach(p=>{
-    p.included=true;
+  function addPersonRow(p){
+    if(p.included===undefined) p.included=true;
     const row=document.createElement("div"); row.className="person";
     row.innerHTML='<div class="p-info"><span class="p-name">'+p.name+'</span><span class="p-role">'+p.role+'</span></div>'+
       '<div class="p-right"><div class="pick"><button type="button">필수</button><button type="button">선택</button></div>'+
@@ -936,8 +965,47 @@
       updateHostCta();
     });
     renderPick(); people.appendChild(row);
-  });
+  }
+  PEOPLE.forEach(addPersonRow);
   updateHostCta();
+
+  // 다른 팀에서 초대하기 (사내 검색)
+  const DIRECTORY=[
+    {name:"지연", role:"프로덕트 오너 · 홈팀"},
+    {name:"라온", role:"iOS 개발자 · 송금팀"},
+    {name:"세인", role:"서버 개발자 · 정산팀"},
+    {name:"무진", role:"데이터 분석가 · 증권팀"},
+    {name:"윤",   role:"프로덕트 디자이너 · 카드팀"},
+  ];
+  const inviteBox=document.getElementById("inviteBox"), inviteInput=document.getElementById("inviteInput"),
+        inviteResults=document.getElementById("inviteResults");
+  function renderInvite(q){
+    inviteResults.replaceChildren();
+    const list=DIRECTORY
+      .filter(d=>!PEOPLE.some(p=>p.name===d.name))
+      .filter(d=>!q || d.name.includes(q) || d.role.includes(q));
+    if(!list.length){
+      const p=document.createElement("p"); p.className="invite-empty";
+      p.textContent=q?"검색 결과가 없어요":"모두 이미 초대했어요";
+      inviteResults.appendChild(p); return;
+    }
+    list.forEach(d=>{
+      const b=document.createElement("button"); b.className="invite-row"; b.type="button";
+      b.innerHTML='<span class="p-info"><span class="p-name">'+d.name+'</span><span class="p-role">'+d.role+'</span></span>'+
+        '<span class="invite-add">추가</span>';
+      b.addEventListener("click",()=>{
+        const np={name:d.name, role:d.role, req:false, included:true};
+        PEOPLE.push(np); addPersonRow(np); updateHostCta();
+        inviteInput.value=""; renderInvite("");
+      });
+      inviteResults.appendChild(b);
+    });
+  }
+  document.getElementById("inviteBtn").addEventListener("click",()=>{
+    inviteBox.hidden=!inviteBox.hidden;
+    if(!inviteBox.hidden){ renderInvite(""); inviteInput.focus(); }
+  });
+  inviteInput.addEventListener("input",()=>renderInvite(inviteInput.value.trim()));
   let hostState="none", hostPickedLabel=""; // none → collecting → confirmed
   hostSendBtn.addEventListener("click",()=>{
     const n=includedCount();
