@@ -1456,7 +1456,7 @@
     weekly:{  name:"홈팀 위클리",      dur:"30분",  durH:0.5, total:3, who:"김지수님", optional:true,
       people:[{name:"장은솔",req:false},{name:"이수아",req:true},{name:"박민수",req:true}] },
   };
-  const TEAM_ROLE={ "장은솔":"프로덕트 디자이너", "김지수":"프로덕트 오너", "이수아":"프로덕트 디자이너", "박민수":"프론트엔드 개발자", "최분석":"데이터 분석가" };
+  const TEAM_ROLE={ "장은솔":"프로덕트 디자이너", "김지수":"프로덕트 오너", "이수아":"프로덕트 디자이너", "박민수":"프론트엔드 개발자", "한도윤":"서버 개발자", "최분석":"데이터 분석가" };
   const titleOf=r=>r.name+" · "+r.dur;
   const ctxOf=r=>"<b>"+titleOf(r)+"</b> · "+(r.span||"다음 주 중");
   const allOf=r=>(KO_N[r.total+1]||r.total+1)+" 명"; // 주최자 포함 전체 인원
@@ -2215,10 +2215,11 @@
   document.getElementById("s2DoneClose").addEventListener("click",()=>s2Go("home","back"));
 
   /* ================= 주최자: 요청 만들기 ================= */
-  const PEOPLE=[ // 팀 5명 — 본인 제외 4명, 상대 디바이스의 주인이 맨 위
+  const PEOPLE=[ // 팀 6명(과제 원문 "6명이 회의") — 본인 제외 5명, 상대 디바이스의 주인(김지수)이 맨 위
     {name:"김지수", role:"프로덕트 오너", req:true, locked:true}, // 오너는 제외 불가
     {name:"이수아", role:"프로덕트 디자이너", req:true},
     {name:"박민수", role:"프론트엔드 개발자", req:true},
+    {name:"한도윤", role:"서버 개발자", req:true},
     {name:"최분석", role:"데이터 분석가", req:false},
   ];
   const people=document.getElementById("people");
@@ -2456,10 +2457,11 @@
   });
 
   /* ================= 지수: 새 회의 만들기 — 요청이 은솔 폰에 도착한다 ================= */
-  const S2PEOPLE=[ // 팀 5명 — 본인 제외 4명, 상대 디바이스의 주인이 맨 위
+  const S2PEOPLE=[ // 팀 6명(과제 원문 "6명이 회의") — 본인 제외 5명, 상대 디바이스의 주인(장은솔)이 맨 위
     {name:"장은솔", role:"프로덕트 디자이너", req:true},
     {name:"이수아", role:"프로덕트 디자이너", req:true},
     {name:"박민수", role:"프론트엔드 개발자", req:true},
+    {name:"한도윤", role:"서버 개발자", req:true},
     {name:"최분석", role:"데이터 분석가", req:false},
   ];
   const s2Meet={dur:"30분", durMin:30, span:SPAN_DEFAULT, spanS:PRESETS[1].s, spanE:PRESETS[1].e};
