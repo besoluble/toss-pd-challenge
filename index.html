@@ -847,18 +847,7 @@
             <div id="s2ReqList" style="display:none;flex-direction:column;gap:12px;">
               <p class="empty-hint">지금은 답할 요청이 없어요.</p>
             </div>
-            <div id="s2MyList" style="display:flex;flex-direction:column;gap:12px;">
-              <button class="req-card" id="s2Card" type="button">
-                <span class="req-top"><span class="req-title">신규 기능 킥오프 · 1시간</span></span>
-                <span class="req-meta" id="s2Meta">다섯 명 중 네 명이 사정을 알려줬어요</span>
-                <span class="req-cta" id="s2Cta">살짝 재촉하기</span>
-              </button>
-              <button class="req-card" id="s2Weekly" type="button" hidden>
-                <span class="req-top"><span class="req-title">홈팀 위클리 · 30분</span></span>
-                <span class="req-meta" id="s2WeeklyMeta">✓ 네 명 모두 사정을 알려줬어요</span>
-                <span class="req-cta" id="s2WeeklyCta">추천 시간 보러 가기</span>
-              </button>
-            </div>
+            <div id="s2MyList" style="display:flex;flex-direction:column;gap:12px;"></div>
           </div>
         </section>
 
@@ -926,6 +915,7 @@
   const STEPS = [
     {label:"편해요"}, {label:"살짝 피하고 싶어요"}, {label:"웬만하면 피하고 싶어요"}, {label:"안 돼요"},
   ];
+  const KO_N=["영","한","두","세","네","다섯","여섯","일곱"];
   function makeSlider(initial, onChange, label){
     const el = document.createElement("div");
     el.className = "slider";
@@ -1061,17 +1051,38 @@
 
   document.getElementById("next1").addEventListener("click",()=>goStep(2,"fwd"));
   document.getElementById("back2").addEventListener("click",()=>goStep(1,"back"));
-  /* ================= 요청 2건 (세션 내 상태 유지) ================= */
+  /* ================= 요청 시스템 (확정 → 다음 요청이 열리는 루프) ================= */
+  // total = 응답자 수(나 포함), 수집 중 표시는 total-1명 답한 상태에서 내가 마지막
   const REQS={
-    kickoff:{ title:"신규 기능 킥오프 · 1시간", who:"지수님", optional:false,
-              ctx:"<b>신규 기능 킥오프 · 1시간</b> · 다음 주 중" },
-    weekly:{  title:"홈팀 위클리 · 30분", who:"지수님", optional:true,
-              ctx:"<b>홈팀 위클리 · 30분</b> · 다음 주 중" },
+    kickoff:{ name:"신규 기능 킥오프", dur:"1시간", durH:1,  total:5, who:"지수님", optional:false },
+    weekly:{  name:"홈팀 위클리",      dur:"30분",  durH:0.5, total:4, who:"지수님", optional:true },
   };
+  const MEET_POOL=[ // 확정할 때마다 하나씩 도착하는 다음 요청들
+    {name:"디자인 크리틱",        dur:"1시간", durH:1,  total:4, optional:false},
+    {name:"스프린트 플래닝",      dur:"1시간", durH:1,  total:5, optional:false},
+    {name:"유저 인터뷰 디브리프", dur:"30분",  durH:0.5, total:3, optional:true},
+    {name:"디자인 QA",           dur:"30분",  durH:0.5, total:4, optional:false},
+    {name:"분기 로드맵 리뷰",     dur:"1시간", durH:1,  total:5, optional:false},
+    {name:"온보딩 개선 킥오프",   dur:"1시간", durH:1,  total:4, optional:true},
+    {name:"랜딩 카피 워크숍",     dur:"30분",  durH:0.5, total:3, optional:false},
+    {name:"실험 결과 공유",       dur:"30분",  durH:0.5, total:5, optional:true},
+    {name:"접근성 점검 회의",     dur:"1시간", durH:1,  total:4, optional:false},
+    {name:"하반기 목표 얼라인",   dur:"1시간", durH:1,  total:5, optional:false},
+  ];
+  let poolIdx=0;
+  const titleOf=r=>r.name+" · "+r.dur;
+  const ctxOf=r=>"<b>"+titleOf(r)+"</b> · 다음 주 중";
+  const allOf=r=>(KO_N[r.total+1]||r.total+1)+" 명"; // 주최자 포함 전체 인원
   const emptyDays=()=>{const o={};DAYS.forEach(d=>o[d]=0);return o;};
-  const store={ kickoff:{time:[0,0,0],days:emptyDays(),submitted:false},
-                weekly:{time:[0,0,0],days:emptyDays(),submitted:false} };
+  const emptyStore=()=>({time:[0,0,0],days:emptyDays(),submitted:false,confirmedAt:null});
+  const store={ kickoff:emptyStore(), weekly:emptyStore() };
   let currentReq="kickoff";
+  function spawnNext(){ // 확정 → 풀에서 다음 요청 도착 (풀 소진 시 조용히 0으로 수렴)
+    if(poolIdx>=MEET_POOL.length) return;
+    const p=MEET_POOL[poolIdx++], id="m"+poolIdx;
+    REQS[id]={...p, who:"지수님"};
+    store[id]=emptyStore();
+  }
 
   const homeTitle=document.getElementById("homeTitle"),
         reqList=document.getElementById("reqList"), ctx1=document.getElementById("ctx1");
@@ -1086,13 +1097,13 @@
     editorHint.textContent=DAYS.some(d=>s.days[d]>0)?"요일을 누르면 다시 고칠 수 있어요":"불편한 요일이 있으면 눌러 주세요";
     editor.replaceChildren(editorHint);
     document.body.dataset.persona=r.optional?"optional":"required";
-    ctx1.innerHTML=r.ctx;
+    ctx1.innerHTML=ctxOf(r);
     updateCTA(); goStep(1,"fwd"); // 홈 → 요청 상세: 앞으로
   }
 
   let homeTab="req";
   function renderHome(){
-    const ids=Object.keys(REQS);
+    const ids=Object.keys(REQS).filter(id=>!store[id].confirmedAt); // 확정된 요청은 리스트를 떠난다(캘린더·알림함에 삶)
     const pending=ids.filter(id=>!store[id].submitted).length;
     const myCount=hostState==="none"?0:1;
 
@@ -1106,17 +1117,23 @@
 
     // 타이틀
     if(homeTab==="req"){
-      homeTitle.innerHTML=pending?"확인할 요청이<br>있어요":"모두 답했어요,<br>잘 반영될 거예요";
+      homeTitle.innerHTML=pending?"확인할 요청이<br>있어요"
+        : ids.length?"모두 답했어요,<br>잘 반영될 거예요":"정할 일이<br>없어요";
     }else{
       homeTitle.innerHTML=hostState==="none"?"잡고 있는 회의가<br>없어요":hostState==="collecting"?"사정을 모으고<br>있어요":"회의가<br>잡혔어요!";
     }
 
     reqList.replaceChildren();
+    if(!ids.length){
+      const p=document.createElement("p"); p.className="empty-hint";
+      p.textContent="새 요청이 오면 여기에 담아둘게요.";
+      reqList.appendChild(p);
+    }
     ids.forEach(id=>{
       const r=REQS[id], done=store[id].submitted;
       const c=document.createElement("button");
       c.className="req-card"+(done?" submitted":""); c.type="button";
-      c.innerHTML='<span class="req-top"><span class="req-title">'+r.title+'</span>'+
+      c.innerHTML='<span class="req-top"><span class="req-title">'+titleOf(r)+'</span>'+
         '<span class="req-tag '+(r.optional?'opt':'req')+'">'+(r.optional?'선택 참석':'필수 참석')+'</span></span>'+
         '<span class="req-meta">'+(done?"✓ 사정을 알려드렸어요 · 다음 주 중":"다음 주 중 · "+r.who+"이 물어봤어요")+'</span>'+
         '<span class="req-cta">'+(done?"다시 고치기":"불편한 시간 알려주기")+'</span>';
@@ -1182,15 +1199,14 @@
       const d=document.createElement("div"); d.className="noti-item";
       d.innerHTML="<b>"+n.t+(n.fresh?'<i class="n-dot"></i>':"")+"</b><span>"+n.b+"</span>";
       d.addEventListener("click",()=>{
-        if(n.t.includes("기다리고")){ openReq("kickoff"); return; }           // 재촉 → 바로 답하러
-        const focus = n.t==="신규 기능 킥오프"?"kickoff" : n.t==="홈팀 위클리"?"weekly" : "review";
-        openCalView("noti", focus);                                           // 확정 → 캘린더에서 확인
+        if(n.x && n.x.req){ openReq(n.x.req); return; }        // 재촉 → 바로 답하러
+        openCalView("noti", (n.x && n.x.cal) || "review");     // 확정 → 캘린더에서 확인
       });
       notiList.appendChild(d);
     });
   }
-  function pushNoti(t,b){
-    notis.unshift({t,b,fresh:true}); unread++; renderNoti();
+  function pushNoti(t,b,x){ // x: {cal:id} 확정→캘린더 포커스 | {req:id} 재촉→답하러
+    notis.unshift({t,b,x,fresh:true}); unread++; renderNoti();
     if(curStep==="noti"){ unread=0; bellDot.hidden=true; } // 보고 있는 중 도착 → 바로 읽음
   }
 
@@ -1207,12 +1223,15 @@
     {d:4,s:10,  e:10.5,t:"데일리 스탠드업"},
     {d:4,s:16,  e:17,  t:"주간 공유회"},
   ];
-  const TIME_COORD={ // 추천 시간 문자열 → [요일, 시작시각]
-    "목요일 오전 10:00":[3,10], "수요일 오후 3:00":[2,15], "금요일 오후 1:00":[4,13],
-    "수요일 오전 9:00":[2,9], "화요일 오후 5:30":[1,17.5],
-    "화요일 오전 10:00":[1,10], "월요일 오후 3:00":[0,15],
-  };
-  let kickoffConfirmedAt=null, calFrom="exit";
+  // 슬롯 시스템: 라벨 ↔ 좌표, 후보는 '실제로 비어 있는' 칸에서만 나온다
+  const DAY_KO=["월","화","수","목","금"];
+  const SLOT_MAP={}; const MASTER=[];
+  for(let d=0; d<5; d++) for(const h of [9,10,11,13,14,15,16,17]){
+    const label=DAY_KO[d]+"요일 "+(h<12?"오전 "+h:"오후 "+(h-12))+":00";
+    SLOT_MAP[label]={d,h};
+    MASTER.push({t:label, d, h, day:DAY_KO[d], slot: h===9?0 : h===13?1 : h>=17?2 : null});
+  }
+  let calFrom="exit";
   const NEXT_MON=new Date(2026,6,13);
   const mondayOf=d=>{ const m=new Date(d); m.setDate(m.getDate()-((m.getDay()+6)%7)); m.setHours(0,0,0,0); return m; };
   function buildCalView(focus){
@@ -1241,17 +1260,16 @@
     body.appendChild(gut);
     const events=MY_EVENTS.map(e=>({...e,kind:"busy"}));
     events.push({d:1,s:11,e:12,t:"디자인 시스템 리뷰",kind:"fixed",key:"review"});
-    if(kickoffConfirmedAt && TIME_COORD[kickoffConfirmedAt]){
-      const [d,s]=TIME_COORD[kickoffConfirmedAt];
-      events.push({d,s,e:s+1,t:"신규 기능 킥오프",kind:"fixed",key:"kickoff"});
-    }
-    if(weeklyConfirmedAt && TIME_COORD[weeklyConfirmedAt]){
-      const [d,s]=TIME_COORD[weeklyConfirmedAt];
-      events.push({d,s,e:s+0.5,t:"홈팀 위클리",kind:"fixed",key:"weekly"});
-    }
-    if(hostState==="confirmed" && TIME_COORD[hostPickedLabel]){
-      const [d,s]=TIME_COORD[hostPickedLabel];
-      events.push({d,s,e:s+durMin/60,t:meet.name,kind:"fixed",key:"mymeet"});
+    Object.keys(REQS).forEach(id=>{ // 확정된 요청들 전부 캘린더에 산다
+      const ca=store[id].confirmedAt;
+      if(ca && SLOT_MAP[ca]){
+        const {d,h}=SLOT_MAP[ca];
+        events.push({d,s:h,e:h+REQS[id].durH,t:REQS[id].name,kind:"fixed",key:id});
+      }
+    });
+    if(hostState==="confirmed" && SLOT_MAP[hostPickedLabel]){
+      const {d,h}=SLOT_MAP[hostPickedLabel];
+      events.push({d,s:h,e:h+durMin/60,t:meet.name,kind:"fixed",key:"mymeet"});
     }
     for(let d=0; d<5; d++){
       const col=document.createElement("div"); col.className="cv-col";
@@ -1285,31 +1303,23 @@
 
   submit.addEventListener("click",()=>{
     saveLive(); store[currentReq].submitted=true;
-    if(currentReq==="kickoff") assignRoles(false); // 역할 고정은 킥오프(메인 서사)만 — weekly는 라벨 반전 방지 위해 제외
+    assignRoles(false); // 첫 완료가 역할을 정의
     goStep("done");
-    if(currentReq==="kickoff") setTimeout(showDevice2, 800); // 내가 마지막 응답자 → 주최자에게 띠롱
-    else if(currentReq==="weekly") setTimeout(showWeeklyArrived, 800); // 선택 참석 응답도 주최자 폰에 도착
+    const id=currentReq;
+    if(!store[id].confirmedAt) setTimeout(()=>showAllCollected(id), 800); // 내가 마지막 응답자 → 주최자에게 띠롱
   });
 
-  function showWeeklyArrived(){
-    const card=document.getElementById("s2Weekly");
-    if(!card.hidden) return; // 재제출 중복 방지
+  function showAllCollected(id){ // 모든 지수 주최 회의 공통: 마지막 사정 도착
+    if(store[id].confirmedAt) return;
     const first=revealDevice2();
-    card.hidden=false; weeklyReady=true;
-    document.getElementById("s2BadgeMy").textContent="2";
-    document.getElementById("s2BadgeMy").classList.add("hot");
-    if(!dev2Confirmed) setS2MyTitle("이제 시간을<br>정할 수 있어요");
-    setS2Tab("my");
+    renderS2My(); setS2Tab("my");
     setTimeout(()=>{
       chime();
-      pushNoti2("모두의 사정이 모였어요","홈팀 위클리 · 이제 시간을 정할 수 있어요");
-      setNotif2("모두의 사정이 모였어요","홈팀 위클리 · 이제 시간을 정할 수 있어요",()=>openS2Results("weekly"));
+      const r=REQS[id];
+      pushNoti2("모두의 사정이 모였어요", r.name+" · 이제 시간을 정할 수 있어요");
+      setNotif2("모두의 사정이 모였어요", r.name+" · 이제 시간을 정할 수 있어요", ()=>openS2Results(id));
     }, first?650:200);
   }
-  document.getElementById("s2Weekly").addEventListener("click",()=>{
-    if(weeklyConfirmed) return;
-    if(weeklyReady) openS2Results("weekly");
-  });
 
   /* ================= 디바이스 2: 주최자(지수)의 폰 ================= */
   let dev2Shown=false, pick2=0;
@@ -1404,7 +1414,7 @@
   }
   document.getElementById("s2Bell").addEventListener("click", openNoti2);
   document.getElementById("s2NotiBack").addEventListener("click",()=>s2Go("home","back"));
-  renderNoti2List();
+  renderNoti2List(); renderS2My();
 
   function chime(){ // 띠롱
     try{
@@ -1420,28 +1430,28 @@
     }catch(e){}
   }
 
-  // 방금 참석자가 흘린 사정(시간대+요일)이 주최자 화면 후보·근거에 그대로 반영되게 — 회의별 파라미터화
+  // 방금 참석자가 흘린 사정(시간대+요일)이 후보·근거에 그대로 반영되고,
+  // 후보는 캘린더·기확정 회의와 겹치지 않는 '진짜 빈 칸'에서만 나온다
   function buildTimes2(reqId, allWord){
-    const s=store[reqId];
+    const s=store[reqId], me=REQS[reqId];
     const SLOT_NAME={0:"이른 아침",1:"점심 직후",2:"늦은 오후"};
     const SLOT_OBJ ={0:"을",1:"를",2:"를"}, SLOT_TOP={0:"은",1:"는",2:"는"};
-    const CANDS=[ // 후보 풀 — 사용자가 요일을 막으면 대체 후보가 올라온다
-      {t:"목요일 오전 10:00", d:"목", slot:null},
-      {t:"수요일 오후 3:00",  d:"수", slot:null},
-      {t:"화요일 오전 10:00", d:"화", slot:null},
-      {t:"월요일 오후 3:00",  d:"월", slot:null},
-      {t:"금요일 오후 1:00",  d:"금", slot:1},
-      {t:"수요일 오전 9:00",  d:"수", slot:0},
-      {t:"화요일 오후 5:30",  d:"화", slot:2},
-    ];
-    const scored=CANDS.map(c=>{
-      const dp=s.days[c.d]||0, tp=c.slot==null?0:(s.time[c.slot]||0);
+    const taken=[{d:1,h:11,durH:1}]; // 디자인 시스템 리뷰(기확정)
+    Object.keys(REQS).forEach(x=>{
+      const ca=store[x].confirmedAt;
+      if(x!==reqId && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:REQS[x].durH});
+    });
+    const conflict=c=>
+      MY_EVENTS.some(e=>e.d===c.d && c.h<e.e && c.h+me.durH>e.s) ||
+      taken.some(e=>e.d===c.d && c.h<e.h+e.durH && c.h+me.durH>e.h);
+    const scored=MASTER.filter(c=>!conflict(c) && c.h+me.durH<=18).map(c=>{
+      const dp=s.days[c.day]||0, tp=c.slot==null?0:(s.time[c.slot]||0);
       const p=Math.max(dp,tp);
       const src = dp>=tp
-        ? {name:c.d+"요일", obj:"을", top:"은", v:dp}
+        ? {name:c.day+"요일", obj:"을", top:"은", v:dp}
         : {name:SLOT_NAME[c.slot], obj:SLOT_OBJ[c.slot], top:SLOT_TOP[c.slot], v:tp};
       return {...c, p, src};
-    }).sort((a,b)=>a.p-b.p);
+    }).sort((a,b)=> a.p-b.p || (Math.abs(a.h-10)-Math.abs(b.h-10)) || a.d-b.d); // 동률이면 오전 10시 근처·이른 요일 선호
     const why=(c,i)=>{
       if(c.p===0) return i===0?allWord+" 모두 편한 시간이에요":"필수 참석자는 모두 편한 시간이에요";
       if(c.p===3) return "한 명이 "+c.src.name+c.src.top+" 안 된다고 했어요";
@@ -1488,19 +1498,51 @@
     document.getElementById("devLabel1").textContent=firstIsHost?"주최자":"참석자";
     document.getElementById("devLabel2").textContent=firstIsHost?"참석자":"주최자";
   }
-  let s2Ready=false, poked=false;
-  let weeklyReady=false, weeklyConfirmed=false, weeklyConfirmedAt=null;
   let s2ActiveMeet="kickoff"; // 결과 화면이 어떤 회의를 다루는지
-  const S2_MEET={
-    kickoff:{ name:"신규 기능 킥오프", ctx:"<b>신규 기능 킥오프 · 1시간</b> · 다음 주 중", all:"여섯 명" },
-    weekly:{  name:"홈팀 위클리",      ctx:"<b>홈팀 위클리 · 30분</b> · 다음 주 중",      all:"네 명" },
-  };
+  const pokedSet=new Set();
+
+  // 지수의 '내가 잡는 회의' — 확정 전 요청들을 상태별로 렌더 (확정되면 떠남)
+  function renderS2My(){
+    const box=document.getElementById("s2MyList"); box.replaceChildren();
+    const ids=Object.keys(REQS).filter(id=>!store[id].confirmedAt);
+    const anyReady=ids.some(id=>store[id].submitted);
+    document.getElementById("s2BadgeMy").textContent=ids.length;
+    document.getElementById("s2BadgeMy").classList.toggle("hot", anyReady);
+    setS2MyTitle(anyReady?"이제 시간을<br>정할 수 있어요"
+      : ids.length?"사정을 모으고<br>있어요":"회의가 모두<br>잡혔어요!");
+    if(!ids.length){
+      const p=document.createElement("p"); p.className="empty-hint";
+      p.textContent="잡을 회의가 생기면 여기에 보여드릴게요.";
+      box.appendChild(p); return;
+    }
+    ids.forEach(id=>{
+      const r=REQS[id], ready=store[id].submitted;
+      const c=document.createElement("button"); c.className="req-card"; c.type="button";
+      const collectingMeta=(KO_N[r.total]||r.total)+" 명 중 "+(KO_N[r.total-1]||r.total-1)+" 명이 사정을 알려줬어요";
+      c.innerHTML='<span class="req-top"><span class="req-title">'+titleOf(r)+'</span></span>'+
+        '<span class="req-meta">'+(ready?"✓ "+allOf(r)+" 모두 사정을 알려줬어요":collectingMeta)+'</span>'+
+        '<span class="req-cta">'+(ready?"추천 시간 보러 가기":(pokedSet.has(id)?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기"))+'</span>';
+      c.addEventListener("click",()=>{
+        if(store[id].confirmedAt) return;
+        if(store[id].submitted){ openS2Results(id); return; }
+        if(pokedSet.has(id)) return;
+        pokedSet.add(id); renderS2My(); // 재촉 → 참석자 폰으로
+        setTimeout(()=>{
+          chime();
+          pushNoti("지수님이 기다리고 있어요", REQS[id].name+" · 불편한 시간을 알려주세요", {req:id});
+          setNotif1("지수님이 기다리고 있어요", REQS[id].name+" · 불편한 시간을 알려주세요", ()=>openReq(id));
+        }, 450);
+      });
+      box.appendChild(c);
+    });
+  }
+
   function openS2Results(id){
     s2ActiveMeet=id;
-    const m=S2_MEET[id];
-    document.getElementById("s2Ctx").innerHTML=m.ctx;
-    document.getElementById("s2ResultsSub").textContent=m.all+"의 캘린더와 알려준 사정을 반영했어요.";
-    TIMES2=buildTimes2(id, m.all); pick2=0; renderTimes2();
+    const r=REQS[id];
+    document.getElementById("s2Ctx").innerHTML=ctxOf(r);
+    document.getElementById("s2ResultsSub").textContent=allOf(r)+"의 캘린더와 알려준 사정을 반영했어요.";
+    TIMES2=buildTimes2(id, allOf(r)); pick2=0; renderTimes2();
     notif.classList.remove("show");
     s2Go("results","fwd");
   }
@@ -1511,33 +1553,7 @@
     setWidth(wrap.offsetWidth,true); // 좁아진 공간에 맞춰 디바이스1 조정
     return true;
   }
-  function showDevice2(){ // 킥오프: 마지막 사정 도착
-    if(dev2Confirmed) return; // 확정 뒤 재제출이 지수 폰을 과거로 되돌리지 않게
-    const first=revealDevice2();
-    setTimeout(()=>{
-      chime();
-      setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>openS2Results("kickoff"));
-      pushNoti2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요");
-      s2Ready=true;
-      setS2MyTitle("이제 시간을<br>정할 수 있어요");
-      document.getElementById("s2BadgeMy").classList.add("hot");
-      document.getElementById("s2Meta").textContent="✓ 다섯 명 모두 사정을 알려줬어요";
-      document.getElementById("s2Cta").textContent="추천 시간 보러 가기";
-    }, first?650:200);
-  }
   notif.addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
-  document.getElementById("s2Card").addEventListener("click",()=>{
-    if(dev2Confirmed) return;
-    if(s2Ready){ openS2Results("kickoff"); return; }
-    if(poked) return; // 아직 안 모임 → 살짝 재촉하기
-    poked=true;
-    document.getElementById("s2Cta").textContent="재촉했어요 · 답이 오면 알려드릴게요";
-    setTimeout(()=>{
-      chime();
-      pushNoti("지수님이 기다리고 있어요","신규 기능 킥오프 · 불편한 시간을 알려주세요"); // 알림함에도 기록
-      setNotif1("지수님이 기다리고 있어요","신규 기능 킥오프 · 불편한 시간을 알려주세요",()=>openReq("kickoff"));
-    }, 450);
-  });
   document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home","back"));
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home","back"));
   const notif1=document.getElementById("notif1");
@@ -1555,32 +1571,17 @@
     }, 2000);
   }
   notif1.addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
-  let dev2Confirmed=false;
   document.getElementById("s2Confirm").addEventListener("click",()=>{
-    const t=TIMES2[pick2].t, m=S2_MEET[s2ActiveMeet];
+    const id=s2ActiveMeet, t=TIMES2[pick2].t, r=REQS[id];
+    store[id].confirmedAt=t; // 확정 — 양쪽 리스트를 떠나 캘린더·알림함에 산다
     document.getElementById("s2DoneSub").innerHTML=t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
-    pushNoti(m.name, t+"으로 확정됐어요 · 캘린더에 추가했어요"); // 참석자 알림함에 쌓임
-    if(s2ActiveMeet==="kickoff"){
-      kickoffConfirmedAt=t; dev2Confirmed=true;
-      document.getElementById("s2Meta").textContent="✓ "+t+" 확정 · 모두에게 알렸어요";
-      document.getElementById("s2Cta").style.display="none";
-      document.getElementById("s2Card").classList.add("submitted");
-    }else{
-      weeklyConfirmedAt=t; weeklyConfirmed=true;
-      document.getElementById("s2WeeklyMeta").textContent="✓ "+t+" 확정 · 모두에게 알렸어요";
-      document.getElementById("s2WeeklyCta").textContent="캘린더에 추가했어요";
-      document.getElementById("s2Weekly").classList.add("submitted");
-    }
-    // 남은 결정이 없으면 뱃지·타이틀 정리
-    const pendingLeft=(s2Ready&&!dev2Confirmed)||(weeklyReady&&!weeklyConfirmed);
-    if(!pendingLeft){
-      setS2MyTitle("회의가<br>잡혔어요!");
-      document.getElementById("s2BadgeMy").classList.remove("hot");
-    }
+    pushNoti(r.name, t+"으로 확정됐어요 · 캘린더에 추가했어요", {cal:id}); // 참석자 알림함에 기록
+    spawnNext();       // 확정이 다음 요청을 낳는다 (풀 소진 시 조용히 종료)
+    renderS2My(); renderHome();
     s2Go("done");
     setTimeout(()=>{ // 참석자에게 확정 알림 띠롱 → 일정이 '사는 곳'인 내 캘린더로
       chime();
-      setNotif1("회의 시간이 정해졌어요", m.name+" · "+t, ()=>openCalView("exit", s2ActiveMeet));
+      setNotif1("회의 시간이 정해졌어요", r.name+" · "+t, ()=>openCalView("exit", id));
     }, 650);
   });
   document.getElementById("again").addEventListener("click",()=>goStep(1,"back"));
@@ -1600,7 +1601,6 @@
   ];
   const people=document.getElementById("people");
   const hostSendBtn=document.getElementById("hostSend");
-  const KO_N=["영","한","두","세","네","다섯","여섯","일곱"];
   function includedCount(){ return PEOPLE.filter(p=>p.included!==false).length; }
   function updateHostCta(){
     const n=includedCount();
@@ -1812,7 +1812,7 @@
     timeCtl.forEach((c,i)=>{ c.slider.set(0,true); c.render(0); timeState[i]=0; });
     DAYS.forEach(d=>{ dayVals[d]=0; renderDayChip(d); dayBtns[d].setAttribute("aria-pressed","false"); });
     activeDay=null; editor.replaceChildren(editorHint);
-    store[currentReq]={time:[0,0,0],days:emptyDays(),submitted:false};
+    store[currentReq]=emptyStore();
     updateCTA(); closeExit(); renderHome(); goStep("exit","back");
   });
 
