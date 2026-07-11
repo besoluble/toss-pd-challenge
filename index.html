@@ -299,7 +299,8 @@
     transition-property:background-color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
   }
   .req-card:active{ scale:.98; background:var(--surface); }
-  .req-title{ font-size:16px; font-weight:700; color:var(--ink); }
+  .req-title{ font-size:16px; font-weight:700; color:var(--ink); min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .req-meta{ font-size:13px; color:var(--ink-3); }
   .req-cta{
     margin-top:14px; align-self:stretch; text-align:center; border:0; font:inherit; cursor:pointer;
@@ -677,7 +678,7 @@
           <div class="content" style="gap:18px;">
             <div class="form-field">
               <span class="f-label">회의 목적</span>
-              <input class="text-input" id="meetName" type="text" value="스프린트 회고" placeholder="무엇을 위한 회의인가요?" autocomplete="off" />
+              <input class="text-input" id="meetName" type="text" value="스프린트 회고" placeholder="무엇을 위한 회의인가요?" autocomplete="off" maxlength="24" />
             </div>
             <div class="form-field">
               <span class="f-label">언제쯤이면 좋아요?</span>
@@ -912,7 +913,7 @@
           <div class="content" style="gap:18px;">
             <div class="form-field">
               <span class="f-label">회의 목적</span>
-              <input class="text-input" id="s2MeetName" type="text" value="디자인 크리틱" placeholder="무엇을 위한 회의인가요?" autocomplete="off" />
+              <input class="text-input" id="s2MeetName" type="text" value="디자인 크리틱" placeholder="무엇을 위한 회의인가요?" autocomplete="off" maxlength="24" />
             </div>
             <div class="form-field">
               <span class="f-label">언제쯤이면 좋아요?</span>
