@@ -1036,11 +1036,15 @@
   const stepEls={1:document.getElementById("step1"),2:document.getElementById("step2"),done:document.getElementById("stepDone"),exit:document.getElementById("stepExit"),noti:document.getElementById("stepNoti"),cal:document.getElementById("stepCal"),
     hostCreate:document.getElementById("stepHostCreate"),hostWho:document.getElementById("stepHostWho"),hostSent:document.getElementById("stepHostSent"),host:document.getElementById("stepHost"),hostDone:document.getElementById("stepHostDone")};
   const screen=document.getElementById("screen");
-  let curStep="exit"; // 자동 진행 가드용 현재 화면 추적
+  let curStep=null; // 자동 진행 가드 + 동일 화면 재진입 가드
   function goStep(k, dir){ // dir: "fwd"(깊이 들어감) | "back"(얕아짐) | 생략(완료 = 페이드업)
+    const el=stepEls[k];
+    if(String(k)===curStep && el.classList.contains("active")){ // 같은 화면이면 애니메이션 재생 없이 정리만 (제자리 튕김 방지)
+      ["exitModal","whenModal","msgModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
+      return;
+    }
     curStep=String(k);
     Object.values(stepEls).forEach(s=>s.classList.remove("active","nav-fwd","nav-back"));
-    const el=stepEls[k];
     el.classList.add("active");
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
@@ -1177,11 +1181,17 @@
     notis.forEach(n=>{
       const d=document.createElement("div"); d.className="noti-item";
       d.innerHTML="<b>"+n.t+(n.fresh?'<i class="n-dot"></i>':"")+"</b><span>"+n.b+"</span>";
-      d.addEventListener("click",()=>openCalView("noti", n.t==="신규 기능 킥오프"?"kickoff":"review")); // 확정 일정 → 캘린더에서 확인
+      d.addEventListener("click",()=>{
+        if(n.t.includes("기다리고")) openReq("kickoff");                      // 재촉 → 바로 답하러
+        else openCalView("noti", n.t==="신규 기능 킥오프"?"kickoff":"review"); // 확정 → 캘린더에서 확인
+      });
       notiList.appendChild(d);
     });
   }
-  function pushNoti(t,b){ notis.unshift({t,b,fresh:true}); unread++; renderNoti(); }
+  function pushNoti(t,b){
+    notis.unshift({t,b,fresh:true}); unread++; renderNoti();
+    if(curStep==="noti"){ unread=0; bellDot.hidden=true; } // 보고 있는 중 도착 → 바로 읽음
+  }
 
   /* ================= 내 캘린더 (주간 뷰) ================= */
   const MY_EVENTS=[ // 캘린더에 이미 있던 일정 = 시스템이 자동으로 뺀 하드 제약
@@ -1259,6 +1269,7 @@
     else { renderHome(); goStep("exit","back"); }
   });
   function openNoti(){
+    clearTimeout(notif1Timer); notif1.classList.remove("show"); // 같은 내용 이중 노출 방지
     renderNoti(); goStep("noti","fwd");     // 홈 → 알림: 우측에서 밀려 들어옴
     notis.forEach(n=>n.fresh=false);        // 다음 방문부턴 읽음 처리
     unread=0; bellDot.hidden=true;
@@ -1324,6 +1335,7 @@
     box.appendChild(c);
   }
   function setS2Tab(tab, animate){
+    if(s2Tab===tab) animate=false; // 같은 탭이면 재생 없이 상태만 동기화
     s2Tab=tab;
     document.querySelectorAll("[data-s2tab]").forEach(x=>x.setAttribute("aria-selected", x.dataset.s2tab===s2Tab?"true":"false"));
     const req=document.getElementById("s2ReqList"), my=document.getElementById("s2MyList");
@@ -1345,9 +1357,13 @@
     t.addEventListener("click",()=>{ if(s2Tab!==t.dataset.s2tab) setS2Tab(t.dataset.s2tab, true); });
   });
   renderS2Req();
+  let s2Cur="home";
   function s2Go(k, dir){
+    const el=s2Els[k];
+    if(k===s2Cur && el.classList.contains("active")) return; // 동일 화면 재진입 튕김 방지
+    s2Cur=k;
     Object.values(s2Els).forEach(s=>s.classList.remove("active","nav-fwd","nav-back"));
-    const el=s2Els[k]; el.classList.add("active");
+    el.classList.add("active");
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
   }
@@ -1371,6 +1387,7 @@
   }
   function pushNoti2(t,b){ s2Notis.unshift({t,b,fresh:true}); s2Unread++; renderNoti2List(); }
   function openNoti2(){
+    clearTimeout(notif2Timer); notif.classList.remove("show"); // 이중 노출 방지
     renderNoti2List(); s2Go("noti","fwd");
     s2Notis.forEach(n=>n.fresh=false); s2Unread=0; s2BellDot.hidden=true;
   }
