@@ -893,7 +893,7 @@
             </div>
             <span class="cal" id="evOpt" hidden>
               <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              꼭 안 와도 괜찮은 회의예요
+              <span id="evOptText">꼭 안 와도 괜찮은 회의예요</span>
             </span>
             <button class="cta" id="evOk" style="margin-top:14px;">확인</button>
           </div>
@@ -1224,7 +1224,7 @@
             </div>
             <span class="cal" id="s2EvOpt" hidden>
               <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              꼭 안 와도 괜찮은 회의예요
+              <span id="s2EvOptText">꼭 안 와도 괜찮은 회의예요</span>
             </span>
             <button class="cta" id="s2EvOk" style="margin-top:14px;">확인</button>
           </div>
@@ -1783,21 +1783,22 @@
   }
   function meetingDetail(key, forJi){ // 파란 이벤트의 정체 — 각 디바이스의 관점으로
     const viewer=forJi?"김지수":"장은솔";
-    const pack=(title,time,hostName,invitees,opt)=>{
-      const ppl=[{name:hostName, req:true, host:true}].concat(invitees||[]);
+    const pack=(title,time,hostName,invitees,opt,declined)=>{
+      let ppl=[{name:hostName, req:true, host:true}].concat(invitees||[]);
+      if(declined) ppl=ppl.filter(x=>x.name!==viewer); // 내가 빠졌으니 참석 명단에서도 빠진다
       const rep=hostName!==viewer?hostName:(invitees[0]&&invitees[0].name)||hostName;
       return {title, time,
         host:hostName===viewer?"나":hostName+"님",
         count:rep+"님 외 "+(KO_N[ppl.length-1]||ppl.length-1)+" 명",
-        people:ppl, opt};
+        people:ppl, opt, declined};
     };
     if(key==="review") return pack("디자인 시스템 리뷰","화요일 오전 11:00 · 1시간","김지수",
       [{name:"장은솔",req:true},{name:"이수아",req:true},{name:"박민수",req:true},{name:"최분석",req:false}], false);
     if(REQS[key]){ const r=REQS[key];
-      return pack(r.name, store[key].confirmedAt+" · "+r.dur, "김지수", r.people||[], !forJi && r.optional);
+      return pack(r.name, store[key].confirmedAt+" · "+r.dur, "김지수", r.people||[], !forJi && r.optional, !forJi && store[key].declined);
     }
     if(HOSTED[key]){ const h=HOSTED[key];
-      return pack(h.name, h.confirmedAt+" · "+h.dur, "장은솔", h.people||[], forJi && !h.jiReq);
+      return pack(h.name, h.confirmedAt+" · "+h.dur, "장은솔", h.people||[], forJi && !h.jiReq, forJi && hostStore[key].declined);
     }
     return null;
   }
@@ -1807,7 +1808,8 @@
     document.getElementById(prefix+"Time").textContent=d.time;
     document.getElementById(prefix+"Host").textContent=d.host;
     document.getElementById(prefix+"Count").textContent=d.count;
-    document.getElementById(prefix+"Opt").hidden=!d.opt;
+    document.getElementById(prefix+"Opt").hidden=!(d.opt||d.declined);
+    document.getElementById(prefix+"OptText").textContent=d.declined?"이번엔 빠지기로 한 회의예요":"꼭 안 와도 괜찮은 회의예요";
     document.getElementById(prefix+"Ppl").textContent=d.people.map(x=>x.name).join(", ");
     document.getElementById(prefix+"Names").classList.remove("open"); // 항상 접힌 채로
     document.getElementById(prefix+"CountBtn").classList.remove("open");
