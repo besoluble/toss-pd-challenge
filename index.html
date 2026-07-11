@@ -64,7 +64,7 @@
   .notif.show{ transform:none; opacity:1; }
   .notif:active{ scale:.98; }
   .notif-icon{
-    flex:none; width:42px; height:42px; border-radius:11px; background:var(--blue-weak);
+    flex:none; width:42px; height:42px; border-radius:11px; background:#FFF6DE;
     display:grid; place-items:center;
   }
   .notif-icon img{ width:26px; height:26px; display:block; }
@@ -831,7 +831,7 @@
         <!-- 참석자 알림 토스트 (재촉·확정) -->
         <div class="notif" id="notif1">
           <button class="notif-main" id="notif1Main" type="button">
-            <span class="notif-icon"><img src="icons/icon_alarm_blue.svg" alt=""></span>
+            <span class="notif-icon"><img src="icons/icon_alarm_yellow.svg" alt=""></span>
             <span class="notif-body"><b id="notif1Title"></b><span id="notif1Body"></span></span>
           </button>
           <button class="notif-x" id="notif1X" type="button" aria-label="알림 닫기">
@@ -1192,7 +1192,7 @@
 
         <div class="notif" id="notif">
           <button class="notif-main" id="notif2Main" type="button">
-            <span class="notif-icon"><img src="icons/icon_alarm_blue.svg" alt=""></span>
+            <span class="notif-icon"><img src="icons/icon_alarm_yellow.svg" alt=""></span>
             <span class="notif-body"><b id="notif2Title">모두의 사정이 모였어요</b><span id="notif2Body">신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span></span>
           </button>
           <button class="notif-x" id="notif2X" type="button" aria-label="알림 닫기">
@@ -1317,9 +1317,9 @@
 
   /* ================= STEP 1 · 시간대 ================= */
   const TIME_ITEMS=[
-    {emoji:'<img class="row-ic" src="icons/icon_morning_blue.svg" alt="">',name:"이른 아침",range:"9시 이전",init:0},
-    {emoji:'<img class="row-ic" src="icons/icon_afternoon_blue.svg" alt="">',name:"점심 직후",range:"12–2시",init:0},
-    {emoji:'<img class="row-ic" src="icons/icon_night_blue.svg" alt="">',name:"늦은 오후",range:"5시 이후",init:0},
+    {emoji:'<img class="row-ic" src="icons/icon_morning_yellow.svg" alt="">',name:"이른 아침",range:"9시 이전",init:0},
+    {emoji:'<img class="row-ic" src="icons/icon_afternoon_yellow.svg" alt="">',name:"점심 직후",range:"12–2시",init:0},
+    {emoji:'<img class="row-ic" src="icons/icon_night_yellow.svg" alt="">',name:"늦은 오후",range:"5시 이후",init:0},
   ];
   const timeRows=document.getElementById("timeRows");
   const timeState=[], timeCtl=[];
