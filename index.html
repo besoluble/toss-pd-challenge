@@ -177,6 +177,14 @@
     flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none;
   }
   .content::-webkit-scrollbar{ display:none; }
+  /* 아래 내용이 더 있을 때만: 잘린 경계의 흰 페이드 — 스크롤바 없이 '이어짐'을 말한다 */
+  .content::after, .editor::after, .cv::after{
+    content:""; position:sticky; bottom:-1px; flex:none; align-self:stretch;
+    height:36px; margin-top:-36px; z-index:3; pointer-events:none;
+    background:linear-gradient(rgba(255,255,255,0), #fff 80%);
+    opacity:0; transition:opacity .25s var(--ease);
+  }
+  .content.has-more::after, .editor.has-more::after, .cv.has-more::after{ opacity:1; }
 
   /* slider rows */
   .legend-row{ display:flex; justify-content:flex-end; margin-bottom:6px; }
@@ -1270,6 +1278,7 @@
       const next=DAYS.slice(DAYS.indexOf(d)+1).find(x=>rows[x]&&rows[x].open); // 요일 순서 유지
       if(next) editorEl.insertBefore(rows[d].el, rows[next].el);
       else editorEl.appendChild(rows[d].el);
+      if(rows[d].el.scrollIntoView) rows[d].el.scrollIntoView({block:"nearest", behavior:"smooth"}); // 접힌 영역이면 스스로 나타난다
     }
     function toggle(d){
       if(rows[d]&&rows[d].open){ // 다시 누르면 끄기 (편해요로 리셋)
@@ -1314,6 +1323,7 @@
     ["exitModal","whenModal","msgModal","cancelModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
     resetMsgLinks(); // '보냈어요' 확인은 그 화면에서만
     screen.scrollTop=0;
+    refreshScrollHints();
   }
   const submit=document.getElementById("submit"), next1=document.getElementById("next1");
   function anySet(){ return timeState.some(s=>s>0)||DAYS.some(d=>dayPick.vals[d]>0); }
@@ -1796,6 +1806,7 @@
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
     ["s2WhenModal","s2CancelModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
+    refreshScrollHints();
   }
 
   // 지수의 알림함 — 기록도 목적지를 가진다
@@ -2422,6 +2433,20 @@
   });
 
   /* ================= showcase: 역할 핵심 화면 바로가기 ================= */
+  /* ================= 스크롤 힌트: 더 있을 때만 하단 페이드 ================= */
+  const scrollHintEls=[...document.querySelectorAll(".content, .editor, .cv")];
+  const updHint=el=>el.classList.toggle("has-more", el.scrollHeight - el.scrollTop - el.clientHeight > 8);
+  function refreshScrollHints(){
+    (window.requestAnimationFrame||setTimeout)(()=>scrollHintEls.forEach(updHint));
+  }
+  scrollHintEls.forEach(el=>el.addEventListener("scroll", ()=>updHint(el), {passive:true}));
+  if(typeof MutationObserver!=="undefined"){
+    const mo=new MutationObserver(refreshScrollHints);
+    scrollHintEls.forEach(el=>mo.observe(el,{childList:true,subtree:true}));
+  }
+  window.addEventListener("resize", refreshScrollHints);
+  refreshScrollHints();
+
   /* ================= showcase: 디바이스 ================= */
   const wrap=document.getElementById("wrap"), badge=document.getElementById("badge"), stage=document.querySelector(".stage");
   const wrap2=document.getElementById("wrap2"), badge2=document.getElementById("badge2");
