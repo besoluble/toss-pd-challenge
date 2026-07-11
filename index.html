@@ -154,7 +154,7 @@
 
   /* 주최자 메시지 시트 */
   .msg-area{ resize:none; min-height:96px; line-height:1.5; font-weight:400; display:block; }
-  .msg-note{ font-size:12px; color:var(--ink-3); margin:10px 0 0; line-height:1.5; }
+  .msg-note{ font-size:12px; color:var(--ink-3); margin:12px 0 0; line-height:1.5; text-align:center; }
   .foot-link.sent{ color:var(--blue); text-decoration:none; pointer-events:none; }
 
   /* 미리보기 안내 툴팁 */
@@ -798,10 +798,10 @@
           <div class="dim" id="msgDim"></div>
           <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="msgTitle">
             <h3 id="msgTitle">따로 전할 말이 있나요?</h3>
-            <p>시간 사정은 위에서 고르는 게 가장 정확하게 반영돼요.<br>그 밖의 이야기만 주최자에게 전할게요.</p>
+            <p>시간 사정은 위에서 고르는 게 가장 정확하게 반영돼요.<br>그 밖의 이야기만 이름과 함께 주최자에게 전할게요.</p>
             <textarea class="text-input msg-area" id="msgText" rows="3"
               placeholder="예) 그 주는 출장이라 원격으로만 참석할 수 있어요"></textarea>
-            <p class="msg-note">메시지는 이름과 함께 전해져요 · 보낸 뒤에도 남은 질문은 끝까지 답해 주세요</p>
+            <p class="msg-note">남은 질문은 끝까지 답해 주세요</p>
             <button class="cta" id="msgSend" style="margin-top:14px;">주최자에게 보내기</button>
           </div>
         </div>
