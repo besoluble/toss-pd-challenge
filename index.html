@@ -144,21 +144,10 @@
   body[data-persona="optional"] .opt-only{ display:inline-flex !important; }
 
   .title-2l{ min-height:2.7em; } /* 타이틀이 1줄이어도 2줄 높이 확보 → 탭·콘텐츠 위치 고정 */
-  #homeSub, #s2HomeSub{ min-height:1.55em; } /* sub 유무로 탭이 출렁이지 않게 */
 
   /* 주최자 메시지 시트 */
   .msg-area{ resize:none; min-height:96px; line-height:1.5; font-weight:400; display:block; }
-  .anon-toggle{
-    display:flex; align-items:center; gap:9px; margin-top:12px; padding:6px 0; min-height:40px;
-    background:none; border:0; font:inherit; font-size:13.5px; font-weight:500; color:var(--ink-2); cursor:pointer;
-  }
-  .anon-box{
-    width:20px; height:20px; border-radius:6px; background:var(--surface); display:grid; place-items:center;
-    transition:background-color .16s var(--ease);
-  }
-  .anon-box svg{ width:12px; height:12px; opacity:0; transition:opacity .16s var(--ease); }
-  .anon-toggle[aria-pressed="true"] .anon-box{ background:var(--blue); }
-  .anon-toggle[aria-pressed="true"] .anon-box svg{ opacity:1; }
+  .msg-note{ font-size:12px; color:var(--ink-3); margin:10px 0 0; line-height:1.5; }
   .foot-link.sent{ color:var(--blue); text-decoration:none; pointer-events:none; }
 
   /* 미리보기 안내 툴팁 */
@@ -548,7 +537,7 @@
           </div>
 
           <div class="foot">
-            <button class="foot-link" id="escapeBtn">이 중에 없는 사정이 있어요</button>
+            <button class="foot-link msg-open">따로 전할 말이 있어요</button>
             <button class="cta" id="next1">다 편해요</button>
           </div>
         </section>
@@ -570,6 +559,7 @@
           </div>
 
           <div class="foot">
+            <button class="foot-link msg-open">따로 전할 말이 있어요</button>
             <p class="privacy">🔒 고른 내용은 익명으로 시간 정할 때만 써요</p>
             <button class="cta" id="submit">다 편해요</button>
           </div>
@@ -605,7 +595,6 @@
             <div class="profile"><span class="avatar">은</span></div>
           </div>
           <h1 class="title title-2l" id="homeTitle">확인할 요청이<br>있어요</h1>
-          <p class="sub" id="homeSub"></p>
 
           <div class="tabs" role="tablist" aria-label="홈 탭">
             <button class="tab" role="tab" aria-selected="true"  data-tab="req">답할 요청<span class="tab-badge" id="badgeReq">2</span></button>
@@ -801,16 +790,11 @@
         <div class="modal" id="msgModal">
           <div class="dim" id="msgDim"></div>
           <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="msgTitle">
-            <h3 id="msgTitle">이 중에 없는 사정이 있나요?</h3>
-            <p>주최자에게 메시지로 전할게요.<br>보낸 뒤에도 남은 질문은 끝까지 답해 주세요.</p>
+            <h3 id="msgTitle">따로 전할 말이 있나요?</h3>
+            <p>시간 사정은 위에서 고르는 게 가장 정확하게 반영돼요.<br>그 밖의 이야기만 주최자에게 전할게요.</p>
             <textarea class="text-input msg-area" id="msgText" rows="3"
-              placeholder="예) 그 주 수요일엔 병원 예약이 있어서 오후 내내 어려워요"></textarea>
-            <button type="button" class="anon-toggle" id="msgAnon" aria-pressed="true">
-              <span class="anon-box">
-                <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3.5 3.5 7.5-8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              익명으로 보내기
-            </button>
+              placeholder="예) 그 주는 출장이라 원격으로만 참석할 수 있어요"></textarea>
+            <p class="msg-note">메시지는 이름과 함께 전해져요 · 보낸 뒤에도 남은 질문은 끝까지 답해 주세요</p>
             <button class="cta" id="msgSend" style="margin-top:14px;">주최자에게 보내기</button>
           </div>
         </div>
@@ -848,7 +832,6 @@
             <div class="profile"><span class="avatar">지</span></div>
           </div>
           <h1 class="title title-2l" id="s2HomeTitle">사정을 모으고<br>있어요</h1>
-          <p class="sub" id="s2HomeSub"></p>
 
           <div class="tabs" role="tablist" aria-label="홈 탭">
             <button class="tab" role="tab" aria-selected="false" data-s2tab="req">답할 요청<span class="tab-badge" id="s2BadgeReq">0</span></button>
@@ -865,10 +848,10 @@
                 <span class="req-meta" id="s2Meta">다섯 명 중 네 명이 사정을 알려줬어요</span>
                 <span class="req-cta" id="s2Cta">살짝 재촉하기</span>
               </button>
-              <button class="req-card submitted" id="s2Weekly" type="button" hidden style="cursor:default;">
+              <button class="req-card" id="s2Weekly" type="button" hidden>
                 <span class="req-top"><span class="req-title">홈팀 위클리 · 30분</span></span>
-                <span class="req-meta">✓ 은솔님이 사정을 알려줬어요 · 계속 모으는 중</span>
-                <span class="req-cta">잘 반영할게요</span>
+                <span class="req-meta">사정을 모으는 중이에요 · 네 명 중 세 명이 답했어요</span>
+                <span class="req-cta" id="s2WeeklyCta">살짝 재촉하기</span>
               </button>
             </div>
           </div>
@@ -1077,7 +1060,7 @@
                 weekly:{time:[0,0,0],days:emptyDays(),submitted:false} };
   let currentReq="kickoff";
 
-  const homeTitle=document.getElementById("homeTitle"), homeSub=document.getElementById("homeSub"),
+  const homeTitle=document.getElementById("homeTitle"),
         reqList=document.getElementById("reqList"), ctx1=document.getElementById("ctx1");
 
   function saveLive(){ const s=store[currentReq]; s.time=[...timeState]; s.days={...dayVals}; }
@@ -1110,11 +1093,9 @@
 
     // 타이틀
     if(homeTab==="req"){
-      homeTitle.innerHTML=pending?"확인할 요청이<br>있어요":"모두 답했어요!";
-      homeSub.textContent=pending?"":"알려준 사정은 시간 정할 때 반영돼요.";
+      homeTitle.innerHTML=pending?"확인할 요청이<br>있어요":"모두 답했어요,<br>잘 반영될 거예요";
     }else{
-      homeTitle.innerHTML=hostState==="none"?"잡고 있는 회의가<br>없어요":hostState==="collecting"?"사정을 모으고<br>있어요":"회의가 잡혔어요!";
-      homeSub.textContent="";
+      homeTitle.innerHTML=hostState==="none"?"잡고 있는 회의가<br>없어요":hostState==="collecting"?"사정을 모으고<br>있어요":"회의가<br>잡혔어요!";
     }
 
     reqList.replaceChildren();
@@ -1278,10 +1259,17 @@
     setS2Tab("my");
     setTimeout(()=>{
       chime();
-      pushNoti2("사정이 도착했어요","홈팀 위클리 · 은솔님이 사정을 알려줬어요");
-      setNotif2("사정이 도착했어요","홈팀 위클리 · 은솔님이 사정을 알려줬어요",()=>{ setS2Tab("my"); s2Go("home","back"); });
+      pushNoti2("새 사정이 도착했어요","홈팀 위클리 · 네 명 중 세 명이 답했어요");
+      setNotif2("새 사정이 도착했어요","홈팀 위클리 · 네 명 중 세 명이 답했어요",()=>{ setS2Tab("my"); s2Go("home","back"); });
     }, first?650:200);
   }
+  // 위클리도 같은 재촉 문법
+  let weeklyPoked=false;
+  document.getElementById("s2Weekly").addEventListener("click",()=>{
+    if(weeklyPoked) return;
+    weeklyPoked=true; chime();
+    document.getElementById("s2WeeklyCta").textContent="재촉했어요 · 답이 오면 알려드릴게요";
+  });
 
   /* ================= 디바이스 2: 주최자(지수)의 폰 ================= */
   let dev2Shown=false, pick2=0;
@@ -1695,21 +1683,20 @@
   document.getElementById("hostAgain").addEventListener("click",()=>goStep("host","back"));
 
   /* ================= 이 중에 없는 사정 → 주최자 메시지 ================= */
-  const msgModal=document.getElementById("msgModal"), msgText=document.getElementById("msgText"),
-        msgAnon=document.getElementById("msgAnon"), escapeBtn=document.getElementById("escapeBtn");
-  escapeBtn.addEventListener("click",()=>{
+  const msgModal=document.getElementById("msgModal"), msgText=document.getElementById("msgText");
+  const msgOpens=[...document.querySelectorAll(".msg-open")];
+  msgOpens.forEach(b=>b.addEventListener("click",()=>{
     msgModal.classList.add("show");
     setTimeout(()=>msgText.focus(), 400);
-  });
-  msgAnon.addEventListener("click",()=>{
-    msgAnon.setAttribute("aria-pressed", msgAnon.getAttribute("aria-pressed")==="true"?"false":"true");
-  });
+  }));
   document.getElementById("msgDim").addEventListener("click",()=>msgModal.classList.remove("show"));
   document.getElementById("msgSend").addEventListener("click",()=>{
     if(!msgText.value.trim()){ msgText.focus(); return; }
     msgModal.classList.remove("show");
-    escapeBtn.textContent="✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요";
-    escapeBtn.classList.add("sent");
+    msgOpens.forEach(b=>{
+      b.textContent="✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요";
+      b.classList.add("sent");
+    });
   });
 
   /* ================= 이탈 확인 ================= */
