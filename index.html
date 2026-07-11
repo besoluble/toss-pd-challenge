@@ -302,11 +302,13 @@
   .req-cta.ghost{ background:var(--surface); color:var(--ink-2); }
   .req-cta-row{ margin-top:14px; align-self:stretch; display:flex; gap:8px; }
   .req-cta-row .req-cta{ margin-top:0; flex:1; }
-  .req-sub{
-    margin-top:8px; align-self:center; border:0; background:none; font:inherit;
-    font-size:12.5px; color:var(--ink-4); cursor:pointer; padding:6px 12px; min-height:32px; border-radius:8px;
+  .req-del{
+    flex:none; width:32px; height:32px; margin:-5px -8px -5px 0;
+    border:0; background:none; border-radius:50%; color:var(--ink-4); cursor:pointer;
+    display:grid; place-items:center; transition:background-color .16s var(--ease);
   }
-  .req-sub:active{ background:var(--surface); }
+  .req-del:active{ background:var(--surface); }
+  .req-del svg{ width:17px; height:17px; }
   .home-nav{ justify-content:flex-end; gap:10px; }
   .nav-ic{ display:inline-flex; align-items:center; gap:10px; }
   .nav-ic .avatar{ width:36px; height:36px; }
@@ -813,6 +815,19 @@
           </div>
         </div>
 
+        <!-- 철회 확인 -->
+        <div class="modal" id="cancelModal">
+          <div class="dim" id="cancelDim"></div>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+            <h3 id="cancelTitle">요청을 철회할까요?</h3>
+            <p>참석자들에게 철회 소식을 알리고,<br>지금까지 모인 사정은 지울게요.</p>
+            <div class="btns">
+              <button class="leave" id="cancelYes">철회하기</button>
+              <button class="stay" id="cancelNo">계속 모으기</button>
+            </div>
+          </div>
+        </div>
+
         <!-- 이탈 확인 -->
         <div class="modal" id="exitModal">
           <div class="dim" id="exitDim"></div>
@@ -1095,6 +1110,19 @@
           </button>
         </div>
 
+        <!-- 지수 · 철회 확인 -->
+        <div class="modal" id="s2CancelModal">
+          <div class="dim" id="s2CancelDim"></div>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="s2CancelTitle">
+            <h3 id="s2CancelTitle">요청을 철회할까요?</h3>
+            <p>참석자들에게 철회 소식을 알리고,<br>지금까지 모인 사정은 지울게요.</p>
+            <div class="btns">
+              <button class="leave" id="s2CancelYes">철회하기</button>
+              <button class="stay" id="s2CancelNo">계속 모으기</button>
+            </div>
+          </div>
+        </div>
+
         <!-- 지수 · 기간 선택 시트 -->
         <div class="modal" id="s2WhenModal">
           <div class="dim" id="s2WhenDim"></div>
@@ -1262,7 +1290,7 @@
   function goStep(k, dir){ // dir: "fwd"(깊이 들어감) | "back"(얕아짐) | 생략(완료 = 페이드업)
     const el=stepEls[k];
     if(String(k)===curStep && el.classList.contains("active")){ // 같은 화면이면 애니메이션 재생 없이 정리만 (제자리 튕김 방지)
-      ["exitModal","whenModal","msgModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
+      ["exitModal","whenModal","msgModal","cancelModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
       return;
     }
     curStep=String(k);
@@ -1270,7 +1298,7 @@
     el.classList.add("active");
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
-    ["exitModal","whenModal","msgModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
+    ["exitModal","whenModal","msgModal","cancelModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
     resetMsgLinks(); // '보냈어요' 확인은 그 화면에서만
     screen.scrollTop=0;
   }
@@ -1331,17 +1359,10 @@
   }
 
   let homeTab="req";
-  const CANCEL_ARM="정말 철회할까요? 한 번 더 눌러 주세요";
-  function armCancel(btn, label, onConfirm){ // 파괴적 동작: 두 번 눌러 확정 (모달 없이 그 자리에서)
-    let armed=false, timer=null;
-    btn.addEventListener("click",e=>{
-      if(e && e.stopPropagation) e.stopPropagation();
-      if(!armed){
-        armed=true; btn.textContent=CANCEL_ARM; btn.style.color="var(--red)";
-        timer=setTimeout(()=>{ armed=false; btn.textContent=label; btn.style.color=""; }, 3200);
-      }else{ clearTimeout(timer); onConfirm(); }
-    });
-  }
+  // 철회 = 파괴적 동작: 바텀시트로 한 번 더 확인
+  let cancelTarget=null, s2CancelTarget=null;
+  function openCancelSheet(hid){ cancelTarget=hid; document.getElementById("cancelModal").classList.add("show"); }
+  function openS2CancelSheet(id){ s2CancelTarget=id; document.getElementById("s2CancelModal").classList.add("show"); }
   function cardActs(c, acts, primary){ // 카드 전체 탭 = 주 동작, 내부 버튼은 각자
     c.querySelectorAll("[data-act]").forEach(b=>{
       const a=b.dataset&&b.dataset.act;
@@ -1422,16 +1443,14 @@
         : "사정을 모으는 중이에요 · "+(KO_N[h.total]||h.total)+" 명 중 "+(KO_N[answeredOf(h)]||answeredOf(h))+" 명이 답했어요"+declNote;
       const cta= ready?'<button type="button" class="req-cta" data-act="results">추천 시간 보러 가기</button>'
         : '<button type="button" class="req-cta'+(h.poked?' ghost':'')+'" data-act="poke">'+(h.poked?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기")+'</button>';
-      c.innerHTML='<span class="req-top"><span class="req-title">'+h.name+' · '+h.dur+'</span></span>'+
-        '<span class="req-meta">'+meta+'</span>'+cta+
-        '<button type="button" class="req-sub" data-act="cancel">요청 철회하기</button>';
+      c.innerHTML='<span class="req-top"><span class="req-title">'+h.name+' · '+h.dur+'</span>'+
+        '<button type="button" class="req-del" data-act="cancel" aria-label="요청 철회"><svg viewBox="0 0 20 20" fill="none"><path d="M4 5.5h12M8.5 3.5h3M6.5 5.5l.6 10a1.5 1.5 0 001.5 1.4h2.8a1.5 1.5 0 001.5-1.4l.6-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 8.5v5M11.5 8.5v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></span>'+
+        '<span class="req-meta">'+meta+'</span>'+cta;
       cardActs(c, {
         results:()=>openHostResults(hid),
         poke:()=>pokeHosted(hid),
-        cancel:()=>{}, // armCancel이 별도 처리
+        cancel:()=>openCancelSheet(hid),
       }, ready?"results":"poke");
-      const cb=c.querySelector('[data-act="cancel"]');
-      if(cb&&cb.dataset) armCancel(cb, "요청 철회하기", ()=>cancelHosted(hid));
       myList.appendChild(c);
     });
   }
@@ -1648,7 +1667,6 @@
 
   submit.addEventListener("click",()=>{
     saveLive(); store[currentReq].submitted=true;
-    assignRoles(false); // 첫 완료가 역할을 정의
     goStep("done");
     const id=currentReq;
     if(!store[id].confirmedAt) setTimeout(()=>showAllCollected(id), 800); // 내가 마지막 응답자 → 주최자에게 띠롱
@@ -1752,7 +1770,7 @@
   function s2Go(k, dir){
     const el=s2Els[k];
     if(k===s2Cur && el.classList.contains("active")){ // 동일 화면 재진입 튕김 방지 (시트만 정리)
-      document.getElementById("s2WhenModal").classList.remove("show");
+      ["s2WhenModal","s2CancelModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
       return;
     }
     s2Cur=k;
@@ -1760,7 +1778,7 @@
     el.classList.add("active");
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
-    document.getElementById("s2WhenModal").classList.remove("show"); // 화면 점프 시 열린 시트 정리
+    ["s2WhenModal","s2CancelModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
   }
 
   // 지수의 알림함 — 기록도 목적지를 가진다
@@ -1888,13 +1906,6 @@
     document.getElementById("notif2Body").textContent=body;
     notif2Tap=onTap; notif.classList.add("show");
   }
-  // 디바이스1의 역할 = 최초로 완료한 플로우가 정의 (이후 고정) — 프로필 칩의 이름 옆에 붙는다
-  let rolesAssigned=false;
-  function assignRoles(firstIsHost){
-    if(rolesAssigned) return; rolesAssigned=true;
-    document.getElementById("dlName1").textContent="장은솔 ("+(firstIsHost?"주최자":"참석자")+")";
-    document.getElementById("dlName2").textContent="김지수 ("+(firstIsHost?"참석자":"주최자")+")";
-  }
   let s2ActiveMeet="kickoff"; // 결과 화면이 어떤 회의를 다루는지
   const pokedSet=new Set();
 
@@ -1921,9 +1932,9 @@
       const collectingMeta=(KO_N[r.total]||r.total)+" 명 중 "+(KO_N[r.total-1]||r.total-1)+" 명이 사정을 알려줬어요";
       const cta= ready?'<button type="button" class="req-cta" data-act="results">추천 시간 보러 가기</button>'
         : '<button type="button" class="req-cta'+(pokedSet.has(id)?' ghost':'')+'" data-act="poke">'+(pokedSet.has(id)?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기")+'</button>';
-      c.innerHTML='<span class="req-top"><span class="req-title">'+titleOf(r)+'</span></span>'+
-        '<span class="req-meta">'+(ready?"✓ "+allOf(r)+" 모두 사정을 알려줬어요"+declNote:collectingMeta)+'</span>'+cta+
-        '<button type="button" class="req-sub" data-act="cancel">요청 철회하기</button>';
+      c.innerHTML='<span class="req-top"><span class="req-title">'+titleOf(r)+'</span>'+
+        '<button type="button" class="req-del" data-act="cancel" aria-label="요청 철회"><svg viewBox="0 0 20 20" fill="none"><path d="M4 5.5h12M8.5 3.5h3M6.5 5.5l.6 10a1.5 1.5 0 001.5 1.4h2.8a1.5 1.5 0 001.5-1.4l.6-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 8.5v5M11.5 8.5v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></span>'+
+        '<span class="req-meta">'+(ready?"✓ "+allOf(r)+" 모두 사정을 알려줬어요"+declNote:collectingMeta)+'</span>'+cta;
       cardActs(c, {
         results:()=>{ if(!store[id].confirmedAt) openS2Results(id); },
         poke:()=>{
@@ -1934,10 +1945,8 @@
             toast1("지수님이 기다리고 있어요", REQS[id].name+" · 불편한 시간을 알려주세요", {req:id}, ()=>openReq(id));
           }, 450);
         },
-        cancel:()=>{},
+        cancel:()=>openS2CancelSheet(id),
       }, ready?"results":"poke");
-      const cb=c.querySelector('[data-act="cancel"]');
-      if(cb&&cb.dataset) armCancel(cb, "요청 철회하기", ()=>cancelReq(id));
       box.appendChild(c);
     });
   }
@@ -2139,7 +2148,6 @@
       poked:false, confirmedAt:null, canceled:false, timers:[] };
     hostStore[hid]={time:[0,0,0], days:emptyDays(), submitted:false, declined:false};
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
-    assignRoles(true); // 첫 완료 = 주최자 플로우
     renderHome(); renderS2Req(); // 상대 폰의 '답할 요청'에 도착
     goStep("hostSent");
     const first=revealDevice2();
@@ -2341,6 +2349,20 @@
   document.getElementById("s2AnsOk").addEventListener("click", s2AnsHome);
   document.getElementById("s2AnsClose").addEventListener("click", s2AnsHome);
   document.getElementById("s2AnsAgain").addEventListener("click",()=>s2Go("ans1","back"));
+
+  /* ================= 철회 확인 시트 ================= */
+  document.getElementById("cancelDim").addEventListener("click",()=>document.getElementById("cancelModal").classList.remove("show"));
+  document.getElementById("cancelNo").addEventListener("click",()=>document.getElementById("cancelModal").classList.remove("show"));
+  document.getElementById("cancelYes").addEventListener("click",()=>{
+    document.getElementById("cancelModal").classList.remove("show");
+    if(cancelTarget) cancelHosted(cancelTarget); cancelTarget=null;
+  });
+  document.getElementById("s2CancelDim").addEventListener("click",()=>document.getElementById("s2CancelModal").classList.remove("show"));
+  document.getElementById("s2CancelNo").addEventListener("click",()=>document.getElementById("s2CancelModal").classList.remove("show"));
+  document.getElementById("s2CancelYes").addEventListener("click",()=>{
+    document.getElementById("s2CancelModal").classList.remove("show");
+    if(s2CancelTarget) cancelReq(s2CancelTarget); s2CancelTarget=null;
+  });
 
   /* ================= 이 중에 없는 사정 → 주최자 메시지 ================= */
   const msgModal=document.getElementById("msgModal"), msgText=document.getElementById("msgText");
