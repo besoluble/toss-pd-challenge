@@ -70,21 +70,25 @@
   .notif-body{ font-size:12.5px; color:var(--ink-2); line-height:1.45; }
   .notif-body b{ display:block; font-size:13px; color:var(--ink); }
 
-  /* 안 누르면 뜨는 탭 가이드 — 자동 전환 대신 능동 조작 유도 */
+  /* 안 누르면 뜨는 탭 가이드 — 토스 블루 점 + 파문 링 (자동 전환 대신 능동 조작 유도) */
   .tap-hint{
-    position:absolute; right:14px; bottom:-15px; width:36px; height:36px;
-    display:none; place-items:center; font-size:17px; pointer-events:none; z-index:2;
-    animation:tapbob 1.3s ease-in-out infinite;
+    position:absolute; right:15px; bottom:-13px; width:34px; height:34px;
+    display:none; pointer-events:none; z-index:2;
   }
-  .notif.show.hint .tap-hint{ display:grid; }
-  .tap-hint::before, .tap-hint::after{
-    content:""; position:absolute; inset:2px; border-radius:50%;
-    border:2px solid rgba(25,31,40,.4);
-    animation:tapring 1.3s ease-out infinite;
+  .notif.show.hint .tap-hint{ display:block; }
+  .tap-hint::before{
+    content:""; position:absolute; left:50%; top:50%; width:10px; height:10px;
+    margin:-5px 0 0 -5px; border-radius:50%; background:var(--blue);
+    box-shadow:0 2px 6px rgba(49,130,246,.45);
+    animation:tapcore 1.5s ease-in-out infinite;
   }
-  .tap-hint::after{ animation-delay:.65s; }
-  @keyframes tapring{ 0%{ transform:scale(.35); opacity:.9; } 100%{ transform:scale(1.25); opacity:0; } }
-  @keyframes tapbob{ 0%,100%{ translate:0 0; } 50%{ translate:0 3px; } }
+  .tap-hint::after{
+    content:""; position:absolute; inset:0; border-radius:50%;
+    background:rgba(49,130,246,.28);
+    animation:tapring 1.5s ease-out infinite;
+  }
+  @keyframes tapcore{ 0%,100%{ transform:scale(1); } 40%{ transform:scale(1.22); } }
+  @keyframes tapring{ 0%{ transform:scale(.32); opacity:.5; } 100%{ transform:scale(1.25); opacity:0; } }
   .wrap{ position:relative; width:390px; max-width:100%; height:100%; }
   .wrap.anim, .wrap2.anim{ transition:width .38s var(--ease); }
   .screen{
@@ -785,7 +789,7 @@
         <button class="notif" id="notif1" type="button">
           <span class="notif-icon">🔔</span>
           <span class="notif-body"><b id="notif1Title"></b><span id="notif1Body"></span></span>
-          <span class="tap-hint" aria-hidden="true">👆</span>
+          <span class="tap-hint" aria-hidden="true"></span>
         </button>
 
         <!-- 기간 선택 시트 -->
@@ -918,7 +922,7 @@
         <button class="notif" id="notif" type="button">
           <span class="notif-icon">🔔</span>
           <span class="notif-body"><b id="notif2Title">모두의 사정이 모였어요</b><span id="notif2Body">신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span></span>
-          <span class="tap-hint" aria-hidden="true">👆</span>
+          <span class="tap-hint" aria-hidden="true"></span>
         </button>
       </div>
       <button class="handle left"  id="hL2" aria-label="왼쪽으로 크기 조절"></button>
