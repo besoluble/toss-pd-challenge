@@ -1301,11 +1301,15 @@
   }
 
   const notif=document.getElementById("notif");
-  let notif2Tap=null;
+  let notif2Tap=null, notif2Timer=null;
   function setNotif2(title, body, onTap){
     document.getElementById("notif2Title").textContent=title;
     document.getElementById("notif2Body").textContent=body;
     notif2Tap=onTap; notif.classList.add("show");
+    clearTimeout(notif2Timer); // 2초간 안 누르면 누른 것처럼 진행
+    notif2Timer=setTimeout(()=>{
+      if(notif.classList.contains("show")){ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); }
+    }, 2000);
   }
   let s2Ready=false, poked=false;
   function revealDevice2(){
@@ -1329,7 +1333,7 @@
       document.getElementById("s2Cta").textContent="추천 시간 보러 가기";
     }, first?650:200);
   }
-  notif.addEventListener("click",()=>{ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
+  notif.addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
   document.getElementById("s2Card").addEventListener("click",()=>{
     if(dev2Confirmed) return;
     if(s2Ready){ notif.classList.remove("show"); s2Go("results","fwd"); return; }
@@ -1344,13 +1348,17 @@
   document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home","back"));
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home","back"));
   const notif1=document.getElementById("notif1");
-  let notif1Tap=null;
+  let notif1Tap=null, notif1Timer=null;
   function setNotif1(t,b,onTap){
     document.getElementById("notif1Title").textContent=t;
     document.getElementById("notif1Body").textContent=b;
     notif1Tap=onTap; notif1.classList.add("show");
+    clearTimeout(notif1Timer); // 2초간 안 누르면 누른 것처럼 진행
+    notif1Timer=setTimeout(()=>{
+      if(notif1.classList.contains("show")){ notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); }
+    }, 2000);
   }
-  notif1.addEventListener("click",()=>{ notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
+  notif1.addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
   let dev2Confirmed=false;
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     document.getElementById("s2DoneSub").innerHTML=TIMES2[pick2].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
