@@ -2097,7 +2097,9 @@
     let selS=PRESETS[1].s, selE=PRESETS[1].e, viewY=2026, viewM=6; // 기본: 다음 주
     function spanLabel(){ // ok에서 selS/selE 보정 후 호출됨
       const p=PRESETS.find(p=>+p.s===+selS && +p.e===+selE);
-      return p ? p.label+" · "+fmtD(p.s)+" – "+fmtD(p.e) : fmtD(selS)+" – "+fmtD(selE);
+      if(p) return p.label+" · "+fmtD(p.s)+" – "+fmtD(p.e);
+      if(+selS===+selE) return fmtD(selS)+"(하루)"; // 하루면 범위 표기를 쓰지 않는다
+      return fmtD(selS)+" – "+fmtD(selE);
     }
     function renderCal(){
       title.textContent=viewY+"년 "+(viewM+1)+"월";
