@@ -1298,6 +1298,7 @@
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
     ["exitModal","whenModal","msgModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
+    resetMsgLinks(); // '보냈어요' 확인은 그 화면에서만
     screen.scrollTop=0;
   }
   const submit=document.getElementById("submit"), next1=document.getElementById("next1");
@@ -1322,7 +1323,7 @@
   const ctxOf=r=>"<b>"+titleOf(r)+"</b> · "+(r.span||"다음 주 중");
   const allOf=r=>(KO_N[r.total+1]||r.total+1)+" 명"; // 주최자 포함 전체 인원
   const emptyDays=()=>{const o={};DAYS.forEach(d=>o[d]=0);return o;};
-  const emptyStore=()=>({time:[0,0,0],days:emptyDays(),submitted:false,declined:false,msgSent:false,msg:"",confirmedAt:null});
+  const emptyStore=()=>({time:[0,0,0],days:emptyDays(),submitted:false,declined:false,confirmedAt:null});
   const store={ kickoff:emptyStore(), weekly:emptyStore() };
   let currentReq="kickoff";
 
@@ -1352,7 +1353,7 @@
     document.getElementById("step2Title").innerHTML=(spanWord(r)==="그 기간에"?"그중":spanWord(r))+" 불편한 요일이<br>있나요?";
     document.body.dataset.persona=r.optional?"optional":"required";
     ctx1.innerHTML=ctxOf(r);
-    msgText.value=s.msg||""; syncMsgLinks(); // 메시지 흔적은 이 요청의 것만 (H4)
+    msgText.value=""; resetMsgLinks(); // 메시지 입력은 항상 새로
     updateCTA(); goStep(1,"fwd"); // 홈 → 요청 상세: 앞으로
   }
 
@@ -2380,18 +2381,14 @@
     setTimeout(()=>msgText.focus(), 400);
   }));
   document.getElementById("msgDim").addEventListener("click",()=>msgModal.classList.remove("show"));
-  function syncMsgLinks(){ // 보냄 흔적은 그 요청에만 남는다 (H4)
-    const sent=!!(store[currentReq] && store[currentReq].msgSent);
-    msgOpens.forEach(b=>{
-      b.textContent=sent?"✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요":"따로 전할 말이 있어요";
-      b.classList.toggle("sent", sent);
-    });
+  function resetMsgLinks(){ // 보냈다는 확인은 그 화면에서만 — 스텝을 옮기면 언제든 다시 보낼 수 있다
+    msgOpens.forEach(b=>{ b.textContent="따로 전할 말이 있어요"; b.classList.remove("sent"); });
   }
   document.getElementById("msgSend").addEventListener("click",()=>{
     if(!msgText.value.trim()){ msgText.focus(); return; }
-    store[currentReq].msgSent=true; store[currentReq].msg=msgText.value;
     msgModal.classList.remove("show");
-    syncMsgLinks();
+    msgText.value=""; // 다음 메시지는 새로 쓴다
+    msgOpens.forEach(b=>{ b.textContent="✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요"; b.classList.add("sent"); });
   });
 
   /* ================= 이탈 확인 ================= */
@@ -2405,7 +2402,7 @@
     // 데모: 입력을 비우고 처음으로
     timeCtl.forEach((c,i)=>{ c.slider.set(0,true); c.render(0); timeState[i]=0; });
     store[currentReq]=emptyStore();
-    dayPick.load(emptyDays()); syncMsgLinks(); msgText.value="";
+    dayPick.load(emptyDays()); resetMsgLinks(); msgText.value="";
     updateCTA(); closeExit(); renderHome(); goStep("exit","back");
   });
 
