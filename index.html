@@ -1587,8 +1587,12 @@
     SLOT_MAP[label]={d,h};
     MASTER.push({t:label, d, h, day:DAY_KO[d], slot: h===9?0 : h===13?1 : h>=17?2 : null});
   }
-  const NEXT_MON=new Date(2026,6,13);
   const mondayOf=d=>{ const m=new Date(d); m.setDate(m.getDate()-((m.getDay()+6)%7)); m.setHours(0,0,0,0); return m; };
+  // 데모의 '오늘' = 실제 오늘 (주말이면 다음 월요일로 보정) — 언제 열어도 시제가 맞는다
+  const TODAY=(()=>{ const t=new Date(); t.setHours(0,0,0,0); const g=t.getDay();
+    if(g===6) t.setDate(t.getDate()+2); else if(g===0) t.setDate(t.getDate()+1); return t; })();
+  const dOff=(base,off)=>{ const x=new Date(base); x.setDate(x.getDate()+off); return x; };
+  const NEXT_MON=dOff(mondayOf(TODAY),7);
   function meetingEvents(forJi){ // 확정된 회의들 — 각자의 캘린더에 산다
     const evs=[];
     Object.keys(REQS).forEach(id=>{
@@ -2065,9 +2069,8 @@
     document.getElementById("inviteNote").classList.add("show");
   });
 
-  // 회의 정보 (만들기 화면의 편집 상태 — 보내는 순간 HOSTED로 스냅샷된다)
-  const meet={name:"스프린트 회고", dur:"30분", durMin:30, span:"다음 주 · 7/13 – 7/17",
-    spanS:new Date(2026,6,13), spanE:new Date(2026,6,17)};
+  // 회의 정보 (만들기 화면의 편집 상태 — 보내는 순간 HOSTED로 스냅샷된다. 기간 기본값은 PRESETS에서 파생)
+  const meet={name:"스프린트 회고", dur:"30분", durMin:30, span:"", spanS:null, spanE:null};
 
   // 길이: 10분 단위 스테퍼 (10분 ~ 3시간) — 두 디바이스 공용
   function fmtDur(m){ return m<60 ? m+"분" : (m%60 ? Math.floor(m/60)+"시간 "+(m%60)+"분" : (m/60)+"시간"); }
@@ -2081,12 +2084,13 @@
   makeStepper(document.getElementById("durMinus"), document.getElementById("durVal"), document.getElementById("durPlus"),
     (s,m)=>{ meet.dur=s; meet.durMin=m; });
 
-  // 언제: 프리셋 + 기간 캘린더 (바텀시트) — 두 디바이스 공용 팩토리
-  const TODAY=new Date(2026,6,8); // 데모 기준일: 수요일 (이번 주가 성립하도록)
+  // 언제: 프리셋 + 기간 캘린더 (바텀시트) — 두 디바이스 공용 팩토리. 모든 날짜는 TODAY에서 파생 (하드코딩 금지)
+  const MONTH_END=new Date(TODAY.getFullYear(), TODAY.getMonth()+1, 0);
+  const THIS_FRI=dOff(mondayOf(TODAY),4);
   const PRESETS=[
-    {label:"이번 주",   s:new Date(2026,6,8),  e:new Date(2026,6,10)},
-    {label:"다음 주",   s:new Date(2026,6,13), e:new Date(2026,6,17)},
-    {label:"이번 달 안", s:new Date(2026,6,8),  e:new Date(2026,6,31)},
+    {label:"이번 주",   s:TODAY, e:(+THIS_FRI>=+TODAY?THIS_FRI:TODAY)},
+    {label:"다음 주",   s:NEXT_MON, e:dOff(NEXT_MON,4)},
+    {label:"이번 달 안", s:TODAY, e:(+MONTH_END>+TODAY?MONTH_END:dOff(TODAY,14))},
   ];
   const fmtD=d=>(d.getMonth()+1)+"/"+d.getDate();
   function makeWhenPicker(ids, onApply){
@@ -2094,17 +2098,19 @@
           title=document.getElementById(ids.title), prev=document.getElementById(ids.prev),
           next=document.getElementById(ids.next),
           presetBtns=[...document.querySelectorAll("#"+ids.presetRow+" .preset")];
-    let selS=PRESETS[1].s, selE=PRESETS[1].e, viewY=2026, viewM=6; // 기본: 다음 주
+    let selS=PRESETS[1].s, selE=PRESETS[1].e,
+        viewY=PRESETS[1].s.getFullYear(), viewM=PRESETS[1].s.getMonth(); // 기본: 다음 주
+    const MINIDX=TODAY.getFullYear()*12+TODAY.getMonth(), MAXIDX=MINIDX+2; // 이동 범위: 이번 달 ~ +2개월
     function spanLabel(){ // ok에서 selS/selE 보정 후 호출됨
       const p=PRESETS.find(p=>+p.s===+selS && +p.e===+selE);
-      if(p) return p.label+" · "+fmtD(p.s)+" – "+fmtD(p.e);
+      if(p) return p.label+" · "+(+p.s===+p.e ? fmtD(p.s)+"(하루)" : fmtD(p.s)+" – "+fmtD(p.e));
       if(+selS===+selE) return fmtD(selS)+"(하루)"; // 하루면 범위 표기를 쓰지 않는다
       return fmtD(selS)+" – "+fmtD(selE);
     }
     function renderCal(){
       title.textContent=viewY+"년 "+(viewM+1)+"월";
-      prev.disabled=(viewY===2026 && viewM<=6);
-      next.disabled=(viewY===2026 && viewM>=9);
+      prev.disabled=(viewY*12+viewM<=MINIDX);
+      next.disabled=(viewY*12+viewM>=MAXIDX);
       presetBtns.forEach((b,i)=>{
         const p=PRESETS[i]; if(!p) return;
         b.setAttribute("aria-pressed", (selS&&selE&&+p.s===+selS&&+p.e===+selE)?"true":"false");
@@ -2146,7 +2152,10 @@
       modal.classList.remove("show");
     });
   }
+  const SPAN_DEFAULT=PRESETS[1].label+" · "+fmtD(PRESETS[1].s)+" – "+fmtD(PRESETS[1].e);
+  meet.span=SPAN_DEFAULT; meet.spanS=PRESETS[1].s; meet.spanE=PRESETS[1].e;
   const whenLabel=document.getElementById("whenLabel");
+  whenLabel.textContent=SPAN_DEFAULT;
   makeWhenPicker(
     {modal:"whenModal", grid:"calGrid", title:"calTitle", prev:"calPrev", next:"calNext",
      presetRow:"presetRow", btn:"whenBtn", dim:"whenDim", ok:"whenOk"},
@@ -2257,8 +2266,8 @@
     {name:"하린", role:"프로덕트 오너", req:true},
     {name:"최분석", role:"데이터 분석가", req:false},
   ];
-  const s2Meet={dur:"30분", durMin:30, span:PRESETS[1].label+" · "+fmtD(PRESETS[1].s)+" – "+fmtD(PRESETS[1].e),
-    spanS:PRESETS[1].s, spanE:PRESETS[1].e};
+  const s2Meet={dur:"30분", durMin:30, span:SPAN_DEFAULT, spanS:PRESETS[1].s, spanE:PRESETS[1].e};
+  document.getElementById("s2WhenLabel").textContent=SPAN_DEFAULT;
   const s2SendBtn=document.getElementById("s2Send");
   function s2IncludedCount(){ return S2PEOPLE.filter(p=>p.included!==false).length; }
   function updateS2Cta(){
