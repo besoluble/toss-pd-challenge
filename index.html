@@ -368,6 +368,9 @@
   .cv-ev.fixed{ background:var(--blue); color:#fff; font-weight:600; cursor:pointer;
     transition:filter .16s var(--ease); border:0; font-family:inherit; text-align:left; }
   .cv-ev.fixed:active{ filter:brightness(.9); }
+  .cv-ev.optional{ background:var(--blue-weak); color:#1B64DA; font-weight:600; cursor:pointer; /* 빠졌지만 잡힌 회의 */
+    transition:filter .16s var(--ease); border:0; font-family:inherit; text-align:left; }
+  .cv-ev.optional:active{ filter:brightness(.96); }
   .ev-rows{ display:flex; flex-direction:column; margin-top:2px; }
   .ev-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 2px; font-size:14.5px; }
   .ev-row+.ev-row{ border-top:1px solid var(--surface); }
@@ -1724,7 +1727,8 @@
       const ca=store[id].confirmedAt;
       if(ca && SLOT_MAP[ca] && (forJi || hasEunsol(REQS[id]))){ // 초대 안 된 회의는 내 캘린더에 없다
         const {d,h}=SLOT_MAP[ca];
-        evs.push({d,s:h,e:h+REQS[id].durH,t:REQS[id].name,kind:"fixed",key:id,
+        const declined = !forJi && store[id].declined; // 은솔이 빠지기로 한 회의 → 연한 하늘색
+        evs.push({d,s:h,e:h+REQS[id].durH,t:REQS[id].name,kind:declined?"optional":"fixed",key:id,
           wk:+(REQS[id].spanS?mondayOf(REQS[id].spanS):NEXT_MON)});
       }
     });
@@ -1732,7 +1736,8 @@
       const h=HOSTED[hid];
       if(h.confirmedAt && SLOT_MAP[h.confirmedAt] && (!forJi || h.jiIn)){
         const p=SLOT_MAP[h.confirmedAt];
-        evs.push({d:p.d,s:p.h,e:p.h+h.durH,t:h.name,kind:"fixed",key:hid,
+        const declined = forJi && hostStore[hid].declined; // 지수가 빠지기로 한 회의 → 연한 하늘색
+        evs.push({d:p.d,s:p.h,e:p.h+h.durH,t:h.name,kind:declined?"optional":"fixed",key:hid,
           wk:+mondayOf(h.spanS||NEXT_MON)});
       }
     });
@@ -1764,7 +1769,7 @@
     for(let d=0; d<5; d++){
       const col=document.createElement("div"); col.className="cv-col";
       visible.filter(e=>e.d===d).forEach(e=>{
-        const tappable=e.kind==="fixed" && onTap;
+        const tappable=(e.kind==="fixed"||e.kind==="optional") && onTap;
         const ev=document.createElement(tappable?"button":"div");
         if(tappable){ ev.type="button"; ev.addEventListener("click",()=>onTap(e.key)); }
         ev.className="cv-ev "+e.kind+(focus && e.key===focus?" flash":"");
@@ -2204,8 +2209,13 @@
     s2Go("done");
     if(hasEunsol(r)) setTimeout(()=>{ // 참석자(초대된 경우)에게 확정 알림 → 일정이 '사는 곳'인 내 캘린더로
       chime();
-      const rec=pushNoti(r.name, t+"으로 확정됐어요 · 캘린더에 추가했어요", {cal:id});
-      setNotif1("회의 시간이 정해졌어요", r.name+" · "+t, ()=>{ rec.fresh=false; renderNoti(); openCalView("exit", id); });
+      if(store[id].declined){ // 빠지기로 한 회의: 확정 사실만 알리되 압박 없이, 캘린더엔 연한 하늘색으로
+        const rec=pushNoti(r.name, "안 가기로 한 회의 · "+t+" · 관심 있으면 들러도 좋아요", {cal:id});
+        setNotif1("안 가기로 한 회의가 잡혔어요", r.name+" · "+t, ()=>{ rec.fresh=false; renderNoti(); openCalView("exit", id); });
+      }else{
+        const rec=pushNoti(r.name, t+"으로 확정됐어요 · 캘린더에 추가했어요", {cal:id});
+        setNotif1("회의 시간이 정해졌어요", r.name+" · "+t, ()=>{ rec.fresh=false; renderNoti(); openCalView("exit", id); });
+      }
     }, 650);
   });
   document.getElementById("again").addEventListener("click",()=>goStep(1,"back"));
@@ -2451,7 +2461,11 @@
       const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림 → 일정이 사는 지수의 캘린더로
       setTimeout(()=>{
         chime();
-        toast2("회의 시간이 정해졌어요", h.name+" · "+h.confirmedAt+" · 캘린더에 추가했어요", {cal:hid}, ()=>openS2Cal("home", hid));
+        if(hostStore[hid].declined){
+          toast2("안 가기로 한 회의가 잡혔어요", h.name+" · "+h.confirmedAt+" · 관심 있으면 들러도 좋아요", {cal:hid}, ()=>openS2Cal("home", hid));
+        }else{
+          toast2("회의 시간이 정해졌어요", h.name+" · "+h.confirmedAt+" · 캘린더에 추가했어요", {cal:hid}, ()=>openS2Cal("home", hid));
+        }
       }, first?900:650);
     }
   });
