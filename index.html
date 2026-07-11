@@ -364,13 +364,11 @@
   .ev-link{ width:100%; background:none; border:0; font:inherit; cursor:pointer; }
   .ev-link b{ margin-left:auto; }
   .ev-link svg{ width:15px; height:15px; color:var(--ink-4); flex:none; }
-  .ev-clip{ overflow:hidden; }
-  .ev-slider{ display:flex; width:200%; transition:transform .32s var(--ease); } /* 패널 높이 = 상세(첫 패널) 기준 */
-  .ev-pane{ width:50%; flex:none; min-width:0; display:flex; flex-direction:column; align-items:stretch; }
-  .ev-sheet.people .ev-slider{ transform:translateX(-50%); }
-  .ev-ppl{ font-size:15px; font-weight:600; color:var(--ink); line-height:1.7; padding:6px 2px 2px; word-break:keep-all; }
-  .ev-ppl-head{ display:flex; align-items:center; gap:6px; margin:-4px 0 6px; }
-  .ev-ppl-head h3{ margin:0; }
+  .ev-link svg{ transition:transform .22s var(--ease); }
+  .ev-link.open svg{ transform:rotate(90deg); }
+  .ev-names{ max-height:0; overflow:hidden; transition:max-height .28s var(--ease); }
+  .ev-names.open{ max-height:120px; }
+  .ev-names p{ margin:0; padding:1px 2px 13px; font-size:14px; font-weight:600; color:var(--ink); line-height:1.75; word-break:keep-all; }
 
   .cv-ev.flash{ animation:evFlash .9s var(--ease) 2; }
   @keyframes evFlash{ 0%,100%{ box-shadow:none; } 50%{ box-shadow:0 0 0 3px var(--blue-weak), 0 4px 12px rgba(49,130,246,.35); } }
@@ -857,37 +855,22 @@
         <!-- 일정 상세 -->
         <div class="modal" id="evModal">
           <div class="dim" id="evDim"></div>
-          <div class="sheet ev-sheet" id="evSheet" role="dialog" aria-modal="true" aria-labelledby="evTitle">
-            <div class="ev-clip" id="evClip">
-              <div class="ev-slider">
-                <div class="ev-pane">
-                  <h3 id="evTitle"></h3>
-                  <div class="ev-rows">
-                    <div class="ev-row"><span>시간</span><b id="evTime"></b></div>
-                    <div class="ev-row"><span>주최</span><b id="evHost"></b></div>
-                    <button type="button" class="ev-row ev-link" id="evCountBtn">
-                      <span>참석</span><b id="evCount"></b>
-                      <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                  </div>
-                  <span class="cal" id="evOpt" hidden>
-                    <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    꼭 안 와도 괜찮은 회의예요
-                  </span>
-                  <button class="cta" id="evOk" style="margin-top:14px;">확인</button>
-                </div>
-                <div class="ev-pane">
-                  <div class="ev-ppl-head">
-                    <button type="button" class="back" id="evPplBack" aria-label="이전으로">
-                      <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                    <h3>참석자</h3>
-                  </div>
-                  <div class="ev-ppl" id="evPpl"></div>
-                  <button class="cta" id="evPplOk" style="margin-top:auto;">확인</button>
-                </div>
-              </div>
+          <div class="sheet" id="evSheet" role="dialog" aria-modal="true" aria-labelledby="evTitle">
+            <h3 id="evTitle"></h3>
+            <div class="ev-rows">
+              <div class="ev-row"><span>시간</span><b id="evTime"></b></div>
+              <div class="ev-row"><span>주최</span><b id="evHost"></b></div>
+              <button type="button" class="ev-row ev-link" id="evCountBtn" aria-expanded="false">
+                <span>참석</span><b id="evCount"></b>
+                <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="ev-names" id="evNames"><p id="evPpl"></p></div>
             </div>
+            <span class="cal" id="evOpt" hidden>
+              <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              꼭 안 와도 괜찮은 회의예요
+            </span>
+            <button class="cta" id="evOk" style="margin-top:14px;">확인</button>
           </div>
         </div>
 
@@ -1189,37 +1172,22 @@
         <!-- 일정 상세 -->
         <div class="modal" id="s2EvModal">
           <div class="dim" id="s2EvDim"></div>
-          <div class="sheet ev-sheet" id="s2EvSheet" role="dialog" aria-modal="true" aria-labelledby="s2EvTitle">
-            <div class="ev-clip" id="s2EvClip">
-              <div class="ev-slider">
-                <div class="ev-pane">
-                  <h3 id="s2EvTitle"></h3>
-                  <div class="ev-rows">
-                    <div class="ev-row"><span>시간</span><b id="s2EvTime"></b></div>
-                    <div class="ev-row"><span>주최</span><b id="s2EvHost"></b></div>
-                    <button type="button" class="ev-row ev-link" id="s2EvCountBtn">
-                      <span>참석</span><b id="s2EvCount"></b>
-                      <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                  </div>
-                  <span class="cal" id="s2EvOpt" hidden>
-                    <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    꼭 안 와도 괜찮은 회의예요
-                  </span>
-                  <button class="cta" id="s2EvOk" style="margin-top:14px;">확인</button>
-                </div>
-                <div class="ev-pane">
-                  <div class="ev-ppl-head">
-                    <button type="button" class="back" id="s2EvPplBack" aria-label="이전으로">
-                      <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                    <h3>참석자</h3>
-                  </div>
-                  <div class="ev-ppl" id="s2EvPpl"></div>
-                  <button class="cta" id="s2EvPplOk" style="margin-top:auto;">확인</button>
-                </div>
-              </div>
+          <div class="sheet" id="s2EvSheet" role="dialog" aria-modal="true" aria-labelledby="s2EvTitle">
+            <h3 id="s2EvTitle"></h3>
+            <div class="ev-rows">
+              <div class="ev-row"><span>시간</span><b id="s2EvTime"></b></div>
+              <div class="ev-row"><span>주최</span><b id="s2EvHost"></b></div>
+              <button type="button" class="ev-row ev-link" id="s2EvCountBtn" aria-expanded="false">
+                <span>참석</span><b id="s2EvCount"></b>
+                <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="ev-names" id="s2EvNames"><p id="s2EvPpl"></p></div>
             </div>
+            <span class="cal" id="s2EvOpt" hidden>
+              <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              꼭 안 와도 괜찮은 회의예요
+            </span>
+            <button class="cta" id="s2EvOk" style="margin-top:14px;">확인</button>
           </div>
         </div>
 
@@ -1784,7 +1752,8 @@
     document.getElementById(prefix+"Count").textContent=d.count;
     document.getElementById(prefix+"Opt").hidden=!d.opt;
     document.getElementById(prefix+"Ppl").textContent=d.people.map(x=>x.name).join(", ");
-    document.getElementById(prefix+"Sheet").classList.remove("people"); // 항상 첫 패널부터
+    document.getElementById(prefix+"Names").classList.remove("open"); // 항상 접힌 채로
+    document.getElementById(prefix+"CountBtn").classList.remove("open");
     return true;
   }
   function openEvDetail(key){
@@ -1793,15 +1762,14 @@
   function openS2EvDetail(key){
     if(fillEvSheet("s2Ev", meetingDetail(key,true))) document.getElementById("s2EvModal").classList.add("show");
   }
-  function evPane(prefix, toPeople){ // 패널 전환 — 시트 높이는 상세(첫 패널)가 정한 그대로
-    document.getElementById(prefix+"Sheet").classList.toggle("people", toPeople);
+  function evNamesToggle(prefix){ // 이름 한 줄은 그 자리에서 펼친다 — 화면 전환은 정보 무게에 과분 (C8)
+    const btn=document.getElementById(prefix+"CountBtn"), names=document.getElementById(prefix+"Names");
+    const open=!names.classList.contains("open");
+    names.classList.toggle("open", open); btn.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", open?"true":"false");
   }
-  document.getElementById("evCountBtn").addEventListener("click",()=>evPane("ev", true));
-  document.getElementById("evPplBack").addEventListener("click",()=>evPane("ev", false));
-  document.getElementById("evPplOk").addEventListener("click",()=>document.getElementById("evModal").classList.remove("show"));
-  document.getElementById("s2EvCountBtn").addEventListener("click",()=>evPane("s2Ev", true));
-  document.getElementById("s2EvPplBack").addEventListener("click",()=>evPane("s2Ev", false));
-  document.getElementById("s2EvPplOk").addEventListener("click",()=>document.getElementById("s2EvModal").classList.remove("show"));
+  document.getElementById("evCountBtn").addEventListener("click",()=>evNamesToggle("ev"));
+  document.getElementById("s2EvCountBtn").addEventListener("click",()=>evNamesToggle("s2Ev"));
   document.getElementById("evDim").addEventListener("click",()=>document.getElementById("evModal").classList.remove("show"));
   document.getElementById("evOk").addEventListener("click",()=>document.getElementById("evModal").classList.remove("show"));
   document.getElementById("s2EvDim").addEventListener("click",()=>document.getElementById("s2EvModal").classList.remove("show"));
