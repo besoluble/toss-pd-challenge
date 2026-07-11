@@ -1288,8 +1288,8 @@
     c.className="req-card"+((s2ReqAnswered||fixed)?" submitted":""); c.type="button";
     c.innerHTML='<span class="req-top"><span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
       '<span class="req-tag req">필수 참석</span></span>'+
-      '<span class="req-meta">'+(fixed?"📅 "+hostPickedLabel+" 확정됐어요":s2ReqAnswered?"✓ 사정을 알려드렸어요":meet.span+" · 은솔님이 물어봤어요")+'</span>'+
-      '<span class="req-cta">'+(fixed?"캘린더에 추가됐어요":s2ReqAnswered?"잘 반영될 거예요":"불편한 시간 알려주기")+'</span>';
+      '<span class="req-meta">'+(fixed?"📅 "+hostPickedLabel+" 확정됐어요":s2ReqAnswered?"✓ 다 편하다고 알려드렸어요":meet.span+" · 은솔님이 물어봤어요")+'</span>'+
+      '<span class="req-cta">'+(fixed?"캘린더에 추가됐어요":s2ReqAnswered?"잘 반영될 거예요":"다 편해요")+'</span>';
     if(!fixed) c.addEventListener("click",()=>{
       if(s2ReqAnswered) return;
       s2ReqAnswered=true; myAnswered=4; chime();
