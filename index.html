@@ -27,27 +27,17 @@
   }
 
   /* ================= showcase shell ================= */
-  .topbar{ display:flex; justify-content:center; padding:14px 22px 8px; position:relative; z-index:5; }
-  .seg{ display:inline-flex; background:rgba(255,255,255,.6); border-radius:12px; padding:3px; gap:2px; }
-  .seg button{
-    display:inline-flex; align-items:center; min-height:36px;
-    border:0; background:transparent; color:var(--ink-3); font:inherit; font-size:13px; font-weight:600;
-    padding:5px 16px; border-radius:9px; cursor:pointer;
-    transition-property:background-color,color,scale; transition-duration:.18s; transition-timing-function:var(--ease);
-  }
-  .seg button:active{ scale:.96; }
-  .seg button[aria-selected="true"]{ background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(16,24,40,.10); }
+  .stage{ flex:1; display:flex; justify-content:center; gap:28px; padding:52px 36px 24px; overflow:visible; min-height:0; }
 
-  .stage{ flex:1; display:flex; justify-content:center; gap:28px; padding:8px 36px 24px; overflow:visible; min-height:0; }
-
-  /* 듀얼 모드: 토글 대신 디바이스별 역할 라벨 */
+  /* 디바이스 라벨 = 프로필 칩 (아바타 + 이름·직책) — 누구의 폰인지 한눈에 */
   .dev-label{
-    position:absolute; top:-27px; left:50%; translate:-50%; white-space:nowrap;
-    font-size:12px; font-weight:600; color:var(--ink-3); display:none;
+    position:absolute; top:-40px; left:50%; translate:-50%; white-space:nowrap;
+    display:flex; align-items:center; gap:8px;
   }
-  body.dual .dev-label{ display:block; }
-  body.dual .topbar{ display:none; }
-  body.dual .stage{ padding-top:44px; }
+  .dev-label .avatar{ width:26px; height:26px; }
+  .dev-label .dl-id{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.25; }
+  .dev-label .dl-id b{ font-size:12px; font-weight:700; color:var(--ink); }
+  .dev-label .dl-id i{ font-style:normal; font-size:10px; font-weight:500; color:var(--ink-4); }
 
   /* 디바이스 2 (주최자 폰) */
   .wrap2{ position:relative; width:390px; max-width:100%; height:100%; flex:none; display:none;
@@ -142,11 +132,10 @@
 
   @media (max-width:640px){
     body{ background:#fff; }
-    .topbar{ display:none; }
     .stage{ padding:0; }
     .wrap{ width:100% !important; }
     .screen{ border-radius:0; box-shadow:none; overflow:auto; }
-    .handle,.badge{ display:none; }
+    .handle,.badge,.dev-label{ display:none; }
     .wrap2{ display:none !important; }
   }
 
@@ -334,7 +323,8 @@
     font-size:12.5px; color:var(--ink-4); cursor:pointer; padding:6px 12px; min-height:32px; border-radius:8px;
   }
   .req-sub:active{ background:var(--surface); }
-  .home-nav{ justify-content:flex-end; gap:10px; }
+  .home-nav{ justify-content:space-between; gap:10px; }
+  .nav-ic{ display:inline-flex; gap:10px; }
   .bell{
     position:relative; width:36px; height:36px; border:0; border-radius:50%; cursor:pointer;
     background:var(--surface-2); color:var(--ink-2); display:grid; place-items:center;
@@ -373,7 +363,7 @@
   .noti-item.read span{ color:var(--ink-4); }
   .noti-empty{ font-size:13.5px; color:var(--ink-3); text-align:center; padding:48px 10px; margin:0; line-height:1.6; }
   .profile{ display:inline-flex; align-items:center; gap:9px; }
-  .p-id{ display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
+  .p-id{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.3; }
   .p-id b{ font-size:12.5px; font-weight:700; color:var(--ink); }
   .p-id i{ font-style:normal; font-size:10.5px; font-weight:500; color:var(--ink-4); }
   .avatar{ width:32px; height:32px; border-radius:50%; overflow:hidden; flex:none;
@@ -540,16 +530,12 @@
 </style>
 </head>
 <body data-persona="required">
-  <div class="topbar">
-    <div class="seg" id="roleSeg" role="tablist" aria-label="핵심 화면 바로가기">
-      <button role="tab" aria-selected="true"  data-role="part">참석자</button>
-      <button role="tab" aria-selected="false" data-role="host">주최자</button>
-    </div>
-  </div>
-
   <div class="stage">
     <div class="wrap" id="wrap">
-      <span class="dev-label" id="devLabel1">장은솔</span>
+      <span class="dev-label" id="devLabel1">
+        <span class="avatar" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFE3C1"/><path d="M6 20c0-8 5-13 12-13s12 5 12 13v6h-4v-6c-1-2-2.5-3.6-3.5-6-2 2.4-7 3.6-12.5 3V26H6v-6z" fill="#54402E"/><circle cx="14" cy="20.5" r="1.5" fill="#33261A"/><circle cx="22" cy="20.5" r="1.5" fill="#33261A"/><path d="M15.5 24.5c1.6 1.4 3.4 1.4 5 0" stroke="#C96F4A" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg></span>
+        <span class="dl-id"><b id="dlName1">장은솔</b><i>프로덕트 디자이너</i></span>
+      </span>
       <div class="screen" id="screen">
 
         <!-- STEP 1 · 시간대 -->
@@ -629,17 +615,19 @@
         <!-- EXITED → 홈 (허브) -->
         <section class="step" id="stepExit" aria-live="polite">
           <div class="nav home-nav">
-            <button class="bell" id="calBtn" aria-label="내 캘린더">
-              <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4.5" width="14" height="12" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </button>
-            <button class="bell" id="bellBtn" aria-label="알림">
-              <svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8c-2.9 0-4.6 2.2-4.6 4.6 0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6c0-2.4-1.7-4.6-4.6-4.6zM8.4 15a1.7 1.7 0 003.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span class="bell-dot" id="bellDot" hidden></span>
-            </button>
             <div class="profile">
-              <span class="p-id"><b>장은솔</b><i>프로덕트 디자이너</i></span>
               <span class="avatar" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFE3C1"/><path d="M6 20c0-8 5-13 12-13s12 5 12 13v6h-4v-6c-1-2-2.5-3.6-3.5-6-2 2.4-7 3.6-12.5 3V26H6v-6z" fill="#54402E"/><circle cx="14" cy="20.5" r="1.5" fill="#33261A"/><circle cx="22" cy="20.5" r="1.5" fill="#33261A"/><path d="M15.5 24.5c1.6 1.4 3.4 1.4 5 0" stroke="#C96F4A" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg></span>
+              <span class="p-id"><b>장은솔</b><i>프로덕트 디자이너</i></span>
             </div>
+            <span class="nav-ic">
+              <button class="bell" id="calBtn" aria-label="내 캘린더">
+                <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4.5" width="14" height="12" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+              <button class="bell" id="bellBtn" aria-label="알림">
+                <svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8c-2.9 0-4.6 2.2-4.6 4.6 0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6c0-2.4-1.7-4.6-4.6-4.6zM8.4 15a1.7 1.7 0 003.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="bell-dot" id="bellDot" hidden></span>
+              </button>
+            </span>
           </div>
           <h1 class="title title-2l" id="homeTitle">확인할 요청이<br>있어요</h1>
 
@@ -869,22 +857,27 @@
 
     <!-- 디바이스 2 · 주최자(지수)의 폰 — 마지막 응답이 도착하면 등장 -->
     <div class="wrap2" id="wrap2" aria-hidden="true">
-      <span class="dev-label" id="devLabel2">김지수</span>
+      <span class="dev-label" id="devLabel2">
+        <span class="avatar" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#CBEBDC"/><path d="M8 19c0-7.5 4.5-12 10-12s10 4.5 10 12l-2.5-1c-.8-2.6-2-4.4-3.5-5.5-2.5 2.3-7.5 3-11.5 2L8 19z" fill="#2E2A28"/><circle cx="14" cy="20.5" r="3.2" stroke="#2E2A28" stroke-width="1.2" fill="none"/><circle cx="22" cy="20.5" r="3.2" stroke="#2E2A28" stroke-width="1.2" fill="none"/><path d="M17.2 20.5h1.6" stroke="#2E2A28" stroke-width="1.2" stroke-linecap="round"/><circle cx="14" cy="20.5" r="1.3" fill="#2E2A28"/><circle cx="22" cy="20.5" r="1.3" fill="#2E2A28"/><path d="M15.8 25.5c1.4 1.1 3 1.1 4.4 0" stroke="#7A5648" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg></span>
+        <span class="dl-id"><b id="dlName2">김지수</b><i>프로덕트 오너</i></span>
+      </span>
       <div class="screen">
 
         <section class="step active" id="s2Home">
           <div class="nav home-nav">
-            <button class="bell" id="s2CalBtn" aria-label="내 캘린더">
-              <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4.5" width="14" height="12" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </button>
-            <button class="bell" id="s2Bell" aria-label="알림">
-              <svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8c-2.9 0-4.6 2.2-4.6 4.6 0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6c0-2.4-1.7-4.6-4.6-4.6zM8.4 15a1.7 1.7 0 003.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span class="bell-dot" id="s2BellDot" hidden></span>
-            </button>
             <div class="profile">
-              <span class="p-id"><b>김지수</b><i>프로덕트 오너</i></span>
               <span class="avatar" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#CBEBDC"/><path d="M8 19c0-7.5 4.5-12 10-12s10 4.5 10 12l-2.5-1c-.8-2.6-2-4.4-3.5-5.5-2.5 2.3-7.5 3-11.5 2L8 19z" fill="#2E2A28"/><circle cx="14" cy="20.5" r="3.2" stroke="#2E2A28" stroke-width="1.2" fill="none"/><circle cx="22" cy="20.5" r="3.2" stroke="#2E2A28" stroke-width="1.2" fill="none"/><path d="M17.2 20.5h1.6" stroke="#2E2A28" stroke-width="1.2" stroke-linecap="round"/><circle cx="14" cy="20.5" r="1.3" fill="#2E2A28"/><circle cx="22" cy="20.5" r="1.3" fill="#2E2A28"/><path d="M15.8 25.5c1.4 1.1 3 1.1 4.4 0" stroke="#7A5648" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg></span>
+              <span class="p-id"><b>김지수</b><i>프로덕트 오너</i></span>
             </div>
+            <span class="nav-ic">
+              <button class="bell" id="s2CalBtn" aria-label="내 캘린더">
+                <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4.5" width="14" height="12" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+              <button class="bell" id="s2Bell" aria-label="알림">
+                <svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8c-2.9 0-4.6 2.2-4.6 4.6 0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6c0-2.4-1.7-4.6-4.6-4.6zM8.4 15a1.7 1.7 0 003.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="bell-dot" id="s2BellDot" hidden></span>
+              </button>
+            </span>
           </div>
           <h1 class="title title-2l" id="s2HomeTitle">사정을 모으고<br>있어요</h1>
 
@@ -1923,12 +1916,12 @@
     clearTimeout(notif2Timer); // 자동 전환 대신: 안 누르면 탭 가이드
     notif2Timer=setTimeout(()=>{ if(notif.classList.contains("show")) notif.classList.add("hint"); }, 2600);
   }
-  // 디바이스1의 역할 = 최초로 완료한 플로우가 정의 (이후 고정) — 라벨은 사람(역할)
+  // 디바이스1의 역할 = 최초로 완료한 플로우가 정의 (이후 고정) — 프로필 칩의 이름 옆에 붙는다
   let rolesAssigned=false;
   function assignRoles(firstIsHost){
     if(rolesAssigned) return; rolesAssigned=true;
-    document.getElementById("devLabel1").textContent="장은솔 ("+(firstIsHost?"주최자":"참석자")+")";
-    document.getElementById("devLabel2").textContent="김지수 ("+(firstIsHost?"참석자":"주최자")+")";
+    document.getElementById("dlName1").textContent="장은솔 ("+(firstIsHost?"주최자":"참석자")+")";
+    document.getElementById("dlName2").textContent="김지수 ("+(firstIsHost?"참석자":"주최자")+")";
   }
   let s2ActiveMeet="kickoff"; // 결과 화면이 어떤 회의를 다루는지
   const pokedSet=new Set();
@@ -2417,18 +2410,6 @@
   });
 
   /* ================= showcase: 역할 핵심 화면 바로가기 ================= */
-  document.querySelectorAll("#roleSeg button").forEach(b=>{
-    b.addEventListener("click", ()=>{
-      document.querySelectorAll("#roleSeg button").forEach(x=>x.setAttribute("aria-selected","false"));
-      b.setAttribute("aria-selected","true");
-      if(b.dataset.role==="part"){ // 참석자 핵심: 살아있는 첫 요청의 사정 입력
-        const id=Object.keys(REQS).find(x=>!store[x].confirmedAt && !REQS[x].canceled);
-        if(id) openReq(id);
-      }
-      else goStep("hostCreate");                        // 주최자 핵심: 회의 만들기
-    });
-  });
-
   /* ================= showcase: 디바이스 ================= */
   const wrap=document.getElementById("wrap"), badge=document.getElementById("badge"), stage=document.querySelector(".stage");
   const wrap2=document.getElementById("wrap2"), badge2=document.getElementById("badge2");
