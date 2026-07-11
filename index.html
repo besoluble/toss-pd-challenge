@@ -855,10 +855,10 @@
                 <span class="req-meta" id="s2Meta">다섯 명 중 네 명이 사정을 알려줬어요</span>
                 <span class="req-cta" id="s2Cta">살짝 재촉하기</span>
               </button>
-              <button class="req-card submitted" id="s2Weekly" type="button" hidden style="cursor:default;">
+              <button class="req-card" id="s2Weekly" type="button" hidden>
                 <span class="req-top"><span class="req-title">홈팀 위클리 · 30분</span></span>
-                <span class="req-meta">✓ 네 명 모두 사정을 알려줬어요</span>
-                <span class="req-cta">추천 시간을 준비하고 있어요</span>
+                <span class="req-meta" id="s2WeeklyMeta">✓ 네 명 모두 사정을 알려줬어요</span>
+                <span class="req-cta" id="s2WeeklyCta">추천 시간 보러 가기</span>
               </button>
             </div>
           </div>
@@ -870,9 +870,9 @@
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
-          <div class="ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
+          <div class="ctx" id="s2Ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
-          <p class="sub">여섯 명의 캘린더와 알려준 사정을 반영했어요.</p>
+          <p class="sub" id="s2ResultsSub">여섯 명의 캘린더와 알려준 사정을 반영했어요.</p>
           <div class="content">
             <div class="times" id="times2" role="radiogroup" aria-label="추천 시간"></div>
           </div>
@@ -1184,8 +1184,9 @@
       const d=document.createElement("div"); d.className="noti-item";
       d.innerHTML="<b>"+n.t+(n.fresh?'<i class="n-dot"></i>':"")+"</b><span>"+n.b+"</span>";
       d.addEventListener("click",()=>{
-        if(n.t.includes("기다리고")) openReq("kickoff");                      // 재촉 → 바로 답하러
-        else openCalView("noti", n.t==="신규 기능 킥오프"?"kickoff":"review"); // 확정 → 캘린더에서 확인
+        if(n.t.includes("기다리고")){ openReq("kickoff"); return; }           // 재촉 → 바로 답하러
+        const focus = n.t==="신규 기능 킥오프"?"kickoff" : n.t==="홈팀 위클리"?"weekly" : "review";
+        openCalView("noti", focus);                                           // 확정 → 캘린더에서 확인
       });
       notiList.appendChild(d);
     });
@@ -1246,6 +1247,10 @@
       const [d,s]=TIME_COORD[kickoffConfirmedAt];
       events.push({d,s,e:s+1,t:"신규 기능 킥오프",kind:"fixed",key:"kickoff"});
     }
+    if(weeklyConfirmedAt && TIME_COORD[weeklyConfirmedAt]){
+      const [d,s]=TIME_COORD[weeklyConfirmedAt];
+      events.push({d,s,e:s+0.5,t:"홈팀 위클리",kind:"fixed",key:"weekly"});
+    }
     if(hostState==="confirmed" && TIME_COORD[hostPickedLabel]){
       const [d,s]=TIME_COORD[hostPickedLabel];
       events.push({d,s,e:s+durMin/60,t:meet.name,kind:"fixed",key:"mymeet"});
@@ -1292,15 +1297,21 @@
     const card=document.getElementById("s2Weekly");
     if(!card.hidden) return; // 재제출 중복 방지
     const first=revealDevice2();
-    card.hidden=false;
+    card.hidden=false; weeklyReady=true;
     document.getElementById("s2BadgeMy").textContent="2";
+    document.getElementById("s2BadgeMy").classList.add("hot");
+    if(!dev2Confirmed) setS2MyTitle("이제 시간을<br>정할 수 있어요");
     setS2Tab("my");
     setTimeout(()=>{
       chime();
       pushNoti2("모두의 사정이 모였어요","홈팀 위클리 · 이제 시간을 정할 수 있어요");
-      setNotif2("모두의 사정이 모였어요","홈팀 위클리 · 이제 시간을 정할 수 있어요",()=>{ setS2Tab("my"); s2Go("home","back"); });
+      setNotif2("모두의 사정이 모였어요","홈팀 위클리 · 이제 시간을 정할 수 있어요",()=>openS2Results("weekly"));
     }, first?650:200);
   }
+  document.getElementById("s2Weekly").addEventListener("click",()=>{
+    if(weeklyConfirmed) return;
+    if(weeklyReady) openS2Results("weekly");
+  });
 
   /* ================= 디바이스 2: 주최자(지수)의 폰 ================= */
   let dev2Shown=false, pick2=0;
@@ -1411,9 +1422,9 @@
     }catch(e){}
   }
 
-  // 방금 참석자가 흘린 사정(시간대+요일)이 주최자 화면 후보·근거에 그대로 반영되게
-  function buildTimes2(){
-    const s=store.kickoff;
+  // 방금 참석자가 흘린 사정(시간대+요일)이 주최자 화면 후보·근거에 그대로 반영되게 — 회의별 파라미터화
+  function buildTimes2(reqId, allWord){
+    const s=store[reqId];
     const SLOT_NAME={0:"이른 아침",1:"점심 직후",2:"늦은 오후"};
     const SLOT_OBJ ={0:"을",1:"를",2:"를"}, SLOT_TOP={0:"은",1:"는",2:"는"};
     const CANDS=[ // 후보 풀 — 사용자가 요일을 막으면 대체 후보가 올라온다
@@ -1434,7 +1445,7 @@
       return {...c, p, src};
     }).sort((a,b)=>a.p-b.p);
     const why=(c,i)=>{
-      if(c.p===0) return i===0?"여섯 명 모두 편한 시간이에요":"필수 참석자는 모두 편한 시간이에요";
+      if(c.p===0) return i===0?allWord+" 모두 편한 시간이에요":"필수 참석자는 모두 편한 시간이에요";
       if(c.p===3) return "한 명이 "+c.src.name+c.src.top+" 안 된다고 했어요";
       return "한 명이 "+c.src.name+c.src.obj+" "+(c.p===2?"웬만하면":"살짝")+" 피하고 싶어 해요";
     };
@@ -1480,6 +1491,21 @@
     document.getElementById("devLabel2").textContent=firstIsHost?"참석자":"주최자";
   }
   let s2Ready=false, poked=false;
+  let weeklyReady=false, weeklyConfirmed=false, weeklyConfirmedAt=null;
+  let s2ActiveMeet="kickoff"; // 결과 화면이 어떤 회의를 다루는지
+  const S2_MEET={
+    kickoff:{ name:"신규 기능 킥오프", ctx:"<b>신규 기능 킥오프 · 1시간</b> · 다음 주 중", all:"여섯 명" },
+    weekly:{  name:"홈팀 위클리",      ctx:"<b>홈팀 위클리 · 30분</b> · 다음 주 중",      all:"네 명" },
+  };
+  function openS2Results(id){
+    s2ActiveMeet=id;
+    const m=S2_MEET[id];
+    document.getElementById("s2Ctx").innerHTML=m.ctx;
+    document.getElementById("s2ResultsSub").textContent=m.all+"의 캘린더와 알려준 사정을 반영했어요.";
+    TIMES2=buildTimes2(id, m.all); pick2=0; renderTimes2();
+    notif.classList.remove("show");
+    s2Go("results","fwd");
+  }
   function revealDevice2(){
     if(dev2Shown) return false; dev2Shown=true;
     document.body.classList.add("dual");
@@ -1490,10 +1516,9 @@
   function showDevice2(){ // 킥오프: 마지막 사정 도착
     if(dev2Confirmed) return; // 확정 뒤 재제출이 지수 폰을 과거로 되돌리지 않게
     const first=revealDevice2();
-    TIMES2=buildTimes2(); pick2=0; renderTimes2();
     setTimeout(()=>{
       chime();
-      setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>s2Go("results","fwd"));
+      setNotif2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요",()=>openS2Results("kickoff"));
       pushNoti2("모두의 사정이 모였어요","신규 기능 킥오프 · 이제 시간을 정할 수 있어요");
       s2Ready=true;
       setS2MyTitle("이제 시간을<br>정할 수 있어요");
@@ -1505,7 +1530,7 @@
   notif.addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
   document.getElementById("s2Card").addEventListener("click",()=>{
     if(dev2Confirmed) return;
-    if(s2Ready){ notif.classList.remove("show"); s2Go("results","fwd"); return; }
+    if(s2Ready){ openS2Results("kickoff"); return; }
     if(poked) return; // 아직 안 모임 → 살짝 재촉하기
     poked=true;
     document.getElementById("s2Cta").textContent="재촉했어요 · 답이 오면 알려드릴게요";
@@ -1534,18 +1559,30 @@
   notif1.addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
   let dev2Confirmed=false;
   document.getElementById("s2Confirm").addEventListener("click",()=>{
-    document.getElementById("s2DoneSub").innerHTML=TIMES2[pick2].t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
-    kickoffConfirmedAt=TIMES2[pick2].t; // 내 캘린더에 반영
-    pushNoti("신규 기능 킥오프", TIMES2[pick2].t+"으로 확정됐어요 · 캘린더에 추가했어요"); // 알림함에 쌓임
-    dev2Confirmed=true;
-    setS2MyTitle("회의가<br>잡혔어요!");
-    document.getElementById("s2BadgeMy").classList.remove("hot");
-    document.getElementById("s2Meta").textContent="✓ "+TIMES2[pick2].t+" 확정 · 모두에게 알렸어요";
-    document.getElementById("s2Cta").style.display="none";
+    const t=TIMES2[pick2].t, m=S2_MEET[s2ActiveMeet];
+    document.getElementById("s2DoneSub").innerHTML=t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
+    pushNoti(m.name, t+"으로 확정됐어요 · 캘린더에 추가했어요"); // 참석자 알림함에 쌓임
+    if(s2ActiveMeet==="kickoff"){
+      kickoffConfirmedAt=t; dev2Confirmed=true;
+      document.getElementById("s2Meta").textContent="✓ "+t+" 확정 · 모두에게 알렸어요";
+      document.getElementById("s2Cta").style.display="none";
+      document.getElementById("s2Card").classList.add("submitted");
+    }else{
+      weeklyConfirmedAt=t; weeklyConfirmed=true;
+      document.getElementById("s2WeeklyMeta").textContent="✓ "+t+" 확정 · 모두에게 알렸어요";
+      document.getElementById("s2WeeklyCta").textContent="캘린더에 추가했어요";
+      document.getElementById("s2Weekly").classList.add("submitted");
+    }
+    // 남은 결정이 없으면 뱃지·타이틀 정리
+    const pendingLeft=(s2Ready&&!dev2Confirmed)||(weeklyReady&&!weeklyConfirmed);
+    if(!pendingLeft){
+      setS2MyTitle("회의가<br>잡혔어요!");
+      document.getElementById("s2BadgeMy").classList.remove("hot");
+    }
     s2Go("done");
     setTimeout(()=>{ // 참석자에게 확정 알림 띠롱 → 일정이 '사는 곳'인 내 캘린더로
       chime();
-      setNotif1("회의 시간이 정해졌어요","신규 기능 킥오프 · "+TIMES2[pick2].t, ()=>openCalView("exit","kickoff"));
+      setNotif1("회의 시간이 정해졌어요", m.name+" · "+t, ()=>openCalView("exit", s2ActiveMeet));
     }, 650);
   });
   document.getElementById("again").addEventListener("click",()=>goStep(1,"back"));
