@@ -144,6 +144,34 @@
   body[data-persona="optional"] .opt-only{ display:inline-flex !important; }
 
   .title-2l{ min-height:2.7em; } /* 타이틀이 1줄이어도 2줄 높이 확보 → 탭·콘텐츠 위치 고정 */
+  #homeSub, #s2HomeSub{ min-height:1.55em; } /* sub 유무로 탭이 출렁이지 않게 */
+
+  /* 주최자 메시지 시트 */
+  .msg-area{ resize:none; min-height:96px; line-height:1.5; font-weight:400; display:block; }
+  .anon-toggle{
+    display:flex; align-items:center; gap:9px; margin-top:12px; padding:6px 0; min-height:40px;
+    background:none; border:0; font:inherit; font-size:13.5px; font-weight:500; color:var(--ink-2); cursor:pointer;
+  }
+  .anon-box{
+    width:20px; height:20px; border-radius:6px; background:var(--surface); display:grid; place-items:center;
+    transition:background-color .16s var(--ease);
+  }
+  .anon-box svg{ width:12px; height:12px; opacity:0; transition:opacity .16s var(--ease); }
+  .anon-toggle[aria-pressed="true"] .anon-box{ background:var(--blue); }
+  .anon-toggle[aria-pressed="true"] .anon-box svg{ opacity:1; }
+  .foot-link.sent{ color:var(--blue); text-decoration:none; pointer-events:none; }
+
+  /* 미리보기 안내 툴팁 */
+  .tip{
+    position:relative; align-self:center; text-align:center;
+    background:rgba(25,31,40,.9); color:#fff; font-size:12px; line-height:1.5;
+    padding:9px 13px; border-radius:11px; margin-bottom:4px;
+    animation:fadeUp .4s var(--ease);
+  }
+  .tip::after{
+    content:""; position:absolute; top:100%; left:50%; translate:-50%;
+    border:6px solid transparent; border-top-color:rgba(25,31,40,.9);
+  }
   .noti-item.static{ cursor:default; }
   .noti-item.static:active{ background:none; }
   .ctx{ font-size:13px; color:var(--ink-3); margin-bottom:10px; }
@@ -520,7 +548,7 @@
           </div>
 
           <div class="foot">
-            <button class="foot-link">이 중에 없는 사정이 있어요</button>
+            <button class="foot-link" id="escapeBtn">이 중에 없는 사정이 있어요</button>
             <button class="cta" id="next1">다 편해요</button>
           </div>
         </section>
@@ -717,6 +745,7 @@
 
           <div class="foot">
             <p class="privacy">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
+            <div class="tip" id="previewTip" hidden>아직 모으는 중이지만, 다 모였다고 가정하고<br>확정까지 미리 체험해 볼 수 있어요</div>
             <button class="cta" id="hostConfirm">이 시간으로 확정하기</button>
           </div>
         </section>
@@ -765,6 +794,24 @@
             <div class="cal-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
             <div class="cal-grid" id="calGrid"></div>
             <button class="cta" id="whenOk" style="margin-top:14px;">확인</button>
+          </div>
+        </div>
+
+        <!-- 이 중에 없는 사정 → 주최자에게 메시지 -->
+        <div class="modal" id="msgModal">
+          <div class="dim" id="msgDim"></div>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="msgTitle">
+            <h3 id="msgTitle">이 중에 없는 사정이 있나요?</h3>
+            <p>주최자에게 메시지로 전할게요.<br>보낸 뒤에도 남은 질문은 끝까지 답해 주세요.</p>
+            <textarea class="text-input msg-area" id="msgText" rows="3"
+              placeholder="예) 그 주 수요일엔 병원 예약이 있어서 오후 내내 어려워요"></textarea>
+            <button type="button" class="anon-toggle" id="msgAnon" aria-pressed="true">
+              <span class="anon-box">
+                <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3.5 3.5 7.5-8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              익명으로 보내기
+            </button>
+            <button class="cta" id="msgSend" style="margin-top:14px;">주최자에게 보내기</button>
           </div>
         </div>
 
@@ -1000,6 +1047,7 @@
     el.classList.add("active");
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
+    ["exitModal","whenModal","msgModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
     screen.scrollTop=0;
   }
   const submit=document.getElementById("submit"), next1=document.getElementById("next1");
@@ -1372,6 +1420,7 @@
     return true;
   }
   function showDevice2(){ // 킥오프: 마지막 사정 도착
+    if(dev2Confirmed) return; // 확정 뒤 재제출이 지수 폰을 과거로 되돌리지 않게
     const first=revealDevice2();
     TIMES2=buildTimes2(); pick2=0; renderTimes2();
     setTimeout(()=>{
@@ -1570,7 +1619,10 @@
       setNotif2("새 요청이 도착했어요", meet.name+" · 은솔님이 사정을 물어봤어요", goS2ReqTab);
     }, first?900:500);
   });
-  document.getElementById("hostPreview").addEventListener("click",()=>goStep("host","fwd"));
+  document.getElementById("hostPreview").addEventListener("click",()=>{
+    goStep("host","fwd");
+    document.getElementById("previewTip").hidden = hostState!=="collecting"; // 왜 눌러볼 수 있는지 안내
+  });
   const goHomeMy=()=>{ homeTab="my"; renderHome(); goStep("exit","back"); };
   document.getElementById("hostSentOk").addEventListener("click", goHomeMy);
   document.getElementById("hostDoneOk").addEventListener("click", goHomeMy);
@@ -1600,6 +1652,7 @@
   renderTimes();
   document.getElementById("hostConfirm").addEventListener("click",()=>{
     hostState="confirmed"; hostPickedLabel=HOST_TIMES[hostPick].t;
+    document.getElementById("previewTip").hidden=true;
     document.getElementById("hostDoneSub").innerHTML=hostPickedLabel+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
     goStep("hostDone");
     const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림
@@ -1610,6 +1663,24 @@
     }, first?900:650);
   });
   document.getElementById("hostAgain").addEventListener("click",()=>goStep("host","back"));
+
+  /* ================= 이 중에 없는 사정 → 주최자 메시지 ================= */
+  const msgModal=document.getElementById("msgModal"), msgText=document.getElementById("msgText"),
+        msgAnon=document.getElementById("msgAnon"), escapeBtn=document.getElementById("escapeBtn");
+  escapeBtn.addEventListener("click",()=>{
+    msgModal.classList.add("show");
+    setTimeout(()=>msgText.focus(), 400);
+  });
+  msgAnon.addEventListener("click",()=>{
+    msgAnon.setAttribute("aria-pressed", msgAnon.getAttribute("aria-pressed")==="true"?"false":"true");
+  });
+  document.getElementById("msgDim").addEventListener("click",()=>msgModal.classList.remove("show"));
+  document.getElementById("msgSend").addEventListener("click",()=>{
+    if(!msgText.value.trim()){ msgText.focus(); return; }
+    msgModal.classList.remove("show");
+    escapeBtn.textContent="✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요";
+    escapeBtn.classList.add("sent");
+  });
 
   /* ================= 이탈 확인 ================= */
   const exitModal=document.getElementById("exitModal");
