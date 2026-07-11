@@ -938,6 +938,78 @@
           </div>
         </section>
 
+        <!-- 지수 · 답변 1스텝: 시간대 -->
+        <section class="step" id="s2Ans1">
+          <div class="nav">
+            <button class="back" id="s2Ans1Back" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="ctx" id="s2AnsCtx"></div>
+          <h1 class="title">불편한 시간만<br>알려주세요</h1>
+          <div class="chips">
+            <span class="cal">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              캘린더에 있는 일정은 이미 빼뒀어요
+            </span>
+            <span class="cal" id="s2OptChip" hidden>
+              <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              꼭 안 와도 괜찮은 회의예요
+            </span>
+          </div>
+
+          <div class="content">
+            <div class="legend-row"><span class="legend">편해요 → 안 돼요</span></div>
+            <div class="rows" id="s2TimeRows"></div>
+          </div>
+
+          <div class="foot">
+            <button class="cta" id="s2Next1">다 편해요</button>
+          </div>
+        </section>
+
+        <!-- 지수 · 답변 2스텝: 요일 -->
+        <section class="step" id="s2Ans2">
+          <div class="nav">
+            <button class="back" id="s2Ans2Back" aria-label="이전으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <h1 class="title">다음 주 불편한 요일이<br>있나요?</h1>
+
+          <div class="content">
+            <div class="week" id="s2Week"></div>
+            <div class="editor" id="s2Editor">
+              <p class="editor-hint" id="s2EditorHint">불편한 요일이 있으면 눌러 주세요</p>
+            </div>
+          </div>
+
+          <div class="foot">
+            <p class="privacy">🔒 고른 내용은 익명으로 시간 정할 때만 써요</p>
+            <button class="cta" id="s2Submit">다 편해요</button>
+          </div>
+        </section>
+
+        <!-- 지수 · 답변 완료 -->
+        <section class="step" id="s2AnsDone" aria-live="polite">
+          <div class="nav">
+            <button class="back" id="s2AnsClose" aria-label="홈으로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div class="done-body">
+            <div class="check">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#3182F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2>잘 반영할게요!</h2>
+            <p>시간이 정해지면 알려드릴게요.</p>
+          </div>
+          <div class="foot">
+            <button class="foot-link" id="s2AnsAgain">다시 고치기</button>
+            <button class="cta" id="s2AnsOk">확인</button>
+          </div>
+        </section>
+
         <!-- 지수 · 보냈어요 -->
         <section class="step" id="s2Sent" aria-live="polite">
           <div class="nav">
@@ -1433,7 +1505,8 @@
   /* ================= 디바이스 2: 주최자(지수)의 폰 ================= */
   let dev2Shown=false, pick2=0;
   const s2Els={home:document.getElementById("s2Home"),results:document.getElementById("s2Results"),done:document.getElementById("s2Done"),noti:document.getElementById("s2Noti"),
-    create:document.getElementById("s2Create"),who:document.getElementById("s2Who"),sent:document.getElementById("s2Sent")};
+    create:document.getElementById("s2Create"),who:document.getElementById("s2Who"),sent:document.getElementById("s2Sent"),
+    ans1:document.getElementById("s2Ans1"),ans2:document.getElementById("s2Ans2"),ansDone:document.getElementById("s2AnsDone")};
 
   // 지수 홈도 허브 문법: 탭 전환 + 상태별 타이틀
   let s2Tab="my", s2MyTitle="사정을 모으고<br>있어요";
@@ -1451,17 +1524,14 @@
       const p=document.createElement("p"); p.className="empty-hint";
       p.textContent="지금은 답할 요청이 없어요."; box.appendChild(p); return;
     }
+    const jiOpt=!PEOPLE.find(p=>p.name==="지수").req; // 은솔이 정한 지수의 필수/선택이 그대로 태그가 된다
     const c=document.createElement("button");
     c.className="req-card"+((s2ReqAnswered||fixed)?" submitted":""); c.type="button";
     c.innerHTML='<span class="req-top"><span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
-      '<span class="req-tag req">필수 참석</span></span>'+
+      '<span class="req-tag '+(jiOpt?'opt':'req')+'">'+(jiOpt?'선택 참석':'필수 참석')+'</span></span>'+
       '<span class="req-meta">'+(fixed?"📅 "+hostPickedLabel+" 확정됐어요":s2ReqAnswered?"✓ 사정을 알려드렸어요":meet.span+" · 은솔님이 물어봤어요")+'</span>'+
-      '<span class="req-cta">'+(fixed?"캘린더에 추가됐어요":s2ReqAnswered?"잘 반영될 거예요":"불편한 시간 알려주기")+'</span>';
-    if(!fixed) c.addEventListener("click",()=>{
-      if(s2ReqAnswered) return;
-      s2ReqAnswered=true; myAnswered=4; chime();
-      renderS2Req(); renderHome(); // 은솔 홈 카드의 응답 수도 함께 갱신
-    });
+      '<span class="req-cta">'+(fixed?"캘린더에 추가됐어요":s2ReqAnswered?"다시 고치기":"불편한 시간 알려주기")+'</span>';
+    if(!fixed) c.addEventListener("click",()=>openS2Answer()); // 라벨이 약속한 진짜 답변 플로우로 (H3)
     else c.style.cursor="default";
     box.appendChild(c);
   }
@@ -1951,6 +2021,95 @@
   const s2GoHomeMy=()=>{ setS2Tab("my"); s2Go("home","back"); };
   document.getElementById("s2SentOk").addEventListener("click", s2GoHomeMy);
   document.getElementById("s2SentClose").addEventListener("click", s2GoHomeMy);
+
+  /* ================= 지수: 진짜 답변 플로우 — 원탭 스텁 교체 (H3) ================= */
+  const s2TimeState=[], s2TimeCtl=[];
+  const s2TimeRows=document.getElementById("s2TimeRows");
+  TIME_ITEMS.forEach((it,idx)=>{
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML='<div class="row-head"><div class="row-name">'+it.emoji+' <span>'+it.name+'</span> <span class="rng">'+it.range+'</span></div><div class="state"></div></div>';
+    const stateEl=row.querySelector(".state");
+    const slider=makeSlider(it.init, s=>{ s2TimeState[idx]=s; render(s); updateS2AnsCta(); }, it.name);
+    row.appendChild(slider.el);
+    function render(s){ stateEl.textContent=STEPS[s].label; stateEl.className="state "+(s===3?"max":s>0?"on":""); }
+    render(it.init); s2TimeState[idx]=it.init; s2TimeCtl.push({slider,render}); s2TimeRows.appendChild(row);
+  });
+
+  const s2WeekEl=document.getElementById("s2Week"), s2EditorEl=document.getElementById("s2Editor"), s2EditorHint=document.getElementById("s2EditorHint");
+  const s2DayVals={}; DAYS.forEach(d=>s2DayVals[d]=0);
+  const s2DayBtns={};
+  let s2ActiveDay=null, s2DayRow=null, s2DaySlider=null, s2DayStateEl=null, s2DayNameEl=null;
+  DAYS.forEach(d=>{
+    const b=document.createElement("button"); b.className="day"; b.type="button";
+    b.innerHTML=d+'<span class="tag" hidden></span>';
+    b.addEventListener("click",()=>s2SelectDay(d));
+    s2WeekEl.appendChild(b); s2DayBtns[d]=b;
+  });
+  function s2RenderDayChip(d){
+    const s=s2DayVals[d], btn=s2DayBtns[d];
+    const tone=s===3?"red":s>0?"blue":"";
+    if(tone) btn.dataset.tone=tone; else btn.removeAttribute("data-tone");
+    const tag=btn.querySelector(".tag");
+    tag.hidden=s===0; tag.textContent=s===3?"안 돼요":s===2?"웬만하면":s===1?"살짝":"";
+  }
+  function s2BuildEditor(){
+    s2DayRow=document.createElement("div"); s2DayRow.className="row";
+    s2DayRow.innerHTML='<div class="row-head"><div class="row-name"><span></span></div><div class="state"></div></div>';
+    s2DayStateEl=s2DayRow.querySelector(".state"); s2DayNameEl=s2DayRow.querySelector(".row-name span");
+    s2DaySlider=makeSlider(0, s=>{ if(s2ActiveDay){ s2DayVals[s2ActiveDay]=s; s2RenderDayChip(s2ActiveDay); s2RenderEditorState(s); updateS2AnsCta(); } }, "요일 세기");
+    s2DayRow.appendChild(s2DaySlider.el);
+  }
+  function s2RenderEditorState(s){
+    s2DayStateEl.textContent=STEPS[s].label;
+    s2DayStateEl.className="state "+(s===3?"max":s>0?"on":"");
+  }
+  function s2SelectDay(d){
+    if(s2ActiveDay===d){ // 다시 누르면 끄기 (편해요로 리셋)
+      s2DayVals[d]=0; s2RenderDayChip(d);
+      s2DayBtns[d].setAttribute("aria-pressed","false");
+      s2ActiveDay=null; updateS2AnsCta();
+      s2EditorHint.textContent = DAYS.some(x=>s2DayVals[x]>0)
+        ? "요일을 누르면 다시 고칠 수 있어요"
+        : "불편한 요일이 있으면 눌러 주세요";
+      s2EditorEl.replaceChildren(s2EditorHint); return;
+    }
+    if(s2ActiveDay) s2DayBtns[s2ActiveDay].setAttribute("aria-pressed","false");
+    s2ActiveDay=d; s2DayBtns[d].setAttribute("aria-pressed","true");
+    if(!s2DayRow) s2BuildEditor();
+    if(s2DayVals[d]===0){ s2DayVals[d]=1; } // 첫 선택은 '살짝'부터
+    s2DayNameEl.textContent=d+"요일";
+    s2DaySlider.el.setAttribute("aria-label", d+"요일");
+    s2DaySlider.set(s2DayVals[d], true);
+    s2RenderEditorState(s2DayVals[d]); s2RenderDayChip(d); updateS2AnsCta();
+    s2EditorEl.replaceChildren(s2DayRow);
+  }
+
+  const s2Next1Btn=document.getElementById("s2Next1"), s2SubmitBtn=document.getElementById("s2Submit");
+  function s2AnySet(){ return s2TimeState.some(s=>s>0)||DAYS.some(d=>s2DayVals[d]>0); }
+  function updateS2AnsCta(){
+    s2SubmitBtn.textContent=s2AnySet()?"다 정했어요":"다 편해요";
+    s2Next1Btn.textContent=s2TimeState.some(s=>s>0)?"다음":"다 편해요";
+  }
+  updateS2AnsCta();
+
+  function openS2Answer(){
+    document.getElementById("s2AnsCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span;
+    document.getElementById("s2OptChip").hidden=PEOPLE.find(p=>p.name==="지수").req; // 은솔이 '선택'으로 정했으면 칩 등장
+    s2Go("ans1","fwd");
+  }
+  // 고른 값은 그대로 남으므로 확인 모달 없이 돌아가도 잃지 않는다
+  document.getElementById("s2Ans1Back").addEventListener("click",()=>{ setS2Tab("req"); s2Go("home","back"); });
+  s2Next1Btn.addEventListener("click",()=>s2Go("ans2","fwd"));
+  document.getElementById("s2Ans2Back").addEventListener("click",()=>s2Go("ans1","back"));
+  s2SubmitBtn.addEventListener("click",()=>{
+    s2ReqAnswered=true; myAnswered=4;
+    renderS2Req(); renderHome(); // 부분 응답 = 은솔 카드의 카운트 상태만 (A3, 띠롱 없음)
+    s2Go("ansDone");
+  });
+  const s2AnsHome=()=>{ renderS2Req(); setS2Tab("req"); s2Go("home","back"); };
+  document.getElementById("s2AnsOk").addEventListener("click", s2AnsHome);
+  document.getElementById("s2AnsClose").addEventListener("click", s2AnsHome);
+  document.getElementById("s2AnsAgain").addEventListener("click",()=>s2Go("ans1","back"));
 
   /* ================= 이 중에 없는 사정 → 주최자 메시지 ================= */
   const msgModal=document.getElementById("msgModal"), msgText=document.getElementById("msgText");
