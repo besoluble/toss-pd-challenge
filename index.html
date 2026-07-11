@@ -1291,7 +1291,6 @@
   const STEPS = [
     {label:"편해요"}, {label:"살짝 피하고 싶어요"}, {label:"웬만하면 피하고 싶어요"}, {label:"안 돼요"},
   ];
-  const KO_N=["영","한","두","세","네","다섯","여섯","일곱"];
   function makeSlider(initial, onChange, label){
     const el = document.createElement("div");
     el.className = "slider";
@@ -1462,7 +1461,16 @@
   const TEAM_ROLE={ "장은솔":"프로덕트 디자이너", "김지수":"프로덕트 오너", "이수아":"프로덕트 디자이너", "박민수":"프론트엔드 개발자", "한도윤":"서버 개발자", "최분석":"데이터 분석가" };
   const titleOf=r=>r.name+" · "+r.dur;
   const ctxOf=r=>"<b>"+titleOf(r)+"</b> · "+(r.span||"다음 주 중");
-  const allOf=r=>(KO_N[r.total+1]||r.total+1)+" 명"; // 주최자 포함 전체 인원
+  const allOf=r=>(r.total+1)+"명"; // 주최자 포함 전체 인원 (숫자 표기 — 규모 무관 대응)
+  // ── 빠짐(선택 참석 불참) 단일 출처 — 모든 표면이 여기만 본다 ──
+  function declinerOf(key){ // 이 회의에서 빠진 사람(있으면). 빠질 수 있는 건 상대 폰의 참석자뿐
+    if(REQS[key] && store[key] && store[key].declined) return "장은솔";
+    if(HOSTED[key] && hostStore[key] && hostStore[key].declined) return "김지수";
+    return null;
+  }
+  function meetingDeclined(key, forJi){ // 지금 보는 사람이 곧 빠진 사람인가 (캘린더 색·알림 프레임용)
+    const d=declinerOf(key); return !!d && d===(forJi?"김지수":"장은솔");
+  }
   const hasEunsol=r=>!r.people || r.people.some(x=>x.name==="장은솔"); // 은솔이 초대된 회의인가
   const emptyDays=()=>{const o={};DAYS.forEach(d=>o[d]=0);return o;};
   const emptyStore=()=>({time:[0,0,0],days:emptyDays(),submitted:false,declined:false,confirmedAt:null});
@@ -1580,8 +1588,8 @@
       const h=HOSTED[hid], ready=answeredOf(h)>=h.total;
       const c=document.createElement("div"); c.className="req-card";
       const declNote=(h.jiIn&&hostStore[hid].declined)?" · 한 명은 이번엔 빠져요":"";
-      const meta= ready?"✓ "+(KO_N[h.total+1]||h.total+1)+" 명 모두 사정을 알려줬어요"+declNote
-        : "사정을 모으는 중이에요 · "+(KO_N[h.total]||h.total)+" 명 중 "+(KO_N[answeredOf(h)]||answeredOf(h))+" 명이 답했어요"+declNote;
+      const meta= ready?"✓ "+(h.total+1)+"명 모두 사정을 알려줬어요"+declNote
+        : "사정을 모으는 중이에요 · "+h.total+"명 중 "+answeredOf(h)+"명이 답했어요"+declNote;
       const cta= ready?'<button type="button" class="req-cta" data-act="results">추천 시간 보러 가기</button>'
         : '<button type="button" class="req-cta'+(h.poked?' ghost':'')+'" data-act="poke">'+(h.poked?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기")+'</button>';
       c.innerHTML='<span class="req-top"><span class="req-title">'+h.name+' · '+h.dur+'</span>'+
@@ -1727,7 +1735,7 @@
       const ca=store[id].confirmedAt;
       if(ca && SLOT_MAP[ca] && (forJi || hasEunsol(REQS[id]))){ // 초대 안 된 회의는 내 캘린더에 없다
         const {d,h}=SLOT_MAP[ca];
-        const declined = !forJi && store[id].declined; // 은솔이 빠지기로 한 회의 → 연한 하늘색
+        const declined = meetingDeclined(id, forJi); // 보는 사람이 빠진 회의 → 연한 하늘색
         evs.push({d,s:h,e:h+REQS[id].durH,t:REQS[id].name,kind:declined?"optional":"fixed",key:id,
           wk:+(REQS[id].spanS?mondayOf(REQS[id].spanS):NEXT_MON)});
       }
@@ -1736,7 +1744,7 @@
       const h=HOSTED[hid];
       if(h.confirmedAt && SLOT_MAP[h.confirmedAt] && (!forJi || h.jiIn)){
         const p=SLOT_MAP[h.confirmedAt];
-        const declined = forJi && hostStore[hid].declined; // 지수가 빠지기로 한 회의 → 연한 하늘색
+        const declined = meetingDeclined(hid, forJi); // 보는 사람이 빠진 회의 → 연한 하늘색
         evs.push({d:p.d,s:p.h,e:p.h+h.durH,t:h.name,kind:declined?"optional":"fixed",key:hid,
           wk:+mondayOf(h.spanS||NEXT_MON)});
       }
@@ -1783,22 +1791,22 @@
   }
   function meetingDetail(key, forJi){ // 파란 이벤트의 정체 — 각 디바이스의 관점으로
     const viewer=forJi?"김지수":"장은솔";
-    const pack=(title,time,hostName,invitees,opt,declined)=>{
+    const pack=(title,time,hostName,invitees,opt,decliner,viewerDeclined)=>{
       let ppl=[{name:hostName, req:true, host:true}].concat(invitees||[]);
-      if(declined) ppl=ppl.filter(x=>x.name!==viewer); // 내가 빠졌으니 참석 명단에서도 빠진다
-      const rep=hostName!==viewer?hostName:(invitees[0]&&invitees[0].name)||hostName;
+      if(decliner) ppl=ppl.filter(x=>x.name!==decliner); // 빠진 사람은 누가 보든 참석 명단에서 제외
+      const rep=(hostName!==viewer)?hostName:((ppl.find(x=>x.name!==viewer)||ppl[0]).name);
       return {title, time,
         host:hostName===viewer?"나":hostName+"님",
-        count:rep+"님 외 "+(KO_N[ppl.length-1]||ppl.length-1)+" 명",
-        people:ppl, opt, declined};
+        count:rep+"님 외 "+(ppl.length-1)+"명", // 숫자 표기
+        people:ppl, opt, declined:viewerDeclined};
     };
     if(key==="review") return pack("디자인 시스템 리뷰","화요일 오전 11:00 · 1시간","김지수",
-      [{name:"장은솔",req:true},{name:"이수아",req:true},{name:"박민수",req:true},{name:"최분석",req:false}], false);
+      [{name:"장은솔",req:true},{name:"이수아",req:true},{name:"박민수",req:true},{name:"최분석",req:false}], false, null, false);
     if(REQS[key]){ const r=REQS[key];
-      return pack(r.name, store[key].confirmedAt+" · "+r.dur, "김지수", r.people||[], !forJi && r.optional, !forJi && store[key].declined);
+      return pack(r.name, store[key].confirmedAt+" · "+r.dur, "김지수", r.people||[], !forJi && r.optional, declinerOf(key), meetingDeclined(key,forJi));
     }
     if(HOSTED[key]){ const h=HOSTED[key];
-      return pack(h.name, h.confirmedAt+" · "+h.dur, "장은솔", h.people||[], forJi && !h.jiReq, forJi && hostStore[key].declined);
+      return pack(h.name, h.confirmedAt+" · "+h.dur, "장은솔", h.people||[], forJi && !h.jiReq, declinerOf(key), meetingDeclined(key,forJi));
     }
     return null;
   }
@@ -2143,7 +2151,7 @@
       const r=REQS[id], ready=store[id].submitted;
       const c=document.createElement("div"); c.className="req-card";
       const declNote=store[id].declined?" · 한 명은 이번엔 빠져요":"";
-      const collectingMeta=(KO_N[r.total]||r.total)+" 명 중 "+(KO_N[r.total-1]||r.total-1)+" 명이 사정을 알려줬어요";
+      const collectingMeta=r.total+"명 중 "+(r.total-1)+"명이 사정을 알려줬어요";
       const cta= ready?'<button type="button" class="req-cta" data-act="results">추천 시간 보러 가기</button>'
         : '<button type="button" class="req-cta'+(pokedSet.has(id)?' ghost':'')+'" data-act="poke">'+(pokedSet.has(id)?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기")+'</button>';
       c.innerHTML='<span class="req-top"><span class="req-title">'+titleOf(r)+'</span>'+
@@ -2211,7 +2219,7 @@
     s2Go("done");
     if(hasEunsol(r)) setTimeout(()=>{ // 참석자(초대된 경우)에게 확정 알림 → 일정이 '사는 곳'인 내 캘린더로
       chime();
-      if(store[id].declined){ // 빠지기로 한 회의: 확정 사실만 알리되 압박 없이, 캘린더엔 연한 하늘색으로
+      if(meetingDeclined(id, false)){ // 은솔이 빠진 회의: 확정 사실만 알리되 압박 없이, 캘린더엔 연한 하늘색으로
         const rec=pushNoti(r.name, "안 가기로 한 회의 · "+t+" · 관심 있으면 들러도 좋아요", {cal:id});
         setNotif1("안 가기로 한 회의가 잡혔어요", r.name+" · "+t, ()=>{ rec.fresh=false; renderNoti(); openCalView("exit", id); });
       }else{
@@ -2382,7 +2390,7 @@
       people:PEOPLE.filter(x=>x.included!==false).map(x=>({name:x.name, req:!!x.req})),
       poked:false, confirmedAt:null, canceled:false, timers:[] };
     hostStore[hid]={time:[0,0,0], days:emptyDays(), submitted:false, declined:false};
-    document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
+    document.getElementById("sentSub").innerHTML=n+"명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     renderHome(); renderS2Req(); // 상대 폰의 '답할 요청'에 도착
     goStep("hostSent");
     const first=revealDevice2();
@@ -2438,7 +2446,7 @@
     hostActive=hid;
     document.getElementById("hostCtx").innerHTML="<b>"+h.name+" · "+h.dur+"</b> · "+h.span;
     const signals=h.jiIn?hostStore[hid]:{time:[0,0,0],days:emptyDays()};
-    HOST_TIMES=buildCandidates(signals, h.durH, (KO_N[h.total+1]||h.total+1)+" 명", hid, h.daysAllowed);
+    HOST_TIMES=buildCandidates(signals, h.durH, (h.total+1)+"명", hid, h.daysAllowed);
     hostPick=0;
     times.replaceChildren();
     HOST_TIMES.forEach((x,i)=>{
@@ -2463,7 +2471,7 @@
       const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림 → 일정이 사는 지수의 캘린더로
       setTimeout(()=>{
         chime();
-        if(hostStore[hid].declined){
+        if(meetingDeclined(hid, true)){
           toast2("안 가기로 한 회의가 잡혔어요", h.name+" · "+h.confirmedAt+" · 관심 있으면 들러도 좋아요", {cal:hid}, ()=>openS2Cal("home", hid));
         }else{
           toast2("회의 시간이 정해졌어요", h.name+" · "+h.confirmedAt+" · 캘린더에 추가했어요", {cal:hid}, ()=>openS2Cal("home", hid));
@@ -2517,7 +2525,7 @@
       daysAllowed:weekdaysIn(s2Meet.spanS, s2Meet.spanE),
       people:S2PEOPLE.filter(x=>x.included!==false).map(x=>({name:x.name, req:!!x.req}))};
     store[id]=emptyStore();
-    document.getElementById("s2SentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
+    document.getElementById("s2SentSub").innerHTML=n+"명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     renderS2My();
     s2Go("sent");
     if(hasEunsol(REQS[id])){
