@@ -69,6 +69,22 @@
   .notif-icon{ font-size:16px; line-height:1.3; }
   .notif-body{ font-size:12.5px; color:var(--ink-2); line-height:1.45; }
   .notif-body b{ display:block; font-size:13px; color:var(--ink); }
+
+  /* 안 누르면 뜨는 탭 가이드 — 자동 전환 대신 능동 조작 유도 */
+  .tap-hint{
+    position:absolute; right:14px; bottom:-15px; width:36px; height:36px;
+    display:none; place-items:center; font-size:17px; pointer-events:none; z-index:2;
+    animation:tapbob 1.3s ease-in-out infinite;
+  }
+  .notif.show.hint .tap-hint{ display:grid; }
+  .tap-hint::before, .tap-hint::after{
+    content:""; position:absolute; inset:2px; border-radius:50%;
+    border:2px solid rgba(25,31,40,.4);
+    animation:tapring 1.3s ease-out infinite;
+  }
+  .tap-hint::after{ animation-delay:.65s; }
+  @keyframes tapring{ 0%{ transform:scale(.35); opacity:.9; } 100%{ transform:scale(1.25); opacity:0; } }
+  @keyframes tapbob{ 0%,100%{ translate:0 0; } 50%{ translate:0 3px; } }
   .wrap{ position:relative; width:390px; max-width:100%; height:100%; }
   .wrap.anim, .wrap2.anim{ transition:width .38s var(--ease); }
   .screen{
@@ -769,6 +785,7 @@
         <button class="notif" id="notif1" type="button">
           <span class="notif-icon">🔔</span>
           <span class="notif-body"><b id="notif1Title"></b><span id="notif1Body"></span></span>
+          <span class="tap-hint" aria-hidden="true">👆</span>
         </button>
 
         <!-- 기간 선택 시트 -->
@@ -901,6 +918,7 @@
         <button class="notif" id="notif" type="button">
           <span class="notif-icon">🔔</span>
           <span class="notif-body"><b id="notif2Title">모두의 사정이 모였어요</b><span id="notif2Body">신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span></span>
+          <span class="tap-hint" aria-hidden="true">👆</span>
         </button>
       </div>
       <button class="handle left"  id="hL2" aria-label="왼쪽으로 크기 조절"></button>
@@ -1485,11 +1503,9 @@
   function setNotif2(title, body, onTap){
     document.getElementById("notif2Title").textContent=title;
     document.getElementById("notif2Body").textContent=body;
-    notif2Tap=onTap; notif.classList.add("show");
-    clearTimeout(notif2Timer); // 2초간 안 누르면 누른 것처럼 진행
-    notif2Timer=setTimeout(()=>{
-      if(notif.classList.contains("show")){ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); }
-    }, 2000);
+    notif2Tap=onTap; notif.classList.add("show"); notif.classList.remove("hint");
+    clearTimeout(notif2Timer); // 자동 전환 대신: 안 누르면 탭 가이드
+    notif2Timer=setTimeout(()=>{ if(notif.classList.contains("show")) notif.classList.add("hint"); }, 2600);
   }
   // 디바이스1의 역할 = 최초로 완료한 플로우가 정의 (이후 고정)
   let rolesAssigned=false;
@@ -1553,7 +1569,7 @@
     setWidth(wrap.offsetWidth,true); // 좁아진 공간에 맞춰 디바이스1 조정
     return true;
   }
-  notif.addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
+  notif.addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show","hint"); if(notif2Tap) notif2Tap(); });
   document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home","back"));
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home","back"));
   const notif1=document.getElementById("notif1");
@@ -1561,16 +1577,11 @@
   function setNotif1(t,b,onTap){
     document.getElementById("notif1Title").textContent=t;
     document.getElementById("notif1Body").textContent=b;
-    notif1Tap=onTap; notif1.classList.add("show");
-    clearTimeout(notif1Timer); // 2초간 안 누르면 누른 것처럼 진행 — 단, 입력 중엔 화면을 뒤엎지 않음
-    notif1Timer=setTimeout(()=>{
-      if(!notif1.classList.contains("show")) return;
-      notif1.classList.remove("show");
-      const busy=["1","2","hostCreate","hostWho"].includes(curStep); // 입력 중 → 알림함 적립만
-      if(!busy && notif1Tap) notif1Tap();
-    }, 2000);
+    notif1Tap=onTap; notif1.classList.add("show"); notif1.classList.remove("hint");
+    clearTimeout(notif1Timer); // 자동 전환 대신: 안 누르면 탭 가이드
+    notif1Timer=setTimeout(()=>{ if(notif1.classList.contains("show")) notif1.classList.add("hint"); }, 2600);
   }
-  notif1.addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
+  notif1.addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show","hint"); if(notif1Tap) notif1Tap(); });
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     const id=s2ActiveMeet, t=TIMES2[pick2].t, r=REQS[id];
     store[id].confirmedAt=t; // 확정 — 양쪽 리스트를 떠나 캘린더·알림함에 산다
