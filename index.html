@@ -865,6 +865,11 @@
                 <span class="req-meta" id="s2Meta">다섯 명 중 네 명이 사정을 알려줬어요</span>
                 <span class="req-cta" id="s2Cta">살짝 재촉하기</span>
               </button>
+              <button class="req-card submitted" id="s2Weekly" type="button" hidden style="cursor:default;">
+                <span class="req-top"><span class="req-title">홈팀 위클리 · 30분</span></span>
+                <span class="req-meta">✓ 은솔님이 사정을 알려줬어요 · 계속 모으는 중</span>
+                <span class="req-cta">잘 반영할게요</span>
+              </button>
             </div>
           </div>
         </section>
@@ -1064,8 +1069,8 @@
   const REQS={
     kickoff:{ title:"신규 기능 킥오프 · 1시간", who:"지수님", optional:false,
               ctx:"<b>신규 기능 킥오프 · 1시간</b> · 다음 주 중" },
-    weekly:{  title:"디자인 위클리 · 30분", who:"수아님", optional:true,
-              ctx:"<b>디자인 위클리 · 30분</b> · 다음 주 중" },
+    weekly:{  title:"홈팀 위클리 · 30분", who:"지수님", optional:true,
+              ctx:"<b>홈팀 위클리 · 30분</b> · 다음 주 중" },
   };
   const emptyDays=()=>{const o={};DAYS.forEach(d=>o[d]=0);return o;};
   const store={ kickoff:{time:[0,0,0],days:emptyDays(),submitted:false},
@@ -1261,7 +1266,22 @@
     assignRoles(false); // 첫 완료 = 참석자 플로우
     goStep("done");
     if(currentReq==="kickoff") setTimeout(showDevice2, 800); // 내가 마지막 응답자 → 주최자에게 띠롱
+    else if(currentReq==="weekly") setTimeout(showWeeklyArrived, 800); // 선택 참석 응답도 주최자 폰에 도착
   });
+
+  function showWeeklyArrived(){
+    const card=document.getElementById("s2Weekly");
+    if(!card.hidden) return; // 재제출 중복 방지
+    const first=revealDevice2();
+    card.hidden=false;
+    document.getElementById("s2BadgeMy").textContent="2";
+    setS2Tab("my");
+    setTimeout(()=>{
+      chime();
+      pushNoti2("사정이 도착했어요","홈팀 위클리 · 은솔님이 사정을 알려줬어요");
+      setNotif2("사정이 도착했어요","홈팀 위클리 · 은솔님이 사정을 알려줬어요",()=>{ setS2Tab("my"); s2Go("home","back"); });
+    }, first?650:200);
+  }
 
   /* ================= 디바이스 2: 주최자(지수)의 폰 ================= */
   let dev2Shown=false, pick2=0;
