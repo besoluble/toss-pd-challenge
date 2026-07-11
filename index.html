@@ -332,10 +332,12 @@
   .cv-ev.flash{ animation:evFlash .9s var(--ease) 2; }
   @keyframes evFlash{ 0%,100%{ box-shadow:none; } 50%{ box-shadow:0 0 0 3px var(--blue-weak), 0 4px 12px rgba(49,130,246,.35); } }
 
-  .noti-item{ display:flex; flex-direction:column; gap:2px; padding:14px 4px; border-radius:12px; cursor:pointer;
+  .noti-item{ position:relative; display:flex; flex-direction:column; gap:2px; padding:14px 4px; border-radius:12px; cursor:pointer;
     transition:background-color .16s var(--ease); }
   .noti-item:active{ background:var(--surface-2); }
-  .noti-item + .noti-item{ box-shadow:0 -1px 0 var(--surface); }
+  .noti-item + .noti-item::before{ /* radius를 타지 않는 직선 구분선 */
+    content:""; position:absolute; top:0; left:4px; right:4px; height:1px; background:var(--surface);
+  }
   .noti-item b{ font-size:14.5px; font-weight:600; color:var(--ink); }
   .noti-item .n-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--blue); margin-left:6px; vertical-align:1.5px; }
   .noti-item span{ font-size:13px; color:var(--ink-3); line-height:1.5; }
