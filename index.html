@@ -364,12 +364,12 @@
   .ev-link{ width:100%; background:none; border:0; font:inherit; cursor:pointer; }
   .ev-link b{ margin-left:auto; }
   .ev-link svg{ width:15px; height:15px; color:var(--ink-4); flex:none; }
-  .ev-clip{ overflow:hidden; transition:height .32s var(--ease); }
-  .ev-slider{ display:flex; width:200%; align-items:flex-start; transition:transform .32s var(--ease); }
-  .ev-pane{ width:50%; flex:none; min-width:0; }
+  .ev-clip{ overflow:hidden; }
+  .ev-slider{ display:flex; width:200%; transition:transform .32s var(--ease); } /* 패널 높이 = 상세(첫 패널) 기준 */
+  .ev-pane{ width:50%; flex:none; min-width:0; display:flex; flex-direction:column; align-items:stretch; }
   .ev-sheet.people .ev-slider{ transform:translateX(-50%); }
   .ev-ppl{ font-size:15px; font-weight:600; color:var(--ink); line-height:1.7; padding:6px 2px 2px; word-break:keep-all; }
-  .ev-ppl-head{ display:flex; align-items:center; gap:6px; margin:-4px 0 6px -8px; }
+  .ev-ppl-head{ display:flex; align-items:center; gap:6px; margin:-4px 0 6px; }
   .ev-ppl-head h3{ margin:0; }
 
   .cv-ev.flash{ animation:evFlash .9s var(--ease) 2; }
@@ -884,7 +884,7 @@
                     <h3>참석자</h3>
                   </div>
                   <div class="ev-ppl" id="evPpl"></div>
-                  <button class="cta" id="evPplOk" style="margin-top:14px;">확인</button>
+                  <button class="cta" id="evPplOk" style="margin-top:auto;">확인</button>
                 </div>
               </div>
             </div>
@@ -1216,7 +1216,7 @@
                     <h3>참석자</h3>
                   </div>
                   <div class="ev-ppl" id="s2EvPpl"></div>
-                  <button class="cta" id="s2EvPplOk" style="margin-top:14px;">확인</button>
+                  <button class="cta" id="s2EvPplOk" style="margin-top:auto;">확인</button>
                 </div>
               </div>
             </div>
@@ -1785,7 +1785,6 @@
     document.getElementById(prefix+"Opt").hidden=!d.opt;
     document.getElementById(prefix+"Ppl").textContent=d.people.map(x=>x.name).join(", ");
     document.getElementById(prefix+"Sheet").classList.remove("people"); // 항상 첫 패널부터
-    document.getElementById(prefix+"Clip").style.height="";
     return true;
   }
   function openEvDetail(key){
@@ -1794,13 +1793,8 @@
   function openS2EvDetail(key){
     if(fillEvSheet("s2Ev", meetingDetail(key,true))) document.getElementById("s2EvModal").classList.add("show");
   }
-  function evPane(prefix, toPeople){ // 패널 전환 — 시트 높이가 활성 패널을 따라간다
-    const sheet=document.getElementById(prefix+"Sheet"), clip=document.getElementById(prefix+"Clip");
-    const panes=clip.querySelectorAll(".ev-pane"), target=panes[toPeople?1:0];
-    if(clip.offsetHeight) clip.style.height=clip.offsetHeight+"px";
-    sheet.classList.toggle("people", toPeople);
-    if(target && target.offsetHeight) clip.style.height=target.offsetHeight+"px";
-    else clip.style.height="";
+  function evPane(prefix, toPeople){ // 패널 전환 — 시트 높이는 상세(첫 패널)가 정한 그대로
+    document.getElementById(prefix+"Sheet").classList.toggle("people", toPeople);
   }
   document.getElementById("evCountBtn").addEventListener("click",()=>evPane("ev", true));
   document.getElementById("evPplBack").addEventListener("click",()=>evPane("ev", false));
