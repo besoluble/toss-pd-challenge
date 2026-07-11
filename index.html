@@ -192,9 +192,9 @@
   .content::-webkit-scrollbar{ display:none; }
   /* 아래 내용이 더 있을 때만: 잘린 경계의 흰 페이드 — 스크롤바 없이 '이어짐'을 말한다 */
   .content::after, .editor::after, .cv::after{
-    content:""; position:sticky; bottom:-1px; flex:none; align-self:stretch;
-    height:36px; margin-top:-36px; z-index:3; pointer-events:none;
-    background:linear-gradient(rgba(255,255,255,0), #fff 80%);
+    content:""; position:sticky; bottom:-9px; flex:none; align-self:stretch;
+    height:46px; margin-top:-46px; z-index:3; pointer-events:none;
+    background:linear-gradient(rgba(255,255,255,0), #fff 76%); /* 하단 패딩(그림자 여유분)까지 덮어 생살 띠 제거 */
     opacity:0; transition:opacity .25s var(--ease);
   }
   .content.has-more::after, .editor.has-more::after, .cv.has-more::after{ opacity:1; }
