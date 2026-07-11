@@ -368,15 +368,10 @@
   .ev-slider{ display:flex; width:200%; align-items:flex-start; transition:transform .32s var(--ease); }
   .ev-pane{ width:50%; flex:none; min-width:0; }
   .ev-sheet.people .ev-slider{ transform:translateX(-50%); }
-  .ev-ppl{ max-height:300px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
-  .ev-ppl::-webkit-scrollbar{ display:none; }
+  .ev-ppl{ font-size:15px; font-weight:600; color:var(--ink); line-height:1.7; padding:6px 2px 2px; word-break:keep-all; }
   .ev-ppl-head{ display:flex; align-items:center; gap:6px; margin:-4px 0 6px -8px; }
   .ev-ppl-head h3{ margin:0; }
-  .ev-ppl{ display:flex; flex-direction:column; }
-  .ppl-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 2px; font-size:14.5px; }
-  .ppl-row+.ppl-row{ border-top:1px solid var(--surface); }
-  .ppl-row b{ font-weight:600; color:var(--ink); }
-  .ppl-row span{ color:var(--ink-3); font-size:13px; text-align:right; }
+
   .cv-ev.flash{ animation:evFlash .9s var(--ease) 2; }
   @keyframes evFlash{ 0%,100%{ box-shadow:none; } 50%{ box-shadow:0 0 0 3px var(--blue-weak), 0 4px 12px rgba(49,130,246,.35); } }
 
@@ -1788,13 +1783,7 @@
     document.getElementById(prefix+"Host").textContent=d.host;
     document.getElementById(prefix+"Count").textContent=d.count;
     document.getElementById(prefix+"Opt").hidden=!d.opt;
-    const box=document.getElementById(prefix+"Ppl"); box.replaceChildren();
-    d.people.forEach(x=>{
-      const row=document.createElement("div"); row.className="ppl-row";
-      const note=(x.host?" · 주최":"")+(!x.req&&!x.host?" · 선택 참석":"");
-      row.innerHTML="<b>"+x.name+"</b><span>"+(TEAM_ROLE[x.name]||"")+note+"</span>";
-      box.appendChild(row);
-    });
+    document.getElementById(prefix+"Ppl").textContent=d.people.map(x=>x.name).join(", ");
     document.getElementById(prefix+"Sheet").classList.remove("people"); // 항상 첫 패널부터
     document.getElementById(prefix+"Clip").style.height="";
     return true;
