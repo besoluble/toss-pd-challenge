@@ -1145,6 +1145,7 @@
         if(myPoked) return;
         myPoked=true; renderHome(); // 아직 안 답한 사람들에게 살짝 재촉
         const first=revealDevice2(); // 재촉이 상대 폰에 실제로 도착
+        renderS2Req(); setS2Tab("req");
         setTimeout(()=>{
           chime();
           pushNoti2("은솔님이 기다리고 있어요", meet.name+" · 불편한 시간을 알려주세요");
@@ -1275,23 +1276,25 @@
   function renderS2Req(){
     const box=document.getElementById("s2ReqList"); box.replaceChildren();
     const bq=document.getElementById("s2BadgeReq");
-    const pending=s2HasReq&&!s2ReqAnswered;
+    const fixed=s2HasReq && hostState==="confirmed";
+    const pending=s2HasReq && !s2ReqAnswered && !fixed;
     bq.textContent=pending?1:0; bq.classList.toggle("hot", pending);
     if(!s2HasReq){
       const p=document.createElement("p"); p.className="empty-hint";
       p.textContent="지금은 답할 요청이 없어요."; box.appendChild(p); return;
     }
     const c=document.createElement("button");
-    c.className="req-card"+(s2ReqAnswered?" submitted":""); c.type="button";
+    c.className="req-card"+((s2ReqAnswered||fixed)?" submitted":""); c.type="button";
     c.innerHTML='<span class="req-top"><span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
       '<span class="req-tag req">필수 참석</span></span>'+
-      '<span class="req-meta">'+(s2ReqAnswered?"✓ 사정을 알려드렸어요":meet.span+" · 은솔님이 물어봤어요")+'</span>'+
-      '<span class="req-cta">'+(s2ReqAnswered?"잘 반영될 거예요":"불편한 시간 알려주기")+'</span>';
-    c.addEventListener("click",()=>{
+      '<span class="req-meta">'+(fixed?"📅 "+hostPickedLabel+" 확정됐어요":s2ReqAnswered?"✓ 사정을 알려드렸어요":meet.span+" · 은솔님이 물어봤어요")+'</span>'+
+      '<span class="req-cta">'+(fixed?"캘린더에 추가됐어요":s2ReqAnswered?"잘 반영될 거예요":"불편한 시간 알려주기")+'</span>';
+    if(!fixed) c.addEventListener("click",()=>{
       if(s2ReqAnswered) return;
       s2ReqAnswered=true; myAnswered=4; chime();
       renderS2Req(); renderHome(); // 은솔 홈 카드의 응답 수도 함께 갱신
     });
+    else c.style.cursor="default";
     box.appendChild(c);
   }
   function setS2Tab(tab, animate){
@@ -1300,7 +1303,11 @@
     const req=document.getElementById("s2ReqList"), my=document.getElementById("s2MyList");
     req.style.display=s2Tab==="req"?"flex":"none";
     my.style.display=s2Tab==="my"?"flex":"none";
-    s2HomeTitle.innerHTML=s2Tab==="req"?((s2HasReq&&!s2ReqAnswered)?"확인할 요청이<br>있어요":"모두 답했어요!"):s2MyTitle;
+    s2HomeTitle.innerHTML=s2Tab==="req"
+      ? (!s2HasReq ? "답할 요청이<br>없어요"
+        : hostState==="confirmed" ? "회의가<br>잡혔어요!"
+        : s2ReqAnswered ? "모두 답했어요!" : "확인할 요청이<br>있어요")
+      : s2MyTitle;
     if(animate){
       const el=s2Tab==="req"?req:my;
       el.animate([{opacity:0, transform:"translateY(6px)"},{opacity:1, transform:"none"}],
@@ -1489,10 +1496,11 @@
     {name:"도윤", role:"서버 개발자", req:true},
     {name:"하린", role:"프로덕트 오너", req:true},
     {name:"최분석", role:"데이터 분석가", req:false},
+    {name:"지수", role:"프로덕트 오너 · 홈팀", req:true},
   ];
   const people=document.getElementById("people");
   const hostSendBtn=document.getElementById("hostSend");
-  const KO_N=["영","한","두","세","네","다섯"];
+  const KO_N=["영","한","두","세","네","다섯","여섯"];
   function includedCount(){ return PEOPLE.filter(p=>p.included!==false).length; }
   function updateHostCta(){
     const n=includedCount();
@@ -1613,6 +1621,7 @@
     s2HasReq=true; s2ReqAnswered=false; renderS2Req(); // 상대 폰의 '답할 요청'에 도착
     goStep("hostSent");
     const first=revealDevice2();
+    setS2Tab("req"); // 수신자 관점으로 등장
     setTimeout(()=>{
       chime();
       pushNoti2("새 요청이 도착했어요", meet.name+" · 은솔님이 사정을 물어봤어요");
@@ -1656,6 +1665,7 @@
     document.getElementById("hostDoneSub").innerHTML=hostPickedLabel+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
     goStep("hostDone");
     const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림
+    renderS2Req(); setS2Tab("req"); // 수신자 관점 + 확정 카드 반영
     setTimeout(()=>{
       chime();
       pushNoti2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel+" · 캘린더에 추가했어요");
