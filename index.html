@@ -1090,8 +1090,12 @@
       c.className="req-card"+(done?" submitted":""); c.type="button";
       c.innerHTML='<span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
         '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · 다섯 명 중 세 명이 답했어요")+'</span>'+
-        '<span class="req-cta">'+(done?"확정 내용 보기":"현황 보기")+'</span>';
-      c.addEventListener("click",()=>{ if(done) openCalView("exit","mymeet"); else goStep("hostSent","fwd"); }); // 모으는 중엔 현황(결과 아님)
+        '<span class="req-cta">'+(done?"확정 내용 보기":(myPoked?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기"))+'</span>';
+      c.addEventListener("click",()=>{
+        if(done){ openCalView("exit","mymeet"); return; }
+        if(myPoked) return;
+        myPoked=true; chime(); renderHome(); // 아직 안 답한 사람들에게 살짝 재촉
+      });
       myList.appendChild(c);
     }
   }
@@ -1514,7 +1518,7 @@
     meet.span=spanLabel(); whenLabel.textContent=meet.span;
     whenModal.classList.remove("show");
   });
-  let hostState="none", hostPickedLabel=""; // none → collecting → confirmed
+  let hostState="none", hostPickedLabel="", myPoked=false; // none → collecting → confirmed
   hostSendBtn.addEventListener("click",()=>{
     const n=includedCount();
     meet.name=document.getElementById("meetName").value.trim()||"새 회의";
