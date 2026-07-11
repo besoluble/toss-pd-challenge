@@ -1451,10 +1451,10 @@
      전역 변수나 DOM에 요청 상태를 저장하지 않는다 — 두 번째 회의가 첫 번째를 덮어쓰는 사고의 뿌리였다. */
   // total = 응답자 수(나 포함), 수집 중 표시는 total-1명 답한 상태에서 내가 마지막
   const REQS={
-    kickoff:{ name:"신규 기능 킥오프", dur:"1시간", durH:1,  total:4, who:"김지수님", optional:false,
-      people:[{name:"장은솔",req:true},{name:"이수아",req:true},{name:"박민수",req:true},{name:"최분석",req:false}] },
-    weekly:{  name:"홈팀 위클리",      dur:"30분",  durH:0.5, total:3, who:"김지수님", optional:true,
-      people:[{name:"장은솔",req:false},{name:"이수아",req:true},{name:"박민수",req:true}] },
+    kickoff:{ name:"신규 기능 킥오프", dur:"1시간", durH:1,  total:5, who:"김지수님", optional:false,
+      people:[{name:"장은솔",req:true},{name:"이수아",req:true},{name:"박민수",req:true},{name:"한도윤",req:true},{name:"최분석",req:false}] },
+    weekly:{  name:"홈팀 위클리",      dur:"30분",  durH:0.5, total:4, who:"김지수님", optional:true,
+      people:[{name:"장은솔",req:false},{name:"이수아",req:true},{name:"박민수",req:true},{name:"한도윤",req:true}] },
   };
   const TEAM_ROLE={ "장은솔":"프로덕트 디자이너", "김지수":"프로덕트 오너", "이수아":"프로덕트 디자이너", "박민수":"프론트엔드 개발자", "한도윤":"서버 개발자", "최분석":"데이터 분석가" };
   const titleOf=r=>r.name+" · "+r.dur;
