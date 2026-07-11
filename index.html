@@ -147,7 +147,9 @@
   }
 
   .nav{ height:32px; display:flex; align-items:center; margin-bottom:18px; }
-  .nav .req-tag{ margin-left:auto; }
+  .ctx-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .ctx-row .ctx{ margin-bottom:0; }
+  .ctx-row{ margin-bottom:10px; }
   .back{
     width:36px; height:36px; margin-left:-8px; border:0; background:none; cursor:pointer; border-radius:10px;
     display:grid; place-items:center; color:var(--ink-2);
@@ -587,9 +589,11 @@
             <button class="back exit" aria-label="나가기">
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
+          </div>
+          <div class="ctx-row">
+            <div class="ctx" id="ctx1"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
             <span class="req-tag opt opt-only">선택 참석</span>
           </div>
-          <div class="ctx" id="ctx1"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
           <h1 class="title">불편한 시간만<br>알려주세요</h1>
           <div class="chips">
             <span class="cal">
@@ -1046,9 +1050,11 @@
             <button class="back" id="s2Ans1Back" aria-label="홈으로">
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
+          </div>
+          <div class="ctx-row">
+            <div class="ctx" id="s2AnsCtx"></div>
             <span class="req-tag opt" id="s2OptTag" hidden>선택 참석</span>
           </div>
-          <div class="ctx" id="s2AnsCtx"></div>
           <h1 class="title">불편한 시간만<br>알려주세요</h1>
           <div class="chips">
             <span class="cal">
