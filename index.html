@@ -325,7 +325,7 @@
     display:grid; place-items:center; transition:background-color .16s var(--ease);
   }
   .req-del:active{ background:var(--surface); }
-  .req-del svg{ width:17px; height:17px; }
+  .req-del svg{ width:18px; height:18px; }
   .home-nav{ justify-content:flex-end; gap:10px; }
   .nav-ic{ display:inline-flex; align-items:center; gap:10px; }
   .nav-ic .avatar{ width:36px; height:36px; }
@@ -1510,7 +1510,7 @@
       const cta= ready?'<button type="button" class="req-cta" data-act="results">추천 시간 보러 가기</button>'
         : '<button type="button" class="req-cta'+(h.poked?' ghost':'')+'" data-act="poke">'+(h.poked?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기")+'</button>';
       c.innerHTML='<span class="req-top"><span class="req-title">'+h.name+' · '+h.dur+'</span>'+
-        '<button type="button" class="req-del" data-act="cancel" aria-label="요청 철회"><svg viewBox="0 0 20 20" fill="none"><path d="M4 5.5h12M8.5 3.5h3M6.5 5.5l.6 10a1.5 1.5 0 001.5 1.4h2.8a1.5 1.5 0 001.5-1.4l.6-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 8.5v5M11.5 8.5v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></span>'+
+        '<button type="button" class="req-del" data-act="cancel" aria-label="요청 철회"><svg viewBox="0 0 20 20" fill="none"><path d="M3.5 5.5h13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 5.2v-.8c0-.9.7-1.6 1.6-1.6h.8c.9 0 1.6.7 1.6 1.6v.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5.3 5.5h9.4l-.55 9.4a1.9 1.9 0 01-1.9 1.8H7.75a1.9 1.9 0 01-1.9-1.8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8.4 9v4M11.6 9v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></span>'+
         '<span class="req-meta">'+meta+'</span>'+cta;
       cardActs(c, {
         results:()=>openHostResults(hid),
@@ -2038,7 +2038,7 @@
       const cta= ready?'<button type="button" class="req-cta" data-act="results">추천 시간 보러 가기</button>'
         : '<button type="button" class="req-cta'+(pokedSet.has(id)?' ghost':'')+'" data-act="poke">'+(pokedSet.has(id)?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기")+'</button>';
       c.innerHTML='<span class="req-top"><span class="req-title">'+titleOf(r)+'</span>'+
-        '<button type="button" class="req-del" data-act="cancel" aria-label="요청 철회"><svg viewBox="0 0 20 20" fill="none"><path d="M4 5.5h12M8.5 3.5h3M6.5 5.5l.6 10a1.5 1.5 0 001.5 1.4h2.8a1.5 1.5 0 001.5-1.4l.6-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 8.5v5M11.5 8.5v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></span>'+
+        '<button type="button" class="req-del" data-act="cancel" aria-label="요청 철회"><svg viewBox="0 0 20 20" fill="none"><path d="M3.5 5.5h13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 5.2v-.8c0-.9.7-1.6 1.6-1.6h.8c.9 0 1.6.7 1.6 1.6v.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5.3 5.5h9.4l-.55 9.4a1.9 1.9 0 01-1.9 1.8H7.75a1.9 1.9 0 01-1.9-1.8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8.4 9v4M11.6 9v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></span>'+
         '<span class="req-meta">'+(ready?"✓ "+allOf(r)+" 모두 사정을 알려줬어요"+declNote:collectingMeta)+'</span>'+cta;
       cardActs(c, {
         results:()=>{ if(!store[id].confirmedAt) openS2Results(id); },
