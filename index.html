@@ -57,9 +57,9 @@
 
   .notif{
     position:absolute; top:14px; left:14px; right:14px; z-index:30;
-    display:flex; gap:10px; align-items:flex-start; text-align:left;
-    border:0; cursor:pointer; font:inherit;
-    background:rgba(255,255,255,.97); backdrop-filter:blur(10px); border-radius:16px; padding:13px 14px;
+    display:flex; gap:4px; align-items:flex-start; text-align:left;
+    border:0; font:inherit;
+    background:rgba(255,255,255,.97); backdrop-filter:blur(10px); border-radius:16px; padding:6px 6px 6px 14px;
     box-shadow:0 8px 28px rgba(16,24,40,.20), 0 2px 6px rgba(16,24,40,.08);
     transform:translateY(-130%); opacity:0;
     transition:transform .55s cubic-bezier(.2,.9,.3,1.08), opacity .4s var(--ease);
@@ -69,6 +69,17 @@
   .notif-icon{ font-size:16px; line-height:1.3; }
   .notif-body{ font-size:12.5px; color:var(--ink-2); line-height:1.45; }
   .notif-body b{ display:block; font-size:13px; color:var(--ink); }
+  .notif-main{
+    display:flex; gap:10px; align-items:flex-start; text-align:left; flex:1;
+    border:0; background:none; font:inherit; cursor:pointer; padding:7px 0;
+  }
+  .notif-x{
+    flex:none; align-self:flex-start; width:30px; height:30px; margin-top:4px;
+    border:0; background:none; border-radius:50%; color:var(--ink-4); cursor:pointer;
+    display:grid; place-items:center; transition:background-color .16s var(--ease);
+  }
+  .notif-x:active{ background:var(--surface); }
+  .notif-x svg{ width:13px; height:13px; }
 
   /* 안 누르면 뜨는 탭 가이드 — 클릭 커서 + 커서 팁에서 퍼지는 파문 (자동 전환 대신 능동 조작 유도) */
   .tap-hint{
@@ -321,10 +332,19 @@
   .req-title{ font-size:16px; font-weight:700; color:var(--ink); }
   .req-meta{ font-size:13px; color:var(--ink-3); }
   .req-cta{
-    margin-top:14px; align-self:stretch; text-align:center;
+    margin-top:14px; align-self:stretch; text-align:center; border:0; font:inherit; cursor:pointer;
     background:var(--blue-weak); color:#1B64DA; font-size:14px; font-weight:600;
     padding:12px; border-radius:12px; min-height:44px; display:flex; align-items:center; justify-content:center;
+    transition:background-color .16s var(--ease);
   }
+  .req-cta.ghost{ background:var(--surface); color:var(--ink-2); }
+  .req-cta-row{ margin-top:14px; align-self:stretch; display:flex; gap:8px; }
+  .req-cta-row .req-cta{ margin-top:0; flex:1; }
+  .req-sub{
+    margin-top:8px; align-self:center; border:0; background:none; font:inherit;
+    font-size:12.5px; color:var(--ink-4); cursor:pointer; padding:6px 12px; min-height:32px; border-radius:8px;
+  }
+  .req-sub:active{ background:var(--surface); }
   .home-nav{ justify-content:flex-end; gap:10px; }
   .bell{
     position:relative; width:36px; height:36px; border:0; border-radius:50%; cursor:pointer;
@@ -360,10 +380,16 @@
   .noti-item b{ font-size:14.5px; font-weight:600; color:var(--ink); }
   .noti-item .n-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--blue); margin-left:6px; vertical-align:1.5px; }
   .noti-item span{ font-size:13px; color:var(--ink-3); line-height:1.5; }
+  .noti-item.read b{ color:var(--ink-2); font-weight:500; }
+  .noti-item.read span{ color:var(--ink-4); }
   .noti-empty{ font-size:13.5px; color:var(--ink-3); text-align:center; padding:48px 10px; margin:0; line-height:1.6; }
-  .profile{ display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:var(--ink-2); }
-  .avatar{ width:26px; height:26px; border-radius:50%; background:var(--blue-weak); color:#1B64DA;
-    display:grid; place-items:center; font-size:12px; font-weight:700; }
+  .profile{ display:inline-flex; align-items:center; gap:9px; }
+  .p-id{ display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
+  .p-id b{ font-size:12.5px; font-weight:700; color:var(--ink); }
+  .p-id i{ font-style:normal; font-size:10.5px; font-weight:500; color:var(--ink-4); }
+  .avatar{ width:32px; height:32px; border-radius:50%; overflow:hidden; flex:none;
+    display:grid; place-items:center; }
+  .avatar svg{ width:100%; height:100%; display:block; }
 
   .tabs{ display:flex; gap:20px; }
   .tab{
@@ -534,7 +560,7 @@
 
   <div class="stage">
     <div class="wrap" id="wrap">
-      <span class="dev-label" id="devLabel1">참석자</span>
+      <span class="dev-label" id="devLabel1">장은솔</span>
       <div class="screen" id="screen">
 
         <!-- STEP 1 · 시간대 -->
@@ -549,7 +575,7 @@
           <div class="chips">
             <span class="cal">
               <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              캘린더에 있는 일정은 이미 빼뒀어요
+              캘린더 일정과 겹치는 시간은 알아서 피해요
             </span>
             <span class="cal opt-only">
               <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -575,7 +601,7 @@
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
-          <h1 class="title">다음 주 불편한 요일이<br>있나요?</h1>
+          <h1 class="title" id="step2Title">다음 주 불편한 요일이<br>있나요?</h1>
 
           <div class="content">
             <div class="week" id="week"></div>
@@ -586,7 +612,7 @@
 
           <div class="foot">
             <button class="foot-link msg-open">따로 전할 말이 있어요</button>
-            <p class="privacy">🔒 고른 내용은 익명으로 시간 정할 때만 써요</p>
+            <p class="privacy">🔒 이름 없이 전달돼요 · 편하게 표시해 주세요</p>
             <button class="cta" id="submit">다 편해요</button>
           </div>
         </section>
@@ -614,11 +640,17 @@
         <!-- EXITED → 홈 (허브) -->
         <section class="step" id="stepExit" aria-live="polite">
           <div class="nav home-nav">
+            <button class="bell" id="calBtn" aria-label="내 캘린더">
+              <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4.5" width="14" height="12" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
             <button class="bell" id="bellBtn" aria-label="알림">
               <svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8c-2.9 0-4.6 2.2-4.6 4.6 0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6c0-2.4-1.7-4.6-4.6-4.6zM8.4 15a1.7 1.7 0 003.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span class="bell-dot" id="bellDot" hidden></span>
             </button>
-            <div class="profile"><span class="avatar">은</span></div>
+            <div class="profile">
+              <span class="p-id"><b>장은솔</b><i>프로덕트 디자이너</i></span>
+              <span class="avatar" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#FFE3C1"/><path d="M6 20c0-8 5-13 12-13s12 5 12 13v6h-4v-6c-1-2-2.5-3.6-3.5-6-2 2.4-7 3.6-12.5 3V26H6v-6z" fill="#54402E"/><circle cx="14" cy="20.5" r="1.5" fill="#33261A"/><circle cx="22" cy="20.5" r="1.5" fill="#33261A"/><path d="M15.5 24.5c1.6 1.4 3.4 1.4 5 0" stroke="#C96F4A" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg></span>
+            </div>
           </div>
           <h1 class="title title-2l" id="homeTitle">확인할 요청이<br>있어요</h1>
 
@@ -670,7 +702,7 @@
           <h1 class="title">어떤 회의인가요?</h1>
           <span class="cal">
             <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            모두의 캘린더 빈 시간은 자동으로 반영돼요
+            겹치는 일정은 자동으로 피해서 추천해요
           </span>
 
           <div class="content" style="gap:18px;">
@@ -738,7 +770,6 @@
             <p id="sentSub">다섯 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.</p>
           </div>
           <div class="foot">
-            <button class="foot-link" id="hostPreview">사정이 다 모이면 이렇게 보여요 →</button>
             <button class="cta" id="hostSentOk">확인</button>
           </div>
         </section>
@@ -760,7 +791,6 @@
 
           <div class="foot">
             <p class="privacy">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
-            <div class="tip" id="previewTip" hidden>아직 모으는 중이지만, 다 모였다고 가정하고<br>확정까지 미리 체험해 볼 수 있어요</div>
             <button class="cta" id="hostConfirm">이 시간으로 확정하기</button>
           </div>
         </section>
@@ -780,17 +810,21 @@
             <p id="hostDoneSub">모두에게 알릴게요.</p>
           </div>
           <div class="foot">
-            <button class="foot-link" id="hostAgain">다시 고르기</button>
             <button class="cta" id="hostDoneOk">확인</button>
           </div>
         </section>
 
         <!-- 참석자 알림 토스트 (재촉·확정) -->
-        <button class="notif" id="notif1" type="button">
-          <span class="notif-icon">🔔</span>
-          <span class="notif-body"><b id="notif1Title"></b><span id="notif1Body"></span></span>
+        <div class="notif" id="notif1">
+          <button class="notif-main" id="notif1Main" type="button">
+            <span class="notif-icon">🔔</span>
+            <span class="notif-body"><b id="notif1Title"></b><span id="notif1Body"></span></span>
+          </button>
+          <button class="notif-x" id="notif1X" type="button" aria-label="알림 닫기">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
           <span class="tap-hint" aria-hidden="true"><svg viewBox="0 0 38 38" fill="none"><path d="M14 12l16 13.5-7.5 1 4 7-3.2 1.8-4-7-5.3 4.2z" fill="#191F28" stroke="#191F28" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
-        </button>
+        </div>
 
         <!-- 기간 선택 시트 -->
         <div class="modal" id="whenModal">
@@ -798,8 +832,8 @@
           <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="whenTitle">
             <h3 id="whenTitle">언제쯤이면 좋아요?</h3>
             <div class="preset-row" id="presetRow">
+              <button type="button" class="preset">이번 주</button>
               <button type="button" class="preset">다음 주</button>
-              <button type="button" class="preset">다다음 주</button>
               <button type="button" class="preset">이번 달 안</button>
             </div>
             <div class="cal-head">
@@ -846,16 +880,22 @@
 
     <!-- 디바이스 2 · 주최자(지수)의 폰 — 마지막 응답이 도착하면 등장 -->
     <div class="wrap2" id="wrap2" aria-hidden="true">
-      <span class="dev-label" id="devLabel2">주최자</span>
+      <span class="dev-label" id="devLabel2">김지수</span>
       <div class="screen">
 
         <section class="step active" id="s2Home">
           <div class="nav home-nav">
+            <button class="bell" id="s2CalBtn" aria-label="내 캘린더">
+              <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4.5" width="14" height="12" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
             <button class="bell" id="s2Bell" aria-label="알림">
               <svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8c-2.9 0-4.6 2.2-4.6 4.6 0 3.4-1.4 4.6-1.4 4.6h12s-1.4-1.2-1.4-4.6c0-2.4-1.7-4.6-4.6-4.6zM8.4 15a1.7 1.7 0 003.2 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span class="bell-dot" id="s2BellDot" hidden></span>
             </button>
-            <div class="profile"><span class="avatar">지</span></div>
+            <div class="profile">
+              <span class="p-id"><b>김지수</b><i>프로덕트 오너</i></span>
+              <span class="avatar" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#CBEBDC"/><path d="M8 19c0-7.5 4.5-12 10-12s10 4.5 10 12l-2.5-1c-.8-2.6-2-4.4-3.5-5.5-2.5 2.3-7.5 3-11.5 2L8 19z" fill="#2E2A28"/><circle cx="14" cy="20.5" r="3.2" stroke="#2E2A28" stroke-width="1.2" fill="none"/><circle cx="22" cy="20.5" r="3.2" stroke="#2E2A28" stroke-width="1.2" fill="none"/><path d="M17.2 20.5h1.6" stroke="#2E2A28" stroke-width="1.2" stroke-linecap="round"/><circle cx="14" cy="20.5" r="1.3" fill="#2E2A28"/><circle cx="22" cy="20.5" r="1.3" fill="#2E2A28"/><path d="M15.8 25.5c1.4 1.1 3 1.1 4.4 0" stroke="#7A5648" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg></span>
+            </div>
           </div>
           <h1 class="title title-2l" id="s2HomeTitle">사정을 모으고<br>있어요</h1>
 
@@ -883,7 +923,7 @@
           <h1 class="title">어떤 회의인가요?</h1>
           <span class="cal">
             <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            모두의 캘린더 빈 시간은 자동으로 반영돼요
+            겹치는 일정은 자동으로 피해서 추천해요
           </span>
 
           <div class="content" style="gap:18px;">
@@ -948,7 +988,7 @@
           <div class="chips">
             <span class="cal">
               <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              캘린더에 있는 일정은 이미 빼뒀어요
+              캘린더 일정과 겹치는 시간은 알아서 피해요
             </span>
             <span class="cal" id="s2OptChip" hidden>
               <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -973,7 +1013,7 @@
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
-          <h1 class="title">다음 주 불편한 요일이<br>있나요?</h1>
+          <h1 class="title" id="s2Ans2Title">다음 주 불편한 요일이<br>있나요?</h1>
 
           <div class="content">
             <div class="week" id="s2Week"></div>
@@ -983,7 +1023,7 @@
           </div>
 
           <div class="foot">
-            <p class="privacy">🔒 고른 내용은 익명으로 시간 정할 때만 써요</p>
+            <p class="privacy">🔒 이름 없이 전달돼요 · 편하게 표시해 주세요</p>
             <button class="cta" id="s2Submit">다 편해요</button>
           </div>
         </section>
@@ -1074,11 +1114,31 @@
           <div class="content" id="s2NotiList" style="gap:4px;"></div>
         </section>
 
-        <button class="notif" id="notif" type="button">
-          <span class="notif-icon">🔔</span>
-          <span class="notif-body"><b id="notif2Title">모두의 사정이 모였어요</b><span id="notif2Body">신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span></span>
+        <!-- 지수 · 내 캘린더 (주간 뷰) -->
+        <section class="step" id="s2Cal">
+          <div class="nav">
+            <button class="back" id="s2CalBack" aria-label="뒤로">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <h1 class="title" style="font-size:20px; margin:0 0 4px;">내 캘린더</h1>
+          <p class="sub" id="s2CalSub">7월 13일 – 17일 · 다음 주</p>
+          <div class="cv">
+            <div class="cv-days" id="s2CvDays"></div>
+            <div class="cv-body" id="s2CvBody"></div>
+          </div>
+        </section>
+
+        <div class="notif" id="notif">
+          <button class="notif-main" id="notif2Main" type="button">
+            <span class="notif-icon">🔔</span>
+            <span class="notif-body"><b id="notif2Title">모두의 사정이 모였어요</b><span id="notif2Body">신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span></span>
+          </button>
+          <button class="notif-x" id="notif2X" type="button" aria-label="알림 닫기">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
           <span class="tap-hint" aria-hidden="true"><svg viewBox="0 0 38 38" fill="none"><path d="M14 12l16 13.5-7.5 1 4 7-3.2 1.8-4-7-5.3 4.2z" fill="#191F28" stroke="#191F28" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
-        </button>
+        </div>
 
         <!-- 지수 · 기간 선택 시트 -->
         <div class="modal" id="s2WhenModal">
@@ -1086,8 +1146,8 @@
           <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="s2WhenTitle">
             <h3 id="s2WhenTitle">언제쯤이면 좋아요?</h3>
             <div class="preset-row" id="s2PresetRow">
+              <button type="button" class="preset">이번 주</button>
               <button type="button" class="preset">다음 주</button>
-              <button type="button" class="preset">다다음 주</button>
               <button type="button" class="preset">이번 달 안</button>
             </div>
             <div class="cal-head">
@@ -1167,58 +1227,77 @@
     render(it.init); timeState[idx]=it.init; timeCtl.push({slider,render}); timeRows.appendChild(row);
   });
 
-  /* ================= STEP 2 · 요일 (하나씩 편집) ================= */
+  /* ================= STEP 2 · 요일 — 누른 요일의 슬라이더가 쌓인다 (두 디바이스 공용 팩토리) ================= */
   const DAYS=["월","화","수","목","금"];
-  const week=document.getElementById("week"), editor=document.getElementById("editor"), editorHint=document.getElementById("editorHint");
-  const dayVals={}; DAYS.forEach(d=>dayVals[d]=0);
-  const dayBtns={};
-  let activeDay=null, dayRow=null, daySlider=null, dayStateEl=null, dayNameEl=null;
-
-  DAYS.forEach(d=>{
-    const b=document.createElement("button"); b.className="day"; b.type="button";
-    b.innerHTML=d+'<span class="tag" hidden></span>';
-    b.addEventListener("click",()=>selectDay(d));
-    week.appendChild(b); dayBtns[d]=b;
-  });
-
-  function buildEditor(){
-    dayRow=document.createElement("div"); dayRow.className="row";
-    dayRow.innerHTML='<div class="row-head"><div class="row-name"><span id="dayName"></span></div><div class="state"></div></div>';
-    dayStateEl=dayRow.querySelector(".state"); dayNameEl=dayRow.querySelector("#dayName");
-    daySlider=makeSlider(0, s=>{ if(activeDay){ dayVals[activeDay]=s; renderDayChip(activeDay); renderEditorState(s); updateCTA(); } }, "요일 세기");
-    dayRow.appendChild(daySlider.el);
-  }
-  function renderEditorState(s){
-    dayStateEl.textContent=STEPS[s].label;
-    dayStateEl.className="state "+(s===3?"max":s>0?"on":"");
-  }
-  function selectDay(d){
-    if(activeDay===d){ // 다시 누르면 끄기 (편해요로 리셋)
-      dayVals[d]=0; renderDayChip(d);
-      dayBtns[d].setAttribute("aria-pressed","false");
-      activeDay=null; updateCTA();
-      editorHint.textContent = DAYS.some(x=>dayVals[x]>0)
-        ? "요일을 누르면 다시 고칠 수 있어요"
-        : "불편한 요일이 있으면 눌러 주세요";
-      editor.replaceChildren(editorHint); return;
+  function makeDayPicker(weekEl, editorEl, hintEl, onChange){
+    const vals={}; DAYS.forEach(d=>vals[d]=0);
+    const btns={}, rows={};
+    DAYS.forEach(d=>{
+      const b=document.createElement("button"); b.className="day"; b.type="button";
+      b.innerHTML=d+'<span class="tag" hidden></span>';
+      b.addEventListener("click",()=>toggle(d));
+      weekEl.appendChild(b); btns[d]=b;
+    });
+    function chipRender(d){
+      const s=vals[d], btn=btns[d];
+      const tone=s===3?"red":s>0?"blue":"";
+      if(tone) btn.dataset.tone=tone; else btn.removeAttribute("data-tone");
+      const tag=btn.querySelector(".tag");
+      tag.hidden=s===0; tag.textContent=s===3?"안 돼요":s===2?"웬만하면":s===1?"살짝":"";
+      btn.setAttribute("aria-pressed", rows[d]&&rows[d].open?"true":"false");
     }
-    if(activeDay) dayBtns[activeDay].setAttribute("aria-pressed","false");
-    activeDay=d; dayBtns[d].setAttribute("aria-pressed","true");
-    if(!dayRow) buildEditor();
-    if(dayVals[d]===0){ dayVals[d]=1; } // 첫 선택은 '살짝'부터
-    dayNameEl.textContent=d+"요일";
-    daySlider.el.setAttribute("aria-label", d+"요일");
-    daySlider.set(dayVals[d], true);
-    renderEditorState(dayVals[d]); renderDayChip(d); updateCTA();
-    editor.replaceChildren(dayRow);
+    function stateRender(d){
+      const s=vals[d];
+      rows[d].stateEl.textContent=STEPS[s].label;
+      rows[d].stateEl.className="state "+(s===3?"max":s>0?"on":"");
+    }
+    function ensureRow(d){
+      if(rows[d]) return;
+      const row=document.createElement("div"); row.className="row";
+      row.innerHTML='<div class="row-head"><div class="row-name"><span>'+d+'요일</span></div><div class="state"></div></div>';
+      const slider=makeSlider(0, s=>{ vals[d]=s; chipRender(d); stateRender(d); onChange(); }, d+"요일");
+      row.appendChild(slider.el);
+      rows[d]={el:row, slider, stateEl:row.querySelector(".state"), open:false};
+    }
+    function refreshHint(){
+      const any=DAYS.some(d=>rows[d]&&rows[d].open);
+      if(!any){
+        hintEl.textContent="불편한 요일이 있으면 눌러 주세요";
+        editorEl.replaceChildren(hintEl);
+      }
+    }
+    function openRow(d, val){
+      ensureRow(d);
+      if(hintEl.parentNode===editorEl) editorEl.replaceChildren();
+      rows[d].open=true; vals[d]=val;
+      rows[d].slider.set(val, true); stateRender(d); chipRender(d);
+      const next=DAYS.slice(DAYS.indexOf(d)+1).find(x=>rows[x]&&rows[x].open); // 요일 순서 유지
+      if(next) editorEl.insertBefore(rows[d].el, rows[next].el);
+      else editorEl.appendChild(rows[d].el);
+    }
+    function toggle(d){
+      if(rows[d]&&rows[d].open){ // 다시 누르면 끄기 (편해요로 리셋)
+        rows[d].open=false; rows[d].el.remove(); vals[d]=0;
+        chipRender(d); refreshHint();
+      }else{
+        openRow(d, vals[d]||1); // 첫 선택은 '살짝'부터
+      }
+      onChange();
+    }
+    function load(src){
+      DAYS.forEach(d=>{ if(rows[d]){ rows[d].open=false; rows[d].el.remove(); } vals[d]=(src&&src[d])||0; });
+      editorEl.replaceChildren();
+      DAYS.forEach(d=>{ if(vals[d]>0) openRow(d, vals[d]); else chipRender(d); });
+      refreshHint();
+    }
+    function setAllowed(list){ // 기간이 며칠뿐이면 그 요일만 묻는다
+      DAYS.forEach(d=>{ btns[d].style.display=list.includes(d)?"":"none"; });
+    }
+    return {vals, load, setAllowed};
   }
-  function renderDayChip(d){
-    const s=dayVals[d], btn=dayBtns[d];
-    const tone=s===3?"red":s>0?"blue":"";
-    if(tone) btn.dataset.tone=tone; else btn.removeAttribute("data-tone");
-    const tag=btn.querySelector(".tag");
-    tag.hidden=s===0; tag.textContent=s===3?"안 돼요":s===2?"웬만하면":s===1?"살짝":"";
-  }
+  const dayPick=makeDayPicker(
+    document.getElementById("week"), document.getElementById("editor"),
+    document.getElementById("editorHint"), ()=>updateCTA());
 
   /* ================= 스텝 이동 & CTA ================= */
   const stepEls={1:document.getElementById("step1"),2:document.getElementById("step2"),done:document.getElementById("stepDone"),exit:document.getElementById("stepExit"),noti:document.getElementById("stepNoti"),cal:document.getElementById("stepCal"),
@@ -1240,7 +1319,7 @@
     screen.scrollTop=0;
   }
   const submit=document.getElementById("submit"), next1=document.getElementById("next1");
-  function anySet(){ return timeState.some(s=>s>0)||DAYS.some(d=>dayVals[d]>0); }
+  function anySet(){ return timeState.some(s=>s>0)||DAYS.some(d=>dayPick.vals[d]>0); }
   function updateCTA(){
     submit.textContent=anySet()?"다 정했어요":"다 편해요";
     next1.textContent=timeState.some(s=>s>0)?"다음":"다 편해요";
@@ -1249,7 +1328,9 @@
 
   document.getElementById("next1").addEventListener("click",()=>goStep(2,"fwd"));
   document.getElementById("back2").addEventListener("click",()=>goStep(1,"back"));
-  /* ================= 요청 시스템 (새 회의는 어느 폰에서든 직접 만들어 잇는다) ================= */
+  /* ================= 요청 시스템 (새 회의는 어느 폰에서든 직접 만들어 잇는다) =================
+     H4: 요청 단위 상태는 전부 요청 객체(REQS/HOSTED + store/hostStore)에 산다.
+     전역 변수나 DOM에 요청 상태를 저장하지 않는다 — 두 번째 회의가 첫 번째를 덮어쓰는 사고의 뿌리였다. */
   // total = 응답자 수(나 포함), 수집 중 표시는 total-1명 답한 상태에서 내가 마지막
   const REQS={
     kickoff:{ name:"신규 기능 킥오프", dur:"1시간", durH:1,  total:5, who:"지수님", optional:false },
@@ -1259,38 +1340,74 @@
   const ctxOf=r=>"<b>"+titleOf(r)+"</b> · "+(r.span||"다음 주 중");
   const allOf=r=>(KO_N[r.total+1]||r.total+1)+" 명"; // 주최자 포함 전체 인원
   const emptyDays=()=>{const o={};DAYS.forEach(d=>o[d]=0);return o;};
-  const emptyStore=()=>({time:[0,0,0],days:emptyDays(),submitted:false,confirmedAt:null});
+  const emptyStore=()=>({time:[0,0,0],days:emptyDays(),submitted:false,declined:false,msgSent:false,msg:"",confirmedAt:null});
   const store={ kickoff:emptyStore(), weekly:emptyStore() };
   let currentReq="kickoff";
+
+  // 은솔이 여는 회의들 — 보내는 순간의 스냅샷으로 고정 (라이브 명단 참조 금지)
+  const HOSTED={}, hostStore={};
+  let hostSeq=0;
+  const answeredOf=h=>h.sim+((h.jiIn&&h.jiAnswered)?1:0);
+  function weekdaysIn(s,e){ // 기간에 실제로 포함된 평일만
+    const set=new Set(); const x=new Date(s);
+    while(+x<=+e && set.size<5){ const g=x.getDay(); if(g>=1&&g<=5) set.add(DAYS[g-1]); x.setDate(x.getDate()+1); }
+    const out=DAYS.filter(d=>set.has(d));
+    return out.length?out:DAYS;
+  }
 
   const homeTitle=document.getElementById("homeTitle"),
         reqList=document.getElementById("reqList"), ctx1=document.getElementById("ctx1");
 
-  function saveLive(){ const s=store[currentReq]; s.time=[...timeState]; s.days={...dayVals}; }
+  function saveLive(){ const s=store[currentReq]; s.time=[...timeState]; s.days={...dayPick.vals}; }
+  function spanWord(r){ const sp=r.span||"다음 주"; return sp.startsWith("다음 주")?"다음 주":sp.startsWith("이번 주")?"이번 주":"그 기간에"; }
   function openReq(id){
+    if(REQS[id].canceled || store[id].confirmedAt) return; // 철회·확정된 요청은 다시 열지 않는다
     saveLive();
     currentReq=id; const s=store[id], r=REQS[id];
     TIME_ITEMS.forEach((_,i)=>{ timeCtl[i].slider.set(s.time[i],true); timeCtl[i].render(s.time[i]); timeState[i]=s.time[i]; });
-    DAYS.forEach(d=>{ dayVals[d]=s.days[d]; renderDayChip(d); dayBtns[d].setAttribute("aria-pressed","false"); });
-    activeDay=null;
-    editorHint.textContent=DAYS.some(d=>s.days[d]>0)?"요일을 누르면 다시 고칠 수 있어요":"불편한 요일이 있으면 눌러 주세요";
-    editor.replaceChildren(editorHint);
+    dayPick.load(s.days);
+    dayPick.setAllowed(r.daysAllowed||DAYS);
+    document.getElementById("step2Title").innerHTML=(spanWord(r)==="그 기간에"?"그중":spanWord(r))+" 불편한 요일이<br>있나요?";
     document.body.dataset.persona=r.optional?"optional":"required";
     ctx1.innerHTML=ctxOf(r);
+    msgText.value=s.msg||""; syncMsgLinks(); // 메시지 흔적은 이 요청의 것만 (H4)
     updateCTA(); goStep(1,"fwd"); // 홈 → 요청 상세: 앞으로
   }
 
   let homeTab="req";
+  const CANCEL_ARM="정말 철회할까요? 한 번 더 눌러 주세요";
+  function armCancel(btn, label, onConfirm){ // 파괴적 동작: 두 번 눌러 확정 (모달 없이 그 자리에서)
+    let armed=false, timer=null;
+    btn.addEventListener("click",e=>{
+      if(e && e.stopPropagation) e.stopPropagation();
+      if(!armed){
+        armed=true; btn.textContent=CANCEL_ARM; btn.style.color="var(--red)";
+        timer=setTimeout(()=>{ armed=false; btn.textContent=label; btn.style.color=""; }, 3200);
+      }else{ clearTimeout(timer); onConfirm(); }
+    });
+  }
+  function cardActs(c, acts, primary){ // 카드 전체 탭 = 주 동작, 내부 버튼은 각자
+    c.querySelectorAll("[data-act]").forEach(b=>{
+      const a=b.dataset&&b.dataset.act;
+      if(a&&acts[a]) b.addEventListener("click",e=>{ if(e&&e.stopPropagation) e.stopPropagation(); acts[a](); });
+    });
+    c.addEventListener("click",e=>{
+      if(e&&e.target&&e.target.closest&&e.target.closest("[data-act]")) return;
+      if(acts[primary]) acts[primary]();
+    });
+  }
   function renderHome(){
-    const ids=Object.keys(REQS).filter(id=>!store[id].confirmedAt); // 확정된 요청은 리스트를 떠난다(캘린더·알림함에 삶)
+    const ids=Object.keys(REQS).filter(id=>!store[id].confirmedAt && !REQS[id].canceled); // 확정·철회된 요청은 리스트를 떠난다
     const pending=ids.filter(id=>!store[id].submitted).length;
-    const myCount=hostState==="none"?0:1;
+    const myIds=Object.keys(HOSTED).filter(h=>!HOSTED[h].confirmedAt && !HOSTED[h].canceled);
+    const anyReady=myIds.some(h=>answeredOf(HOSTED[h])>=HOSTED[h].total);
+    const anyConfirmed=Object.keys(HOSTED).some(h=>HOSTED[h].confirmedAt);
 
     // 탭·뱃지
-    document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===homeTab?"true":"false"));
+    document.querySelectorAll("[data-tab]").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===homeTab?"true":"false"));
     const bq=document.getElementById("badgeReq"), bm=document.getElementById("badgeMy");
     bq.textContent=pending; bq.classList.toggle("hot", pending>0);
-    bm.textContent=myCount;
+    bm.textContent=myIds.length; bm.classList.toggle("hot", anyReady);
     reqList.style.display=homeTab==="req"?"flex":"none";
     document.getElementById("myList").style.display=homeTab==="my"?"flex":"none";
 
@@ -1299,7 +1416,9 @@
       homeTitle.innerHTML=pending?"확인할 요청이<br>있어요"
         : ids.length?"모두 답했어요,<br>잘 반영될 거예요":"정할 일이<br>없어요";
     }else{
-      homeTitle.innerHTML=hostState==="none"?"잡고 있는 회의가<br>없어요":hostState==="collecting"?"사정을 모으고<br>있어요":"회의가<br>잡혔어요!";
+      homeTitle.innerHTML=anyReady?"이제 시간을<br>정할 수 있어요"
+        : myIds.length?"사정을 모으고<br>있어요"
+        : anyConfirmed?"회의가<br>잡혔어요!":"잡고 있는 회의가<br>없어요";
     }
 
     reqList.replaceChildren();
@@ -1309,45 +1428,92 @@
       reqList.appendChild(p);
     }
     ids.forEach(id=>{
-      const r=REQS[id], done=store[id].submitted;
-      const c=document.createElement("button");
-      c.className="req-card"+(done?" submitted":""); c.type="button";
+      const r=REQS[id], s=store[id], dec=s.declined, done=s.submitted&&!dec;
+      const c=document.createElement("div");
+      c.className="req-card"+((done||dec)?" submitted":"");
+      const meta= done?"✓ 사정을 알려드렸어요 · "+(r.span||"다음 주 중")
+        : dec?"✓ 이번엔 빠진다고 알렸어요"
+        : (r.span||"다음 주 중")+" · "+r.who+"이 물어봤어요";
+      let ctas;
+      if(dec) ctas='<button type="button" class="req-cta ghost" data-act="undec">다시 생각해볼게요</button>';
+      else if(done) ctas='<button type="button" class="req-cta" data-act="open">다시 고치기</button>';
+      else if(r.optional) ctas='<span class="req-cta-row"><button type="button" class="req-cta ghost" data-act="dec">이번엔 빠질게요</button><button type="button" class="req-cta" data-act="open">불편한 시간 알려주기</button></span>';
+      else ctas='<button type="button" class="req-cta" data-act="open">불편한 시간 알려주기</button>';
       c.innerHTML='<span class="req-top"><span class="req-title">'+titleOf(r)+'</span>'+
         '<span class="req-tag '+(r.optional?'opt':'req')+'">'+(r.optional?'선택 참석':'필수 참석')+'</span></span>'+
-        '<span class="req-meta">'+(done?"✓ 사정을 알려드렸어요 · "+(r.span||"다음 주 중"):(r.span||"다음 주 중")+" · "+r.who+"이 물어봤어요")+'</span>'+
-        '<span class="req-cta">'+(done?"다시 고치기":"불편한 시간 알려주기")+'</span>';
-      c.addEventListener("click",()=>openReq(id));
+        '<span class="req-meta">'+meta+'</span>'+ctas;
+      cardActs(c, {
+        open:()=>openReq(id),
+        dec:()=>declineReq(id),
+        undec:()=>undeclineReq(id),
+      }, dec?"undec":"open");
       reqList.appendChild(c);
     });
 
-    // 내가 잡는 회의
+    // 내가 잡는 회의 (여러 개가 공존한다)
     const myList=document.getElementById("myList");
     myList.replaceChildren();
-    if(hostState==="none"){
+    if(!myIds.length){
       const p=document.createElement("p"); p.className="empty-hint";
       p.textContent="아직 직접 잡는 회의가 없어요.";
       myList.appendChild(p);
-    }else{
-      const done=hostState==="confirmed";
-      const c=document.createElement("button");
-      c.className="req-card"+(done?" submitted":""); c.type="button";
-      const total=includedCount(), answered=Math.min(myAnswered, total);
-      c.innerHTML='<span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
-        '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · "+(KO_N[total]||total)+" 명 중 "+(KO_N[answered]||answered)+" 명이 답했어요")+'</span>'+
-        '<span class="req-cta">'+(done?"확정 내용 보기":(myPoked?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기"))+'</span>';
-      c.addEventListener("click",()=>{
-        if(done){ openCalView("exit","mymeet"); return; }
-        if(myPoked) return;
-        myPoked=true; renderHome(); // 아직 안 답한 사람들에게 살짝 재촉
-        const first=revealDevice2(); // 재촉이 상대 폰에 실제로 도착
-        renderS2Req(); setS2Tab("req");
-        setTimeout(()=>{
-          chime();
-          pushNoti2("은솔님이 기다리고 있어요", meet.name+" · 불편한 시간을 알려주세요");
-          setNotif2("은솔님이 기다리고 있어요", meet.name+" · 불편한 시간을 알려주세요", goS2ReqTab);
-        }, first?900:450);
-      });
+    }
+    myIds.forEach(hid=>{
+      const h=HOSTED[hid], ready=answeredOf(h)>=h.total;
+      const c=document.createElement("div"); c.className="req-card";
+      const declNote=(h.jiIn&&hostStore[hid].declined)?" · 한 명은 이번엔 빠져요":"";
+      const meta= ready?"✓ "+(KO_N[h.total+1]||h.total+1)+" 명 모두 사정을 알려줬어요"+declNote
+        : "사정을 모으는 중이에요 · "+(KO_N[h.total]||h.total)+" 명 중 "+(KO_N[answeredOf(h)]||answeredOf(h))+" 명이 답했어요"+declNote;
+      const cta= ready?'<button type="button" class="req-cta" data-act="results">추천 시간 보러 가기</button>'
+        : '<button type="button" class="req-cta'+(h.poked?' ghost':'')+'" data-act="poke">'+(h.poked?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기")+'</button>';
+      c.innerHTML='<span class="req-top"><span class="req-title">'+h.name+' · '+h.dur+'</span></span>'+
+        '<span class="req-meta">'+meta+'</span>'+cta+
+        '<button type="button" class="req-sub" data-act="cancel">요청 철회하기</button>';
+      cardActs(c, {
+        results:()=>openHostResults(hid),
+        poke:()=>pokeHosted(hid),
+        cancel:()=>{}, // armCancel이 별도 처리
+      }, ready?"results":"poke");
+      const cb=c.querySelector('[data-act="cancel"]');
+      if(cb&&cb.dataset) armCancel(cb, "요청 철회하기", ()=>cancelHosted(hid));
       myList.appendChild(c);
+    });
+  }
+  function declineReq(id){ // 선택 참석: 빠지는 것도 정식 답변
+    const s=store[id];
+    s.declined=true; s.submitted=true;
+    renderHome();
+    if(!s.confirmedAt) setTimeout(()=>showAllCollected(id), 800);
+  }
+  function undeclineReq(id){
+    const s=store[id];
+    s.declined=false; s.submitted=false;
+    renderHome(); renderS2My(); // 주최자 카드도 다시 '모으는 중'으로
+  }
+  function pokeHosted(hid){
+    const h=HOSTED[hid];
+    if(h.poked) return;
+    h.poked=true; renderHome();
+    scheduleAmbient(hid, 1600, 2000); // 재촉 → 남은 사람들의 답이 빨라진다
+    if(h.jiIn && !h.jiAnswered){
+      const first=revealDevice2();
+      renderS2Req(); setS2Tab("req");
+      setTimeout(()=>{
+        chime();
+        toast2("은솔님이 기다리고 있어요", h.name+" · 불편한 시간을 알려주세요", null, goS2ReqTab);
+      }, first?900:450);
+    }
+  }
+  function cancelHosted(hid){
+    const h=HOSTED[hid];
+    h.canceled=true; h.timers.forEach(clearTimeout); h.timers=[];
+    renderHome(); renderS2Req();
+    if(h.jiIn){
+      const first=revealDevice2();
+      setTimeout(()=>{
+        chime();
+        toast2("회의가 철회됐어요", h.name+" · 은솔님이 요청을 거두었어요", null, goS2ReqTab);
+      }, first?900:450);
     }
   }
 
@@ -1363,11 +1529,10 @@
   });
 
   /* ================= 알림함 (확정 소식이 쌓이는 곳) ================= */
-  const notis=[{t:"디자인 시스템 리뷰", b:"화요일 오전 11:00으로 확정됐어요 · 캘린더에 추가했어요", fresh:true}];
-  let unread=1;
+  const notis=[{t:"디자인 시스템 리뷰", b:"화요일 오전 11:00으로 확정됐어요 · 캘린더에 추가했어요", x:{cal:"review"}, fresh:true}];
   const bellDot=document.getElementById("bellDot"), notiList=document.getElementById("notiList");
   function renderNoti(){
-    bellDot.hidden=unread===0;
+    bellDot.hidden=!notis.some(n=>n.fresh);
     notiList.replaceChildren();
     if(!notis.length){
       const p=document.createElement("p"); p.className="noti-empty";
@@ -1375,18 +1540,34 @@
       notiList.appendChild(p); return;
     }
     notis.forEach(n=>{
-      const d=document.createElement("div"); d.className="noti-item";
+      const d=document.createElement("div"); d.className="noti-item"+(n.fresh?"":" read");
       d.innerHTML="<b>"+n.t+(n.fresh?'<i class="n-dot"></i>':"")+"</b><span>"+n.b+"</span>";
       d.addEventListener("click",()=>{
-        if(n.x && n.x.req){ openReq(n.x.req); return; }        // 재촉 → 바로 답하러
+        n.fresh=false;
+        if(n.x && n.x.req){ const id=n.x.req;                  // 재촉·새 요청 → 바로 답하러
+          if(REQS[id].canceled) return;
+          if(store[id].confirmedAt){ openCalView("noti", id); } else openReq(id);
+          return;
+        }
+        if(n.x && n.x.host){ const h=HOSTED[n.x.host];         // 내가 잡는 회의의 완료 → 추천으로
+          if(h && !h.confirmedAt && !h.canceled){ openHostResults(n.x.host); }
+          else openCalView("noti", n.x.host);
+          return;
+        }
         openCalView("noti", (n.x && n.x.cal) || "review");     // 확정 → 캘린더에서 확인
       });
       notiList.appendChild(d);
     });
   }
-  function pushNoti(t,b,x){ // x: {cal:id} 확정→캘린더 포커스 | {req:id} 재촉→답하러
-    notis.unshift({t,b,x,fresh:true}); unread++; renderNoti();
-    if(curStep==="noti"){ unread=0; bellDot.hidden=true; } // 보고 있는 중 도착 → 바로 읽음
+  function pushNoti(t,b,x,read){ // x: {cal:id} 확정→캘린더 | {req:id} 답하러 | {host:hid} 추천으로
+    const rec={t,b,x,fresh:!read};
+    notis.unshift(rec); renderNoti();
+    if(curStep==="noti"){ rec.fresh=false; renderNoti(); } // 보고 있는 중 도착 → 바로 읽음
+    return rec;
+  }
+  function toast1(t,b,x,onTap,read){ // 토스트+기록 쌍 발행 — 토스트로 확인하면 기록도 읽음 처리
+    const rec=pushNoti(t,b,x,read);
+    setNotif1(t,b,()=>{ rec.fresh=false; renderNoti(); if(onTap) onTap(); });
   }
 
   /* ================= 내 캘린더 (주간 뷰) ================= */
@@ -1402,6 +1583,14 @@
     {d:4,s:10,  e:10.5,t:"데일리 스탠드업"},
     {d:4,s:16,  e:17,  t:"주간 공유회"},
   ];
+  // 지수의 캘린더 하드 제약 — 추천은 두 사람의 캘린더를 모두 피한다
+  const JI_EVENTS=[
+    {d:0,s:11,e:12,t:"지표 리뷰"},
+    {d:1,s:13,e:14,t:"PO 싱크"},
+    {d:2,s:16,e:17,t:"채용 인터뷰"},
+    {d:3,s:9, e:10,t:"홈팀 스탠드업"},
+    {d:4,s:13,e:14,t:"하반기 기획 정리"},
+  ];
   // 슬롯 시스템: 라벨 ↔ 좌표, 후보는 '실제로 비어 있는' 칸에서만 나온다
   const DAY_KO=["월","화","수","목","금"];
   const SLOT_MAP={}; const MASTER=[];
@@ -1410,49 +1599,54 @@
     SLOT_MAP[label]={d,h};
     MASTER.push({t:label, d, h, day:DAY_KO[d], slot: h===9?0 : h===13?1 : h>=17?2 : null});
   }
-  let calFrom="exit";
   const NEXT_MON=new Date(2026,6,13);
   const mondayOf=d=>{ const m=new Date(d); m.setDate(m.getDate()-((m.getDay()+6)%7)); m.setHours(0,0,0,0); return m; };
-  function buildCalView(focus){
-    // 보여줄 주: 회고(mymeet)는 주최자가 고른 기간의 주, 그 외는 다음 주
-    let weekStart=NEXT_MON;
-    if(focus==="mymeet" && typeof selS!=="undefined" && selS){
-      const m=mondayOf(selS); if(+m>+NEXT_MON) weekStart=m;
-      else if(+m<+NEXT_MON) weekStart=NEXT_MON;
-      else weekStart=m;
-    }
-    const dates=[...Array(5)].map((_,i)=>{ const x=new Date(weekStart); x.setDate(weekStart.getDate()+i); return x; });
-    const suffix = +weekStart===+NEXT_MON ? " · 다음 주"
-      : +weekStart===+new Date(2026,6,20) ? " · 다다음 주" : "";
-    document.getElementById("calSub").textContent=
-      (dates[0].getMonth()+1)+"월 "+dates[0].getDate()+"일 – "+dates[4].getDate()+"일"+suffix;
-
-    const days=document.getElementById("cvDays"), body=document.getElementById("cvBody");
-    days.replaceChildren();
-    days.appendChild(document.createElement("span"));
-    ["월","화","수","목","금"].forEach((w,i)=>{
-      const s=document.createElement("span"); s.innerHTML=w+"<b>"+dates[i].getDate()+"</b>"; days.appendChild(s);
-    });
-    body.replaceChildren();
-    const gut=document.createElement("div"); gut.className="cv-gut";
-    for(let h=9;h<18;h++){ const l=document.createElement("div"); l.textContent=h+"시"; gut.appendChild(l); }
-    body.appendChild(gut);
-    const events=MY_EVENTS.map(e=>({...e,kind:"busy"}));
-    events.push({d:1,s:11,e:12,t:"디자인 시스템 리뷰",kind:"fixed",key:"review"});
-    Object.keys(REQS).forEach(id=>{ // 확정된 요청들 전부 캘린더에 산다
+  function meetingEvents(forJi){ // 확정된 회의들 — 각자의 캘린더에 산다
+    const evs=[];
+    Object.keys(REQS).forEach(id=>{
       const ca=store[id].confirmedAt;
       if(ca && SLOT_MAP[ca]){
         const {d,h}=SLOT_MAP[ca];
-        events.push({d,s:h,e:h+REQS[id].durH,t:REQS[id].name,kind:"fixed",key:id});
+        evs.push({d,s:h,e:h+REQS[id].durH,t:REQS[id].name,kind:"fixed",key:id,
+          wk:+(REQS[id].spanS?mondayOf(REQS[id].spanS):NEXT_MON)});
       }
     });
-    if(hostState==="confirmed" && SLOT_MAP[hostPickedLabel]){
-      const {d,h}=SLOT_MAP[hostPickedLabel];
-      events.push({d,s:h,e:h+durMin/60,t:meet.name,kind:"fixed",key:"mymeet"});
-    }
+    Object.keys(HOSTED).forEach(hid=>{
+      const h=HOSTED[hid];
+      if(h.confirmedAt && SLOT_MAP[h.confirmedAt] && (!forJi || h.jiIn)){
+        const p=SLOT_MAP[h.confirmedAt];
+        evs.push({d:p.d,s:p.h,e:p.h+h.durH,t:h.name,kind:"fixed",key:hid,
+          wk:+mondayOf(h.spanS||NEXT_MON)});
+      }
+    });
+    return evs;
+  }
+  function renderWeekView(subEl, daysEl, bodyEl, base, focus, forJi){
+    let weekStart=NEXT_MON; // 보여줄 주: 포커스된 회의가 있으면 그 회의 기간의 주
+    const fm=focus && (HOSTED[focus]||REQS[focus]);
+    if(fm && fm.spanS) weekStart=mondayOf(fm.spanS);
+    if(+weekStart<+mondayOf(TODAY)) weekStart=mondayOf(TODAY);
+    const dates=[...Array(5)].map((_,i)=>{ const x=new Date(weekStart); x.setDate(weekStart.getDate()+i); return x; });
+    const suffix = +weekStart===+NEXT_MON ? " · 다음 주"
+      : +weekStart===+mondayOf(TODAY) ? " · 이번 주" : "";
+    subEl.textContent=(dates[0].getMonth()+1)+"월 "+dates[0].getDate()+"일 – "+dates[4].getDate()+"일"+suffix;
+
+    daysEl.replaceChildren();
+    daysEl.appendChild(document.createElement("span"));
+    DAY_KO.forEach((w,i)=>{
+      const s=document.createElement("span"); s.innerHTML=w+"<b>"+dates[i].getDate()+"</b>"; daysEl.appendChild(s);
+    });
+    bodyEl.replaceChildren();
+    const gut=document.createElement("div"); gut.className="cv-gut";
+    for(let h=9;h<18;h++){ const l=document.createElement("div"); l.textContent=h+"시"; gut.appendChild(l); }
+    bodyEl.appendChild(gut);
+    const events=base.map(e=>({...e,kind:"busy"}));
+    events.push({d:1,s:11,e:12,t:"디자인 시스템 리뷰",kind:"fixed",key:"review",wk:+NEXT_MON});
+    events.push(...meetingEvents(forJi));
+    const visible=events.filter(e=>e.wk===undefined || e.wk===+weekStart);
     for(let d=0; d<5; d++){
       const col=document.createElement("div"); col.className="cv-col";
-      events.filter(e=>e.d===d).forEach(e=>{
+      visible.filter(e=>e.d===d).forEach(e=>{
         const ev=document.createElement("div");
         ev.className="cv-ev "+e.kind+(focus && e.key===focus?" flash":"");
         ev.style.top=((e.s-9)*44+1)+"px";
@@ -1460,21 +1654,37 @@
         ev.textContent=e.t;
         col.appendChild(ev);
       });
-      body.appendChild(col);
+      bodyEl.appendChild(col);
     }
   }
+  let calFrom="exit";
   function openCalView(from, focus){
-    calFrom=from; buildCalView(focus); goStep("cal","fwd");
+    calFrom=from;
+    renderWeekView(document.getElementById("calSub"), document.getElementById("cvDays"),
+      document.getElementById("cvBody"), MY_EVENTS, focus, false);
+    goStep("cal","fwd");
   }
   document.getElementById("calBack").addEventListener("click",()=>{
     if(calFrom==="noti"){ goStep("noti","back"); }
     else { renderHome(); goStep("exit","back"); }
   });
+  document.getElementById("calBtn").addEventListener("click",()=>openCalView("exit"));
+  let s2CalFrom="home";
+  function openS2Cal(from, focus){
+    s2CalFrom=from;
+    renderWeekView(document.getElementById("s2CalSub"), document.getElementById("s2CvDays"),
+      document.getElementById("s2CvBody"), JI_EVENTS, focus, true);
+    s2Go("cal","fwd");
+  }
+  document.getElementById("s2CalBtn").addEventListener("click",()=>openS2Cal("home"));
+  document.getElementById("s2CalBack").addEventListener("click",()=>{
+    if(s2CalFrom==="noti") s2Go("noti","back"); else s2Go("home","back");
+  });
   function openNoti(){
-    clearTimeout(notif1Timer); notif1.classList.remove("show"); // 같은 내용 이중 노출 방지
+    clearTimeout(notif1Timer); notif1.classList.remove("show","hint"); // 같은 내용 이중 노출 방지
     renderNoti(); goStep("noti","fwd");     // 홈 → 알림: 우측에서 밀려 들어옴
-    notis.forEach(n=>n.fresh=false);        // 다음 방문부턴 읽음 처리
-    unread=0; bellDot.hidden=true;
+    notis.forEach(n=>n.fresh=false);        // 다음 방문부턴 읽음 처리 (점은 이번 방문 동안 유지)
+    bellDot.hidden=true;
   }
   document.getElementById("bellBtn").addEventListener("click", openNoti);
   document.getElementById("notiBack").addEventListener("click",()=>{ renderHome(); goStep("exit","back"); });
@@ -1489,20 +1699,21 @@
   });
 
   function showAllCollected(id){ // 모든 지수 주최 회의 공통: 마지막 사정 도착
-    if(store[id].confirmedAt) return;
+    if(store[id].confirmedAt || REQS[id].canceled) return;
     const first=revealDevice2();
     renderS2My(); setS2Tab("my");
     setTimeout(()=>{
+      if(store[id].confirmedAt || REQS[id].canceled) return;
       chime();
       const r=REQS[id];
-      pushNoti2("모두의 사정이 모였어요", r.name+" · 이제 시간을 정할 수 있어요");
-      setNotif2("모두의 사정이 모였어요", r.name+" · 이제 시간을 정할 수 있어요", ()=>openS2Results(id));
+      toast2("모두의 사정이 모였어요", r.name+" · 이제 시간을 정할 수 있어요", null, ()=>openS2Results(id));
     }, first?650:200);
   }
 
   /* ================= 디바이스 2: 주최자(지수)의 폰 ================= */
   let dev2Shown=false, pick2=0;
   const s2Els={home:document.getElementById("s2Home"),results:document.getElementById("s2Results"),done:document.getElementById("s2Done"),noti:document.getElementById("s2Noti"),
+    cal:document.getElementById("s2Cal"),
     create:document.getElementById("s2Create"),who:document.getElementById("s2Who"),sent:document.getElementById("s2Sent"),
     ans1:document.getElementById("s2Ans1"),ans2:document.getElementById("s2Ans2"),ansDone:document.getElementById("s2AnsDone")};
 
@@ -1510,28 +1721,57 @@
   let s2Tab="my", s2MyTitle="사정을 모으고<br>있어요";
   const s2HomeTitle=document.getElementById("s2HomeTitle");
   function setS2MyTitle(t){ s2MyTitle=t; if(s2Tab==="my") s2HomeTitle.innerHTML=t; }
-  // 지수 폰에 도착하는 요청(은솔의 회고) — 서로의 행동이 상대 폰에 나타나는 핵심 배선
-  let s2HasReq=false, s2ReqAnswered=false, myAnswered=3;
+  // 지수 폰의 답할 요청 = 은솔이 연 회의들 (보낸 순간의 스냅샷으로 렌더 — H4)
+  function s2ReqIds(){ return Object.keys(HOSTED).filter(hid=>HOSTED[hid].jiIn && !HOSTED[hid].canceled && !HOSTED[hid].confirmedAt); }
+  function s2SyncTitle(){
+    if(s2Tab!=="req") return;
+    const ids=s2ReqIds(), pend=ids.filter(hid=>!HOSTED[hid].jiAnswered).length;
+    s2HomeTitle.innerHTML=!ids.length?"답할 요청이<br>없어요":pend?"확인할 요청이<br>있어요":"모두 답했어요!";
+  }
   function renderS2Req(){
     const box=document.getElementById("s2ReqList"); box.replaceChildren();
+    const ids=s2ReqIds();
+    const pend=ids.filter(hid=>!HOSTED[hid].jiAnswered).length;
     const bq=document.getElementById("s2BadgeReq");
-    const fixed=s2HasReq && hostState==="confirmed";
-    const pending=s2HasReq && !s2ReqAnswered && !fixed;
-    bq.textContent=pending?1:0; bq.classList.toggle("hot", pending);
-    if(!s2HasReq){
+    bq.textContent=pend; bq.classList.toggle("hot", pend>0);
+    if(!ids.length){
       const p=document.createElement("p"); p.className="empty-hint";
-      p.textContent="지금은 답할 요청이 없어요."; box.appendChild(p); return;
+      p.textContent="지금은 답할 요청이 없어요."; box.appendChild(p); s2SyncTitle(); return;
     }
-    const jiOpt=!PEOPLE.find(p=>p.name==="지수").req; // 은솔이 정한 지수의 필수/선택이 그대로 태그가 된다
-    const c=document.createElement("button");
-    c.className="req-card"+((s2ReqAnswered||fixed)?" submitted":""); c.type="button";
-    c.innerHTML='<span class="req-top"><span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
-      '<span class="req-tag '+(jiOpt?'opt':'req')+'">'+(jiOpt?'선택 참석':'필수 참석')+'</span></span>'+
-      '<span class="req-meta">'+(fixed?"📅 "+hostPickedLabel+" 확정됐어요":s2ReqAnswered?"✓ 사정을 알려드렸어요":meet.span+" · 은솔님이 물어봤어요")+'</span>'+
-      '<span class="req-cta">'+(fixed?"캘린더에 추가됐어요":s2ReqAnswered?"다시 고치기":"불편한 시간 알려주기")+'</span>';
-    if(!fixed) c.addEventListener("click",()=>openS2Answer()); // 라벨이 약속한 진짜 답변 플로우로 (H3)
-    else c.style.cursor="default";
-    box.appendChild(c);
+    ids.forEach(hid=>{
+      const h=HOSTED[hid], st=hostStore[hid], dec=st.declined, done=h.jiAnswered&&!dec;
+      const c=document.createElement("div");
+      c.className="req-card"+((done||dec)?" submitted":"");
+      const meta= done?"✓ 사정을 알려드렸어요"
+        : dec?"✓ 이번엔 빠진다고 알렸어요"
+        : h.span+" · 은솔님이 물어봤어요";
+      let ctas;
+      if(dec) ctas='<button type="button" class="req-cta ghost" data-act="undec">다시 생각해볼게요</button>';
+      else if(done) ctas='<button type="button" class="req-cta" data-act="open">다시 고치기</button>';
+      else if(!h.jiReq) ctas='<span class="req-cta-row"><button type="button" class="req-cta ghost" data-act="dec">이번엔 빠질게요</button><button type="button" class="req-cta" data-act="open">불편한 시간 알려주기</button></span>';
+      else ctas='<button type="button" class="req-cta" data-act="open">불편한 시간 알려주기</button>';
+      c.innerHTML='<span class="req-top"><span class="req-title">'+h.name+' · '+h.dur+'</span>'+
+        '<span class="req-tag '+(h.jiReq?'req':'opt')+'">'+(h.jiReq?'필수 참석':'선택 참석')+'</span></span>'+
+        '<span class="req-meta">'+meta+'</span>'+ctas;
+      cardActs(c, {
+        open:()=>openS2Answer(hid),
+        dec:()=>s2Decline(hid),
+        undec:()=>s2Undecline(hid),
+      }, dec?"undec":"open");
+      box.appendChild(c);
+    });
+    s2SyncTitle();
+  }
+  function s2Decline(hid){
+    const h=HOSTED[hid];
+    hostStore[hid].declined=true; h.jiAnswered=true;
+    renderS2Req(); renderHome();
+    scheduleAmbient(hid, 1200, 1400); // 내 답이 끝났으니 남은 사람들도 곧
+  }
+  function s2Undecline(hid){
+    const h=HOSTED[hid];
+    hostStore[hid].declined=false; h.jiAnswered=false;
+    renderS2Req(); renderHome();
   }
   function setS2Tab(tab, animate){
     if(s2Tab===tab) animate=false; // 같은 탭이면 재생 없이 상태만 동기화
@@ -1540,11 +1780,7 @@
     const req=document.getElementById("s2ReqList"), my=document.getElementById("s2MyList");
     req.style.display=s2Tab==="req"?"flex":"none";
     my.style.display=s2Tab==="my"?"flex":"none";
-    s2HomeTitle.innerHTML=s2Tab==="req"
-      ? (!s2HasReq ? "답할 요청이<br>없어요"
-        : hostState==="confirmed" ? "회의가<br>잡혔어요!"
-        : s2ReqAnswered ? "모두 답했어요!" : "확인할 요청이<br>있어요")
-      : s2MyTitle;
+    if(s2Tab==="req") s2SyncTitle(); else s2HomeTitle.innerHTML=s2MyTitle;
     if(animate){
       const el=s2Tab==="req"?req:my;
       el.animate([{opacity:0, transform:"translateY(6px)"},{opacity:1, transform:"none"}],
@@ -1571,11 +1807,11 @@
     document.getElementById("s2WhenModal").classList.remove("show"); // 화면 점프 시 열린 시트 정리
   }
 
-  // 지수의 알림함
-  const s2Notis=[]; let s2Unread=0;
+  // 지수의 알림함 — 기록도 목적지를 가진다
+  const s2Notis=[];
   const s2BellDot=document.getElementById("s2BellDot"), s2NotiList=document.getElementById("s2NotiList");
   function renderNoti2List(){
-    s2BellDot.hidden=s2Unread===0;
+    s2BellDot.hidden=!s2Notis.some(n=>n.fresh);
     s2NotiList.replaceChildren();
     if(!s2Notis.length){
       const p=document.createElement("p"); p.className="noti-empty";
@@ -1583,16 +1819,35 @@
       s2NotiList.appendChild(p); return;
     }
     s2Notis.forEach(n=>{
-      const d=document.createElement("div"); d.className="noti-item static";
+      const d=document.createElement("div");
+      d.className="noti-item"+(n.x?"":" static")+(n.fresh?"":" read");
       d.innerHTML="<b>"+n.t+(n.fresh?'<i class="n-dot"></i>':"")+"</b><span>"+n.b+"</span>";
+      if(n.x) d.addEventListener("click",()=>{
+        n.fresh=false;
+        if(n.x.cal){ openS2Cal("noti", n.x.cal); return; }
+        if(n.x.req){ const h=HOSTED[n.x.req];
+          if(h && !h.canceled && !h.confirmedAt && !h.jiAnswered){ openS2Answer(n.x.req); }
+          else { renderNoti2List(); goS2ReqTab(); }
+          return;
+        }
+      });
       s2NotiList.appendChild(d);
     });
   }
-  function pushNoti2(t,b){ s2Notis.unshift({t,b,fresh:true}); s2Unread++; renderNoti2List(); }
+  function pushNoti2(t,b,x,read){
+    const rec={t,b,x,fresh:!read};
+    s2Notis.unshift(rec); renderNoti2List();
+    if(s2Cur==="noti"){ rec.fresh=false; renderNoti2List(); }
+    return rec;
+  }
+  function toast2(t,b,x,onTap,read){ // 토스트+기록 쌍 — 토스트로 확인하면 기록도 읽음
+    const rec=pushNoti2(t,b,x,read);
+    setNotif2(t,b,()=>{ rec.fresh=false; renderNoti2List(); if(onTap) onTap(); });
+  }
   function openNoti2(){
-    clearTimeout(notif2Timer); notif.classList.remove("show"); // 이중 노출 방지
+    clearTimeout(notif2Timer); notif.classList.remove("show","hint"); // 이중 노출 방지
     renderNoti2List(); s2Go("noti","fwd");
-    s2Notis.forEach(n=>n.fresh=false); s2Unread=0; s2BellDot.hidden=true;
+    s2Notis.forEach(n=>n.fresh=false); s2BellDot.hidden=true;
   }
   document.getElementById("s2Bell").addEventListener("click", openNoti2);
   document.getElementById("s2NotiBack").addEventListener("click",()=>s2Go("home","back"));
@@ -1613,20 +1868,25 @@
   }
 
   // 방금 참석자가 흘린 사정(시간대+요일)이 후보·근거에 그대로 반영되고,
-  // 후보는 캘린더·기확정 회의와 겹치지 않는 '진짜 빈 칸'에서만 나온다
-  function buildTimes2(reqId, allWord){
-    const s=store[reqId], me=REQS[reqId];
+  // 후보는 두 사람의 캘린더·기확정 회의와 겹치지 않는 '진짜 빈 칸'에서만 나온다
+  function buildCandidates(s, durH, allWord, excludeKey, allowed){
     const SLOT_NAME={0:"이른 아침",1:"점심 직후",2:"늦은 오후"};
     const SLOT_OBJ ={0:"을",1:"를",2:"를"}, SLOT_TOP={0:"은",1:"는",2:"는"};
     const taken=[{d:1,h:11,durH:1}]; // 디자인 시스템 리뷰(기확정)
     Object.keys(REQS).forEach(x=>{
       const ca=store[x].confirmedAt;
-      if(x!==reqId && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:REQS[x].durH});
+      if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:REQS[x].durH});
     });
+    Object.keys(HOSTED).forEach(x=>{
+      const ca=HOSTED[x].confirmedAt;
+      if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:HOSTED[x].durH});
+    });
+    const busy=MY_EVENTS.concat(JI_EVENTS);
     const conflict=c=>
-      MY_EVENTS.some(e=>e.d===c.d && c.h<e.e && c.h+me.durH>e.s) ||
-      taken.some(e=>e.d===c.d && c.h<e.h+e.durH && c.h+me.durH>e.h);
-    const scored=MASTER.filter(c=>!conflict(c) && c.h+me.durH<=18).map(c=>{
+      busy.some(e=>e.d===c.d && c.h<e.e && c.h+durH>e.s) ||
+      taken.some(e=>e.d===c.d && c.h<e.h+e.durH && c.h+durH>e.h);
+    const okDays=allowed||DAYS;
+    const scored=MASTER.filter(c=>okDays.includes(c.day) && !conflict(c) && c.h+durH<=18).map(c=>{
       const dp=s.days[c.day]||0, tp=c.slot==null?0:(s.time[c.slot]||0);
       const p=Math.max(dp,tp);
       const src = dp>=tp
@@ -1647,7 +1907,10 @@
       const echo=[...scored].reverse().find(c=>c.p===maxSig && !top2.includes(c));
       if(echo) third=echo;
     }
-    return [...top2, third].map((c,i)=>({t:c.t, why:why(c,i), best:i===0}));
+    return [...top2, third].filter(Boolean).map((c,i)=>({t:c.t, why:why(c,i), best:i===0}));
+  }
+  function buildTimes2(reqId, allWord){
+    return buildCandidates(store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed);
   }
   let TIMES2=[];
   function renderTimes2(){
@@ -1671,12 +1934,12 @@
     clearTimeout(notif2Timer); // 자동 전환 대신: 안 누르면 탭 가이드
     notif2Timer=setTimeout(()=>{ if(notif.classList.contains("show")) notif.classList.add("hint"); }, 2600);
   }
-  // 디바이스1의 역할 = 최초로 완료한 플로우가 정의 (이후 고정)
+  // 디바이스1의 역할 = 최초로 완료한 플로우가 정의 (이후 고정) — 라벨은 사람(역할)
   let rolesAssigned=false;
   function assignRoles(firstIsHost){
     if(rolesAssigned) return; rolesAssigned=true;
-    document.getElementById("devLabel1").textContent=firstIsHost?"주최자":"참석자";
-    document.getElementById("devLabel2").textContent=firstIsHost?"참석자":"주최자";
+    document.getElementById("devLabel1").textContent="장은솔 ("+(firstIsHost?"주최자":"참석자")+")";
+    document.getElementById("devLabel2").textContent="김지수 ("+(firstIsHost?"참석자":"주최자")+")";
   }
   let s2ActiveMeet="kickoff"; // 결과 화면이 어떤 회의를 다루는지
   const pokedSet=new Set();
@@ -1684,12 +1947,14 @@
   // 지수의 '내가 잡는 회의' — 확정 전 요청들을 상태별로 렌더 (확정되면 떠남)
   function renderS2My(){
     const box=document.getElementById("s2MyList"); box.replaceChildren();
-    const ids=Object.keys(REQS).filter(id=>!store[id].confirmedAt);
+    const ids=Object.keys(REQS).filter(id=>!store[id].confirmedAt && !REQS[id].canceled);
     const anyReady=ids.some(id=>store[id].submitted);
+    const anyConfirmed=Object.keys(REQS).some(id=>store[id].confirmedAt);
     document.getElementById("s2BadgeMy").textContent=ids.length;
     document.getElementById("s2BadgeMy").classList.toggle("hot", anyReady);
     setS2MyTitle(anyReady?"이제 시간을<br>정할 수 있어요"
-      : ids.length?"사정을 모으고<br>있어요":"회의가 모두<br>잡혔어요!");
+      : ids.length?"사정을 모으고<br>있어요"
+      : anyConfirmed?"회의가 모두<br>잡혔어요!":"잡고 있는 회의가<br>없어요");
     if(!ids.length){
       const p=document.createElement("p"); p.className="empty-hint";
       p.textContent="아직 직접 잡는 회의가 없어요.";
@@ -1697,33 +1962,47 @@
     }
     ids.forEach(id=>{
       const r=REQS[id], ready=store[id].submitted;
-      const c=document.createElement("button"); c.className="req-card"; c.type="button";
+      const c=document.createElement("div"); c.className="req-card";
+      const declNote=store[id].declined?" · 한 명은 이번엔 빠져요":"";
       const collectingMeta=(KO_N[r.total]||r.total)+" 명 중 "+(KO_N[r.total-1]||r.total-1)+" 명이 사정을 알려줬어요";
+      const cta= ready?'<button type="button" class="req-cta" data-act="results">추천 시간 보러 가기</button>'
+        : '<button type="button" class="req-cta'+(pokedSet.has(id)?' ghost':'')+'" data-act="poke">'+(pokedSet.has(id)?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기")+'</button>';
       c.innerHTML='<span class="req-top"><span class="req-title">'+titleOf(r)+'</span></span>'+
-        '<span class="req-meta">'+(ready?"✓ "+allOf(r)+" 모두 사정을 알려줬어요":collectingMeta)+'</span>'+
-        '<span class="req-cta">'+(ready?"추천 시간 보러 가기":(pokedSet.has(id)?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기"))+'</span>';
-      c.addEventListener("click",()=>{
-        if(store[id].confirmedAt) return;
-        if(store[id].submitted){ openS2Results(id); return; }
-        if(pokedSet.has(id)) return;
-        pokedSet.add(id); renderS2My(); // 재촉 → 참석자 폰으로
-        setTimeout(()=>{
-          chime();
-          pushNoti("지수님이 기다리고 있어요", REQS[id].name+" · 불편한 시간을 알려주세요", {req:id});
-          setNotif1("지수님이 기다리고 있어요", REQS[id].name+" · 불편한 시간을 알려주세요", ()=>openReq(id));
-        }, 450);
-      });
+        '<span class="req-meta">'+(ready?"✓ "+allOf(r)+" 모두 사정을 알려줬어요"+declNote:collectingMeta)+'</span>'+cta+
+        '<button type="button" class="req-sub" data-act="cancel">요청 철회하기</button>';
+      cardActs(c, {
+        results:()=>{ if(!store[id].confirmedAt) openS2Results(id); },
+        poke:()=>{
+          if(store[id].submitted||pokedSet.has(id)) return;
+          pokedSet.add(id); renderS2My(); // 재촉 → 참석자 폰으로
+          setTimeout(()=>{
+            chime();
+            toast1("지수님이 기다리고 있어요", REQS[id].name+" · 불편한 시간을 알려주세요", {req:id}, ()=>openReq(id));
+          }, 450);
+        },
+        cancel:()=>{},
+      }, ready?"results":"poke");
+      const cb=c.querySelector('[data-act="cancel"]');
+      if(cb&&cb.dataset) armCancel(cb, "요청 철회하기", ()=>cancelReq(id));
       box.appendChild(c);
     });
+  }
+  function cancelReq(id){ // 지수가 자기 회의를 철회 — 은솔 폰에서도 사라지고, 안내가 간다
+    REQS[id].canceled=true;
+    renderS2My(); renderHome();
+    setTimeout(()=>{
+      chime();
+      toast1("회의가 철회됐어요", REQS[id].name+" · 지수님이 요청을 거두었어요", null, ()=>{ homeTab="req"; renderHome(); goStep("exit","back"); });
+    }, 450);
   }
 
   function openS2Results(id){
     s2ActiveMeet=id;
     const r=REQS[id];
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
-    document.getElementById("s2ResultsSub").textContent=allOf(r)+"의 캘린더와 알려준 사정을 반영했어요.";
+    document.getElementById("s2ResultsSub").textContent=allOf(r)+"의 캘린더와 알려준 사정을 반영했어요."+(store[id].declined?" 선택 참석 한 명은 이번엔 빠져요.":"");
     TIMES2=buildTimes2(id, allOf(r)); pick2=0; renderTimes2();
-    notif.classList.remove("show");
+    notif.classList.remove("show","hint");
     s2Go("results","fwd");
   }
   function revealDevice2(){
@@ -1733,7 +2012,8 @@
     setWidth(wrap.offsetWidth,true); // 좁아진 공간에 맞춰 디바이스1 조정
     return true;
   }
-  notif.addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show","hint"); if(notif2Tap) notif2Tap(); });
+  document.getElementById("notif2Main").addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show","hint"); if(notif2Tap) notif2Tap(); });
+  document.getElementById("notif2X").addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show","hint"); }); // 닫기만 — 기록은 벨에 남는다
   document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home","back"));
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home","back"));
   const notif1=document.getElementById("notif1");
@@ -1745,17 +2025,19 @@
     clearTimeout(notif1Timer); // 자동 전환 대신: 안 누르면 탭 가이드
     notif1Timer=setTimeout(()=>{ if(notif1.classList.contains("show")) notif1.classList.add("hint"); }, 2600);
   }
-  notif1.addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show","hint"); if(notif1Tap) notif1Tap(); });
+  document.getElementById("notif1Main").addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show","hint"); if(notif1Tap) notif1Tap(); });
+  document.getElementById("notif1X").addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show","hint"); }); // 닫기만 — 기록은 벨에 남는다
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     const id=s2ActiveMeet, t=TIMES2[pick2].t, r=REQS[id];
     store[id].confirmedAt=t; // 확정 — 양쪽 리스트를 떠나 캘린더·알림함에 산다
     document.getElementById("s2DoneSub").innerHTML=t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
-    pushNoti(r.name, t+"으로 확정됐어요 · 캘린더에 추가했어요", {cal:id}); // 참석자 알림함에 기록
+    pushNoti2(r.name, t+"으로 확정했어요 · 캘린더에 추가했어요", {cal:id}, true); // 내 행동은 읽음 상태로 기록
     renderS2My(); renderHome();
     s2Go("done");
     setTimeout(()=>{ // 참석자에게 확정 알림 띠롱 → 일정이 '사는 곳'인 내 캘린더로
       chime();
-      setNotif1("회의 시간이 정해졌어요", r.name+" · "+t, ()=>openCalView("exit", id));
+      const rec=pushNoti(r.name, t+"으로 확정됐어요 · 캘린더에 추가했어요", {cal:id});
+      setNotif1("회의 시간이 정해졌어요", r.name+" · "+t, ()=>{ rec.fresh=false; renderNoti(); openCalView("exit", id); });
     }, 650);
   });
   document.getElementById("again").addEventListener("click",()=>goStep(1,"back"));
@@ -1809,8 +2091,9 @@
     document.getElementById("inviteNote").classList.add("show");
   });
 
-  // 회의 정보
-  const meet={name:"스프린트 회고", dur:"30분", span:"다음 주 · 7/13 – 7/17"};
+  // 회의 정보 (만들기 화면의 편집 상태 — 보내는 순간 HOSTED로 스냅샷된다)
+  const meet={name:"스프린트 회고", dur:"30분", durMin:30, span:"다음 주 · 7/13 – 7/17",
+    spanS:new Date(2026,6,13), spanE:new Date(2026,6,17)};
 
   // 길이: 10분 단위 스테퍼 (10분 ~ 3시간) — 두 디바이스 공용
   function fmtDur(m){ return m<60 ? m+"분" : (m%60 ? Math.floor(m/60)+"시간 "+(m%60)+"분" : (m/60)+"시간"); }
@@ -1822,14 +2105,14 @@
     render();
   }
   makeStepper(document.getElementById("durMinus"), document.getElementById("durVal"), document.getElementById("durPlus"),
-    s=>{ meet.dur=s; });
+    (s,m)=>{ meet.dur=s; meet.durMin=m; });
 
   // 언제: 프리셋 + 기간 캘린더 (바텀시트) — 두 디바이스 공용 팩토리
-  const TODAY=new Date(2026,6,11);
+  const TODAY=new Date(2026,6,8); // 데모 기준일: 수요일 (이번 주가 성립하도록)
   const PRESETS=[
+    {label:"이번 주",   s:new Date(2026,6,8),  e:new Date(2026,6,10)},
     {label:"다음 주",   s:new Date(2026,6,13), e:new Date(2026,6,17)},
-    {label:"다다음 주", s:new Date(2026,6,20), e:new Date(2026,6,24)},
-    {label:"이번 달 안", s:new Date(2026,6,12), e:new Date(2026,6,31)},
+    {label:"이번 달 안", s:new Date(2026,6,8),  e:new Date(2026,6,31)},
   ];
   const fmtD=d=>(d.getMonth()+1)+"/"+d.getDate();
   function makeWhenPicker(ids, onApply){
@@ -1837,7 +2120,7 @@
           title=document.getElementById(ids.title), prev=document.getElementById(ids.prev),
           next=document.getElementById(ids.next),
           presetBtns=[...document.querySelectorAll("#"+ids.presetRow+" .preset")];
-    let selS=PRESETS[0].s, selE=PRESETS[0].e, viewY=2026, viewM=6;
+    let selS=PRESETS[1].s, selE=PRESETS[1].e, viewY=2026, viewM=6; // 기본: 다음 주
     function spanLabel(){ // ok에서 selS/selE 보정 후 호출됨
       const p=PRESETS.find(p=>+p.s===+selS && +p.e===+selE);
       return p ? p.label+" · "+fmtD(p.s)+" – "+fmtD(p.e) : fmtD(selS)+" – "+fmtD(selE);
@@ -1883,7 +2166,7 @@
     document.getElementById(ids.dim).addEventListener("click",()=>modal.classList.remove("show"));
     document.getElementById(ids.ok).addEventListener("click",()=>{
       if(selS && !selE) selE=selS;
-      onApply(spanLabel());
+      onApply(spanLabel(), selS, selE);
       modal.classList.remove("show");
     });
   }
@@ -1891,30 +2174,56 @@
   makeWhenPicker(
     {modal:"whenModal", grid:"calGrid", title:"calTitle", prev:"calPrev", next:"calNext",
      presetRow:"presetRow", btn:"whenBtn", dim:"whenDim", ok:"whenOk"},
-    s=>{ meet.span=s; whenLabel.textContent=s; });
-  let hostState="none", hostPickedLabel="", myPoked=false; // none → collecting → confirmed
+    (s,sd,ed)=>{ meet.span=s; meet.spanS=sd; meet.spanE=ed; whenLabel.textContent=s; });
   hostSendBtn.addEventListener("click",()=>{
-    const n=includedCount();
-    meet.name=document.getElementById("meetName").value.trim()||"새 회의";
-    document.getElementById("hostCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span;
+    const n=includedCount(); if(!n) return;
+    const hid="h"+(++hostSeq);
+    const ji=PEOPLE.find(p=>p.name==="지수");
+    const name=document.getElementById("meetName").value.trim()||"새 회의";
+    // 보내는 순간의 스냅샷 — 이후 명단을 고쳐도 이미 보낸 요청은 변하지 않는다 (H4)
+    HOSTED[hid]={ name, dur:meet.dur, durH:meet.durMin/60, span:meet.span, spanS:meet.spanS, spanE:meet.spanE,
+      daysAllowed:weekdaysIn(meet.spanS, meet.spanE),
+      total:n, jiIn:ji.included!==false, jiReq:!!ji.req, jiAnswered:false, sim:0,
+      poked:false, confirmedAt:null, canceled:false, timers:[] };
+    hostStore[hid]={time:[0,0,0], days:emptyDays(), submitted:false, declined:false};
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     assignRoles(true); // 첫 완료 = 주최자 플로우
-    regenHostTimes(); // 인원 변경 반영
-    hostState="collecting"; myPoked=false; myAnswered=3;
-    s2HasReq=true; s2ReqAnswered=false; renderS2Req(); // 상대 폰의 '답할 요청'에 도착
+    renderHome(); renderS2Req(); // 상대 폰의 '답할 요청'에 도착
     goStep("hostSent");
     const first=revealDevice2();
-    setS2Tab("req"); // 수신자 관점으로 등장
+    if(HOSTED[hid].jiIn){
+      setS2Tab("req"); // 수신자 관점으로 등장
+      setTimeout(()=>{
+        chime();
+        toast2("새 요청이 도착했어요", name+" · 은솔님이 사정을 물어봤어요", {req:hid}, goS2ReqTab);
+      }, first?900:500);
+    }
+    scheduleAmbient(hid, 4000, 5000); // 동료들의 답이 시차를 두고 도착한다
+  });
+  const simTarget=h=>h.total-(h.jiIn?1:0);
+  function scheduleAmbient(hid, first, step){
+    // 시뮬레이션된 동료들의 응답 — 각본이 아니라 세계의 반응. 완료의 마지막 조각은 항상 진짜 사용자(지수)의 답이다.
+    const h=HOSTED[hid];
+    h.timers.forEach(clearTimeout); h.timers=[];
+    let delay=first;
+    for(let i=h.sim; i<simTarget(h); i++){
+      h.timers.push(setTimeout(()=>{
+        if(h.canceled||h.confirmedAt) return;
+        h.sim++; renderHome(); maybeCompleteHosted(hid); // 카운트만 조용히 오른다 (A3)
+      }, delay));
+      delay+=step;
+    }
+  }
+  function maybeCompleteHosted(hid){
+    const h=HOSTED[hid];
+    if(h.canceled||h.confirmedAt) return;
+    if(answeredOf(h)<h.total) return;
     setTimeout(()=>{
+      if(h.canceled||h.confirmedAt) return;
       chime();
-      pushNoti2("새 요청이 도착했어요", meet.name+" · 은솔님이 사정을 물어봤어요");
-      setNotif2("새 요청이 도착했어요", meet.name+" · 은솔님이 사정을 물어봤어요", goS2ReqTab);
-    }, first?900:500);
-  });
-  document.getElementById("hostPreview").addEventListener("click",()=>{
-    goStep("host","fwd");
-    document.getElementById("previewTip").hidden = hostState!=="collecting"; // 왜 눌러볼 수 있는지 안내
-  });
+      toast1("모두의 사정이 모였어요", h.name+" · 이제 시간을 정할 수 있어요", {host:hid}, ()=>openHostResults(hid));
+    }, 500);
+  }
   const goHomeMy=()=>{ homeTab="my"; renderHome(); goStep("exit","back"); };
   document.getElementById("hostSentOk").addEventListener("click", goHomeMy);
   document.getElementById("hostDoneOk").addEventListener("click", goHomeMy);
@@ -1926,43 +2235,43 @@
   document.getElementById("hostNext").addEventListener("click",()=>goStep("hostWho","fwd"));
   document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate","fwd"));
 
-  /* ================= 주최자(은솔) 결과 — 인원은 명단에서 파생 ================= */
-  let HOST_TIMES=[];
+  /* ================= 주최자(은솔) 결과 — 지수의 진짜 답이 후보를 바꾼다 ================= */
+  let HOST_TIMES=[], hostActive=null;
   const times=document.getElementById("times"); let hostPick=0;
-  function regenHostTimes(){
-    const n=includedCount()+1; // 참석자 + 주최자
-    HOST_TIMES=[
-      {t:"목요일 오전 10:00", why:(KO_N[n]||n)+" 명 모두 편한 시간이에요", best:true},
-      {t:"수요일 오후 3:00",  why:"한 명이 수요일을 살짝 피하고 싶어 해요"},
-      {t:"금요일 오후 1:00",  why:"두 명이 점심 직후를 웬만하면 피하고 싶어 해요"},
-    ];
+  function openHostResults(hid){
+    const h=HOSTED[hid]; if(!h||h.canceled) return;
+    hostActive=hid;
+    document.getElementById("hostCtx").innerHTML="<b>"+h.name+" · "+h.dur+"</b> · "+h.span;
+    const signals=h.jiIn?hostStore[hid]:{time:[0,0,0],days:emptyDays()};
+    HOST_TIMES=buildCandidates(signals, h.durH, (KO_N[h.total+1]||h.total+1)+" 명", hid, h.daysAllowed);
     hostPick=0;
     times.replaceChildren();
-    HOST_TIMES.forEach((h,i)=>{
+    HOST_TIMES.forEach((x,i)=>{
       const c=document.createElement("button"); c.className="time-card"; c.type="button"; c.setAttribute("role","radio");
-      c.innerHTML='<span class="tc-top"><span class="tc-time">'+h.t+'</span>'+(h.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
-        '<span class="tc-why">'+h.why+'</span>';
+      c.innerHTML='<span class="tc-top"><span class="tc-time">'+x.t+'</span>'+(x.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
+        '<span class="tc-why">'+x.why+'</span>';
       c.addEventListener("click",()=>{ hostPick=i; renderTimes(); });
       times.appendChild(c);
     });
     renderTimes();
+    goStep("host","fwd");
   }
   function renderTimes(){ [...times.children].forEach((c,i)=>c.setAttribute("aria-checked", i===hostPick?"true":"false")); }
-  regenHostTimes();
   document.getElementById("hostConfirm").addEventListener("click",()=>{
-    hostState="confirmed"; hostPickedLabel=HOST_TIMES[hostPick].t;
-    document.getElementById("previewTip").hidden=true;
-    document.getElementById("hostDoneSub").innerHTML=hostPickedLabel+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
+    const hid=hostActive, h=HOSTED[hid]; if(!h||h.confirmedAt) return;
+    h.confirmedAt=HOST_TIMES[hostPick].t;
+    document.getElementById("hostDoneSub").innerHTML=h.confirmedAt+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
+    pushNoti(h.name, h.confirmedAt+"으로 확정했어요 · 캘린더에 추가했어요", {cal:hid}, true); // 내 행동은 읽음 상태로 기록
+    renderHome(); renderS2Req();
     goStep("hostDone");
-    const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림
-    renderS2Req(); setS2Tab("req"); // 수신자 관점 + 확정 카드 반영
-    setTimeout(()=>{
-      chime();
-      pushNoti2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel+" · 캘린더에 추가했어요");
-      setNotif2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel, goS2ReqTab); // 확정이 반영된 요청 카드로
-    }, first?900:650);
+    if(h.jiIn){
+      const first=revealDevice2(); // 참석자 쪽 폰에 확정 알림 → 일정이 사는 지수의 캘린더로
+      setTimeout(()=>{
+        chime();
+        toast2("회의 시간이 정해졌어요", h.name+" · "+h.confirmedAt+" · 캘린더에 추가했어요", {cal:hid}, ()=>openS2Cal("home", hid));
+      }, first?900:650);
+    }
   });
-  document.getElementById("hostAgain").addEventListener("click",()=>goStep("host","back"));
 
   /* ================= 지수: 새 회의 만들기 — 요청이 은솔 폰에 도착한다 ================= */
   const S2PEOPLE=[
@@ -1973,7 +2282,8 @@
     {name:"하린", role:"프로덕트 오너", req:true},
     {name:"최분석", role:"데이터 분석가", req:false},
   ];
-  const s2Meet={dur:"30분", durMin:30, span:PRESETS[0].label+" · "+fmtD(PRESETS[0].s)+" – "+fmtD(PRESETS[0].e)};
+  const s2Meet={dur:"30분", durMin:30, span:PRESETS[1].label+" · "+fmtD(PRESETS[1].s)+" – "+fmtD(PRESETS[1].e),
+    spanS:PRESETS[1].s, spanE:PRESETS[1].e};
   const s2SendBtn=document.getElementById("s2Send");
   function s2IncludedCount(){ return S2PEOPLE.filter(p=>p.included!==false).length; }
   function updateS2Cta(){
@@ -1992,7 +2302,7 @@
   makeWhenPicker(
     {modal:"s2WhenModal", grid:"s2CalGrid", title:"s2CalTitle", prev:"s2CalPrev", next:"s2CalNext",
      presetRow:"s2PresetRow", btn:"s2WhenBtn", dim:"s2WhenDim", ok:"s2WhenOk"},
-    s=>{ s2Meet.span=s; document.getElementById("s2WhenLabel").textContent=s; });
+    (s,sd,ed)=>{ s2Meet.span=s; s2Meet.spanS=sd; s2Meet.spanE=ed; document.getElementById("s2WhenLabel").textContent=s; });
 
   document.getElementById("s2FabNew").addEventListener("click",()=>s2Go("create","fwd"));
   document.getElementById("s2CreateBack").addEventListener("click",()=>s2Go("home","back"));
@@ -2003,8 +2313,10 @@
     const n=s2IncludedCount(); if(!n) return;
     const id="j"+(++s2Seq);
     const name=document.getElementById("s2MeetName").value.trim()||"새 회의";
-    // 은솔 행의 필수/선택이 그대로 은솔 폰의 요청 태그가 된다 (행동이 상대 폰에 나타나는 배선)
-    REQS[id]={name, dur:s2Meet.dur, durH:s2Meet.durMin/60, total:n, who:"지수님", optional:!S2PEOPLE[0].req, span:s2Meet.span};
+    // 은솔 행의 필수/선택이 그대로 은솔 폰의 요청 태그가 된다 — 보내는 순간 스냅샷 (H4)
+    REQS[id]={name, dur:s2Meet.dur, durH:s2Meet.durMin/60, total:n, who:"지수님",
+      optional:!S2PEOPLE[0].req, span:s2Meet.span, spanS:s2Meet.spanS, spanE:s2Meet.spanE,
+      daysAllowed:weekdaysIn(s2Meet.spanS, s2Meet.spanE)};
     store[id]=emptyStore();
     document.getElementById("s2SentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     renderS2My();
@@ -2012,8 +2324,7 @@
     renderHome(); // 은솔 홈 '답할 요청'에 새 카드
     setTimeout(()=>{
       chime();
-      pushNoti("새 요청이 도착했어요", name+" · 지수님이 사정을 물어봤어요", {req:id});
-      setNotif1("새 요청이 도착했어요", name+" · 불편한 시간을 알려주세요", ()=>openReq(id));
+      toast1("새 요청이 도착했어요", name+" · 지수님이 사정을 물어봤어요", {req:id}, ()=>openReq(id));
     }, 500);
   });
   const s2GoHomeMy=()=>{ setS2Tab("my"); s2Go("home","back"); };
@@ -2033,78 +2344,48 @@
     render(it.init); s2TimeState[idx]=it.init; s2TimeCtl.push({slider,render}); s2TimeRows.appendChild(row);
   });
 
-  const s2WeekEl=document.getElementById("s2Week"), s2EditorEl=document.getElementById("s2Editor"), s2EditorHint=document.getElementById("s2EditorHint");
-  const s2DayVals={}; DAYS.forEach(d=>s2DayVals[d]=0);
-  const s2DayBtns={};
-  let s2ActiveDay=null, s2DayRow=null, s2DaySlider=null, s2DayStateEl=null, s2DayNameEl=null;
-  DAYS.forEach(d=>{
-    const b=document.createElement("button"); b.className="day"; b.type="button";
-    b.innerHTML=d+'<span class="tag" hidden></span>';
-    b.addEventListener("click",()=>s2SelectDay(d));
-    s2WeekEl.appendChild(b); s2DayBtns[d]=b;
-  });
-  function s2RenderDayChip(d){
-    const s=s2DayVals[d], btn=s2DayBtns[d];
-    const tone=s===3?"red":s>0?"blue":"";
-    if(tone) btn.dataset.tone=tone; else btn.removeAttribute("data-tone");
-    const tag=btn.querySelector(".tag");
-    tag.hidden=s===0; tag.textContent=s===3?"안 돼요":s===2?"웬만하면":s===1?"살짝":"";
-  }
-  function s2BuildEditor(){
-    s2DayRow=document.createElement("div"); s2DayRow.className="row";
-    s2DayRow.innerHTML='<div class="row-head"><div class="row-name"><span></span></div><div class="state"></div></div>';
-    s2DayStateEl=s2DayRow.querySelector(".state"); s2DayNameEl=s2DayRow.querySelector(".row-name span");
-    s2DaySlider=makeSlider(0, s=>{ if(s2ActiveDay){ s2DayVals[s2ActiveDay]=s; s2RenderDayChip(s2ActiveDay); s2RenderEditorState(s); updateS2AnsCta(); } }, "요일 세기");
-    s2DayRow.appendChild(s2DaySlider.el);
-  }
-  function s2RenderEditorState(s){
-    s2DayStateEl.textContent=STEPS[s].label;
-    s2DayStateEl.className="state "+(s===3?"max":s>0?"on":"");
-  }
-  function s2SelectDay(d){
-    if(s2ActiveDay===d){ // 다시 누르면 끄기 (편해요로 리셋)
-      s2DayVals[d]=0; s2RenderDayChip(d);
-      s2DayBtns[d].setAttribute("aria-pressed","false");
-      s2ActiveDay=null; updateS2AnsCta();
-      s2EditorHint.textContent = DAYS.some(x=>s2DayVals[x]>0)
-        ? "요일을 누르면 다시 고칠 수 있어요"
-        : "불편한 요일이 있으면 눌러 주세요";
-      s2EditorEl.replaceChildren(s2EditorHint); return;
-    }
-    if(s2ActiveDay) s2DayBtns[s2ActiveDay].setAttribute("aria-pressed","false");
-    s2ActiveDay=d; s2DayBtns[d].setAttribute("aria-pressed","true");
-    if(!s2DayRow) s2BuildEditor();
-    if(s2DayVals[d]===0){ s2DayVals[d]=1; } // 첫 선택은 '살짝'부터
-    s2DayNameEl.textContent=d+"요일";
-    s2DaySlider.el.setAttribute("aria-label", d+"요일");
-    s2DaySlider.set(s2DayVals[d], true);
-    s2RenderEditorState(s2DayVals[d]); s2RenderDayChip(d); updateS2AnsCta();
-    s2EditorEl.replaceChildren(s2DayRow);
-  }
+  const s2DayPick=makeDayPicker(
+    document.getElementById("s2Week"), document.getElementById("s2Editor"),
+    document.getElementById("s2EditorHint"), ()=>updateS2AnsCta());
 
   const s2Next1Btn=document.getElementById("s2Next1"), s2SubmitBtn=document.getElementById("s2Submit");
-  function s2AnySet(){ return s2TimeState.some(s=>s>0)||DAYS.some(d=>s2DayVals[d]>0); }
+  function s2AnySet(){ return s2TimeState.some(s=>s>0)||DAYS.some(d=>s2DayPick.vals[d]>0); }
   function updateS2AnsCta(){
     s2SubmitBtn.textContent=s2AnySet()?"다 정했어요":"다 편해요";
     s2Next1Btn.textContent=s2TimeState.some(s=>s>0)?"다음":"다 편해요";
   }
   updateS2AnsCta();
 
-  function openS2Answer(){
-    document.getElementById("s2AnsCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span;
-    document.getElementById("s2OptChip").hidden=PEOPLE.find(p=>p.name==="지수").req; // 은솔이 '선택'으로 정했으면 칩 등장
+  let s2AnsActive=null; // 어떤 회의에 답하는 중인지 — 상태는 hostStore[해당 회의]에 (H4)
+  function openS2Answer(hid){
+    const h=HOSTED[hid]; if(!h||h.canceled||h.confirmedAt) return;
+    s2AnsActive=hid;
+    const st=hostStore[hid];
+    TIME_ITEMS.forEach((_,i)=>{ s2TimeCtl[i].slider.set(st.time[i],true); s2TimeCtl[i].render(st.time[i]); s2TimeState[i]=st.time[i]; });
+    s2DayPick.load(st.days);
+    s2DayPick.setAllowed(h.daysAllowed||DAYS);
+    document.getElementById("s2Ans2Title").innerHTML=(spanWord(h)==="그 기간에"?"그중":spanWord(h))+" 불편한 요일이<br>있나요?";
+    document.getElementById("s2AnsCtx").innerHTML="<b>"+h.name+" · "+h.dur+"</b> · "+h.span;
+    document.getElementById("s2OptChip").hidden=h.jiReq; // 은솔이 '선택'으로 정했으면 칩 등장 (스냅샷 기준)
+    updateS2AnsCta();
     s2Go("ans1","fwd");
   }
+  const s2AnsHome=()=>{ renderS2Req(); setS2Tab("req"); s2Go("home","back"); };
   // 고른 값은 그대로 남으므로 확인 모달 없이 돌아가도 잃지 않는다
   document.getElementById("s2Ans1Back").addEventListener("click",()=>{ setS2Tab("req"); s2Go("home","back"); });
   s2Next1Btn.addEventListener("click",()=>s2Go("ans2","fwd"));
   document.getElementById("s2Ans2Back").addEventListener("click",()=>s2Go("ans1","back"));
   s2SubmitBtn.addEventListener("click",()=>{
-    s2ReqAnswered=true; myAnswered=4;
+    const hid=s2AnsActive, h=HOSTED[hid];
+    if(!h||h.canceled){ s2AnsHome(); return; } // 답하는 사이 철회된 경우
+    const st=hostStore[hid];
+    st.time=[...s2TimeState]; st.days={...s2DayPick.vals}; st.submitted=true; st.declined=false;
+    h.jiAnswered=true;
     renderS2Req(); renderHome(); // 부분 응답 = 은솔 카드의 카운트 상태만 (A3, 띠롱 없음)
+    scheduleAmbient(hid, 1200, 1400); // 내 답이 도착했으니 남은 사람들도 곧
+    maybeCompleteHosted(hid);
     s2Go("ansDone");
   });
-  const s2AnsHome=()=>{ renderS2Req(); setS2Tab("req"); s2Go("home","back"); };
   document.getElementById("s2AnsOk").addEventListener("click", s2AnsHome);
   document.getElementById("s2AnsClose").addEventListener("click", s2AnsHome);
   document.getElementById("s2AnsAgain").addEventListener("click",()=>s2Go("ans1","back"));
@@ -2117,13 +2398,18 @@
     setTimeout(()=>msgText.focus(), 400);
   }));
   document.getElementById("msgDim").addEventListener("click",()=>msgModal.classList.remove("show"));
+  function syncMsgLinks(){ // 보냄 흔적은 그 요청에만 남는다 (H4)
+    const sent=!!(store[currentReq] && store[currentReq].msgSent);
+    msgOpens.forEach(b=>{
+      b.textContent=sent?"✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요":"따로 전할 말이 있어요";
+      b.classList.toggle("sent", sent);
+    });
+  }
   document.getElementById("msgSend").addEventListener("click",()=>{
     if(!msgText.value.trim()){ msgText.focus(); return; }
+    store[currentReq].msgSent=true; store[currentReq].msg=msgText.value;
     msgModal.classList.remove("show");
-    msgOpens.forEach(b=>{
-      b.textContent="✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요";
-      b.classList.add("sent");
-    });
+    syncMsgLinks();
   });
 
   /* ================= 이탈 확인 ================= */
@@ -2136,9 +2422,8 @@
   document.getElementById("exitLeave").addEventListener("click", ()=>{
     // 데모: 입력을 비우고 처음으로
     timeCtl.forEach((c,i)=>{ c.slider.set(0,true); c.render(0); timeState[i]=0; });
-    DAYS.forEach(d=>{ dayVals[d]=0; renderDayChip(d); dayBtns[d].setAttribute("aria-pressed","false"); });
-    activeDay=null; editor.replaceChildren(editorHint);
     store[currentReq]=emptyStore();
+    dayPick.load(emptyDays()); syncMsgLinks(); msgText.value="";
     updateCTA(); closeExit(); renderHome(); goStep("exit","back");
   });
 
@@ -2147,7 +2432,10 @@
     b.addEventListener("click", ()=>{
       document.querySelectorAll("#roleSeg button").forEach(x=>x.setAttribute("aria-selected","false"));
       b.setAttribute("aria-selected","true");
-      if(b.dataset.role==="part") openReq("kickoff");   // 참석자 핵심: 사정 입력
+      if(b.dataset.role==="part"){ // 참석자 핵심: 살아있는 첫 요청의 사정 입력
+        const id=Object.keys(REQS).find(x=>!store[x].confirmedAt && !REQS[x].canceled);
+        if(id) openReq(id);
+      }
       else goStep("hostCreate");                        // 주최자 핵심: 회의 만들기
     });
   });
