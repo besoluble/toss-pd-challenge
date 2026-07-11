@@ -487,7 +487,7 @@
 
   <div class="stage">
     <div class="wrap" id="wrap">
-      <span class="dev-label">참석자 · 은솔 (Product Designer)</span>
+      <span class="dev-label" id="devLabel1">참석자</span>
       <div class="screen" id="screen">
 
         <!-- STEP 1 · 시간대 -->
@@ -785,7 +785,7 @@
 
     <!-- 디바이스 2 · 주최자(지수)의 폰 — 마지막 응답이 도착하면 등장 -->
     <div class="wrap2" id="wrap2" aria-hidden="true">
-      <span class="dev-label">주최자 · 지수 (PO)</span>
+      <span class="dev-label" id="devLabel2">주최자</span>
       <div class="screen">
 
         <section class="step active" id="s2Home">
@@ -1193,7 +1193,9 @@
   renderNoti();
 
   submit.addEventListener("click",()=>{
-    saveLive(); store[currentReq].submitted=true; goStep("done");
+    saveLive(); store[currentReq].submitted=true;
+    assignRoles(false); // 첫 완료 = 참석자 플로우
+    goStep("done");
     if(currentReq==="kickoff") setTimeout(showDevice2, 800); // 내가 마지막 응답자 → 주최자에게 띠롱
   });
 
@@ -1310,6 +1312,13 @@
     notif2Timer=setTimeout(()=>{
       if(notif.classList.contains("show")){ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); }
     }, 2000);
+  }
+  // 디바이스1의 역할 = 최초로 완료한 플로우가 정의 (이후 고정)
+  let rolesAssigned=false;
+  function assignRoles(firstIsHost){
+    if(rolesAssigned) return; rolesAssigned=true;
+    document.getElementById("devLabel1").textContent=firstIsHost?"주최자":"참석자";
+    document.getElementById("devLabel2").textContent=firstIsHost?"참석자":"주최자";
   }
   let s2Ready=false, poked=false;
   function revealDevice2(){
@@ -1507,6 +1516,7 @@
     meet.name=document.getElementById("meetName").value.trim()||"새 회의";
     document.getElementById("hostCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span;
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
+    assignRoles(true); // 첫 완료 = 주최자 플로우
     hostState="collecting"; goStep("hostSent");
   });
   document.getElementById("hostPreview").addEventListener("click",()=>goStep("host","fwd"));
