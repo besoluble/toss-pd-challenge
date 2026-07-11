@@ -156,6 +156,7 @@
 
   .chips{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; margin-top:12px; }
   .chips .cal{ margin-top:0; }
+  [hidden]{ display:none !important; } /* display를 정의한 컴포넌트에서도 hidden이 항상 이긴다 */
   .opt-only{ display:none !important; }
   body[data-persona="optional"] .opt-only{ display:inline-flex !important; }
 
@@ -1416,6 +1417,7 @@
   const titleOf=r=>r.name+" · "+r.dur;
   const ctxOf=r=>"<b>"+titleOf(r)+"</b> · "+(r.span||"다음 주 중");
   const allOf=r=>(KO_N[r.total+1]||r.total+1)+" 명"; // 주최자 포함 전체 인원
+  const hasEunsol=r=>!r.people || r.people.some(x=>x.name==="장은솔"); // 은솔이 초대된 회의인가
   const emptyDays=()=>{const o={};DAYS.forEach(d=>o[d]=0);return o;};
   const emptyStore=()=>({time:[0,0,0],days:emptyDays(),submitted:false,declined:false,confirmedAt:null});
   const store={ kickoff:emptyStore(), weekly:emptyStore() };
@@ -1467,7 +1469,7 @@
     });
   }
   function renderHome(){
-    const ids=Object.keys(REQS).filter(id=>!store[id].confirmedAt && !REQS[id].canceled); // 확정·철회된 요청은 리스트를 떠난다
+    const ids=Object.keys(REQS).filter(id=>!store[id].confirmedAt && !REQS[id].canceled && hasEunsol(REQS[id])); // 확정·철회·미초대 요청은 이 폰에 없다
     const pending=ids.filter(id=>!store[id].submitted).length;
     const myIds=Object.keys(HOSTED).filter(h=>!HOSTED[h].confirmedAt && !HOSTED[h].canceled);
     const anyReady=myIds.some(h=>answeredOf(HOSTED[h])>=HOSTED[h].total);
@@ -1568,7 +1570,7 @@
       renderS2Req(); setS2Tab("req");
       setTimeout(()=>{
         chime();
-        toast2("장은솔님이 기다리고 있어요", h.name+" · 불편한 시간을 알려주세요", null, goS2ReqTab);
+        toast2("장은솔님이 기다리고 있어요", h.name+" · 불편한 시간을 알려주세요", {req:hid}, goS2ReqTab);
       }, first?900:450);
     }
   }
@@ -1677,7 +1679,7 @@
     const evs=[];
     Object.keys(REQS).forEach(id=>{
       const ca=store[id].confirmedAt;
-      if(ca && SLOT_MAP[ca]){
+      if(ca && SLOT_MAP[ca] && (forJi || hasEunsol(REQS[id]))){ // 초대 안 된 회의는 내 캘린더에 없다
         const {d,h}=SLOT_MAP[ca];
         evs.push({d,s:h,e:h+REQS[id].durH,t:REQS[id].name,kind:"fixed",key:id,
           wk:+(REQS[id].spanS?mondayOf(REQS[id].spanS):NEXT_MON)});
@@ -1829,7 +1831,7 @@
       if(store[id].confirmedAt || REQS[id].canceled) return;
       chime();
       const r=REQS[id];
-      toast2("모두의 사정이 모였어요", r.name+" · 이제 시간을 정할 수 있어요", null, ()=>openS2Results(id));
+      toast2("모두의 사정이 모였어요", r.name+" · 이제 시간을 정할 수 있어요", {res:id}, ()=>openS2Results(id));
     }, first?650:200);
   }
 
@@ -1952,6 +1954,12 @@
         if(n.x.req){ const h=HOSTED[n.x.req];
           if(h && !h.canceled && !h.confirmedAt && !h.jiAnswered){ openS2Answer(n.x.req); }
           else { renderNoti2List(); goS2ReqTab(); }
+          return;
+        }
+        if(n.x.res){ const id=n.x.res; // 내 회의의 수집 완료 → 추천으로, 이미 확정이면 캘린더로
+          if(REQS[id].canceled) return;
+          if(store[id].confirmedAt) openS2Cal("noti", id);
+          else openS2Results(id);
           return;
         }
       });
@@ -2145,7 +2153,7 @@
     pushNoti2(r.name, t+"으로 확정했어요 · 캘린더에 추가했어요", {cal:id}, true); // 내 행동은 읽음 상태로 기록
     renderS2My(); renderHome();
     s2Go("done");
-    setTimeout(()=>{ // 참석자에게 확정 알림 띠롱 → 일정이 '사는 곳'인 내 캘린더로
+    if(hasEunsol(r)) setTimeout(()=>{ // 참석자(초대된 경우)에게 확정 알림 → 일정이 '사는 곳'인 내 캘린더로
       chime();
       const rec=pushNoti(r.name, t+"으로 확정됐어요 · 캘린더에 추가했어요", {cal:id});
       setNotif1("회의 시간이 정해졌어요", r.name+" · "+t, ()=>{ rec.fresh=false; renderNoti(); openCalView("exit", id); });
@@ -2445,11 +2453,16 @@
     document.getElementById("s2SentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     renderS2My();
     s2Go("sent");
-    renderHome(); // 은솔 홈 '답할 요청'에 새 카드
-    setTimeout(()=>{
-      chime();
-      toast1("새 요청이 도착했어요", name+" · 김지수님이 사정을 물어봤어요", {req:id}, ()=>openReq(id));
-    }, 500);
+    if(hasEunsol(REQS[id])){
+      renderHome(); // 은솔 홈 '답할 요청'에 새 카드
+      setTimeout(()=>{
+        chime();
+        toast1("새 요청이 도착했어요", name+" · 김지수님이 사정을 물어봤어요", {req:id}, ()=>openReq(id));
+      }, 500);
+    }else{ // 은솔을 뺀 회의 — 나머지는 이미 답했으니 곧바로 다 모인다
+      store[id].submitted=true;
+      setTimeout(()=>showAllCollected(id), 700);
+    }
   });
   const s2GoHomeMy=()=>{ setS2Tab("my"); s2Go("home","back"); };
   document.getElementById("s2SentOk").addEventListener("click", s2GoHomeMy);
