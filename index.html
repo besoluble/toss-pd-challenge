@@ -102,6 +102,13 @@
   }
   .wrap.dragging .badge, .wrap2.dragging .badge{ opacity:1; }
 
+  /* 낮은 창 높이 안전망: 노스크롤 원칙은 유지하되, 물리적으로 안 들어가면 내부 스크롤 허용 */
+  @media (max-height:760px){
+    .screen{ overflow-y:auto; }
+    .step{ height:auto; min-height:100%; }
+    .sheet{ max-height:calc(100% - 20px); overflow-y:auto; }
+  }
+
   @media (max-width:640px){
     body{ background:#fff; }
     .topbar{ display:none; }
@@ -217,7 +224,7 @@
   .day[data-tone="red"][aria-pressed="true"]{ box-shadow:inset 0 0 0 2px var(--red); }
   .day .tag{ display:block; font-size:10px; font-weight:600; margin-top:3px; opacity:.85; }
   .editor{ margin-top:26px; min-height:96px; }
-  .editor-hint{ font-size:13px; color:var(--ink-4); text-align:center; padding-top:26px; }
+  .editor-hint{ font-size:13px; color:var(--ink-3); text-align:center; padding-top:26px; }
 
   /* footer */
   .foot{ margin-top:auto; display:flex; flex-direction:column; gap:12px; padding-top:16px; }
@@ -292,7 +299,6 @@
     transition-property:background-color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
   }
   .req-card:active{ scale:.98; background:var(--surface); }
-  .req-kind{ font-size:12px; font-weight:600; color:var(--blue); margin-bottom:2px; }
   .req-title{ font-size:16px; font-weight:700; color:var(--ink); }
   .req-meta{ font-size:13px; color:var(--ink-3); }
   .req-cta{
@@ -333,7 +339,7 @@
   .noti-item b{ font-size:14.5px; font-weight:600; color:var(--ink); }
   .noti-item .n-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--blue); margin-left:6px; vertical-align:1.5px; }
   .noti-item span{ font-size:13px; color:var(--ink-3); line-height:1.5; }
-  .noti-empty{ font-size:13.5px; color:var(--ink-4); text-align:center; padding:48px 10px; margin:0; line-height:1.6; }
+  .noti-empty{ font-size:13.5px; color:var(--ink-3); text-align:center; padding:48px 10px; margin:0; line-height:1.6; }
   .profile{ display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:var(--ink-2); }
   .avatar{ width:26px; height:26px; border-radius:50%; background:var(--blue-weak); color:#1B64DA;
     display:grid; place-items:center; font-size:12px; font-weight:700; }
@@ -369,7 +375,7 @@
     transition-property:background-color,scale; transition-duration:.16s; transition-timing-function:var(--ease);
   }
   .fab:active{ scale:.95; background:var(--blue-press); }
-  .empty-hint{ font-size:13px; color:var(--ink-4); padding:6px 2px; margin:0; }
+  .empty-hint{ font-size:13px; color:var(--ink-3); padding:6px 2px; margin:0; }
 
   /* 주최자: 참석자 지정 */
   .people{ display:flex; flex-direction:column; }
@@ -408,7 +414,6 @@
   .invite-note{ font-size:12.5px; color:var(--ink-4); opacity:0; transition:opacity .3s var(--ease); text-align:right; }
   .invite-note.show{ opacity:1; }
   .form-field{ display:flex; flex-direction:column; gap:7px; }
-  .form-row{ display:flex; gap:24px; }
   .f-label{ font-size:12px; font-weight:600; color:var(--ink-3); }
   .text-input{
     border:0; background:var(--surface-2); border-radius:12px; padding:13px 14px;
@@ -627,7 +632,7 @@
             </button>
           </div>
           <h1 class="title" style="font-size:20px; margin:0 0 4px;">내 캘린더</h1>
-          <p class="sub">7월 13일 – 17일 · 다음 주</p>
+          <p class="sub" id="calSub">7월 13일 – 17일 · 다음 주</p>
           <div class="cv">
             <div class="cv-days" id="cvDays"></div>
             <div class="cv-body" id="cvBody"></div>
@@ -921,9 +926,10 @@
   const STEPS = [
     {label:"편해요"}, {label:"살짝 피하고 싶어요"}, {label:"웬만하면 피하고 싶어요"}, {label:"안 돼요"},
   ];
-  function makeSlider(initial, onChange){
+  function makeSlider(initial, onChange, label){
     const el = document.createElement("div");
     el.className = "slider";
+    if(label) el.setAttribute("aria-label", label);
     el.innerHTML = '<div class="track"></div><div class="fill"></div>'+
       '<div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>'+
       '<div class="knob"></div>';
@@ -967,7 +973,7 @@
     const row=document.createElement("div"); row.className="row";
     row.innerHTML='<div class="row-head"><div class="row-name">'+it.emoji+' <span>'+it.name+'</span> <span class="rng">'+it.range+'</span></div><div class="state"></div></div>';
     const stateEl=row.querySelector(".state");
-    const slider=makeSlider(it.init, s=>{ timeState[idx]=s; render(s); updateCTA(); });
+    const slider=makeSlider(it.init, s=>{ timeState[idx]=s; render(s); updateCTA(); }, it.name);
     row.appendChild(slider.el);
     function render(s){ stateEl.textContent=STEPS[s].label; stateEl.className="state "+(s===3?"max":s>0?"on":""); }
     render(it.init); timeState[idx]=it.init; timeCtl.push({slider,render}); timeRows.appendChild(row);
@@ -978,7 +984,7 @@
   const week=document.getElementById("week"), editor=document.getElementById("editor"), editorHint=document.getElementById("editorHint");
   const dayVals={}; DAYS.forEach(d=>dayVals[d]=0);
   const dayBtns={};
-  let activeDay=null, dayRow=null, daySlider=null, dayStateEl=null, dayMaxnote=null, dayNameEl=null;
+  let activeDay=null, dayRow=null, daySlider=null, dayStateEl=null, dayNameEl=null;
 
   DAYS.forEach(d=>{
     const b=document.createElement("button"); b.className="day"; b.type="button";
@@ -991,7 +997,7 @@
     dayRow=document.createElement("div"); dayRow.className="row";
     dayRow.innerHTML='<div class="row-head"><div class="row-name"><span id="dayName"></span></div><div class="state"></div></div>';
     dayStateEl=dayRow.querySelector(".state"); dayNameEl=dayRow.querySelector("#dayName");
-    daySlider=makeSlider(0, s=>{ if(activeDay){ dayVals[activeDay]=s; renderDayChip(activeDay); renderEditorState(s); updateCTA(); } });
+    daySlider=makeSlider(0, s=>{ if(activeDay){ dayVals[activeDay]=s; renderDayChip(activeDay); renderEditorState(s); updateCTA(); } }, "요일 세기");
     dayRow.appendChild(daySlider.el);
   }
   function renderEditorState(s){
@@ -1013,6 +1019,7 @@
     if(!dayRow) buildEditor();
     if(dayVals[d]===0){ dayVals[d]=1; } // 첫 선택은 '살짝'부터
     dayNameEl.textContent=d+"요일";
+    daySlider.el.setAttribute("aria-label", d+"요일");
     daySlider.set(dayVals[d], true);
     renderEditorState(dayVals[d]); renderDayChip(d); updateCTA();
     editor.replaceChildren(dayRow);
@@ -1029,7 +1036,9 @@
   const stepEls={1:document.getElementById("step1"),2:document.getElementById("step2"),done:document.getElementById("stepDone"),exit:document.getElementById("stepExit"),noti:document.getElementById("stepNoti"),cal:document.getElementById("stepCal"),
     hostCreate:document.getElementById("stepHostCreate"),hostWho:document.getElementById("stepHostWho"),hostSent:document.getElementById("stepHostSent"),host:document.getElementById("stepHost"),hostDone:document.getElementById("stepHostDone")};
   const screen=document.getElementById("screen");
+  let curStep="exit"; // 자동 진행 가드용 현재 화면 추적
   function goStep(k, dir){ // dir: "fwd"(깊이 들어감) | "back"(얕아짐) | 생략(완료 = 페이드업)
+    curStep=String(k);
     Object.values(stepEls).forEach(s=>s.classList.remove("active","nav-fwd","nav-back"));
     const el=stepEls[k];
     el.classList.add("active");
@@ -1087,7 +1096,7 @@
     document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===homeTab?"true":"false"));
     const bq=document.getElementById("badgeReq"), bm=document.getElementById("badgeMy");
     bq.textContent=pending; bq.classList.toggle("hot", pending>0);
-    bm.textContent=myCount; bm.classList.toggle("hot", false);
+    bm.textContent=myCount;
     reqList.style.display=homeTab==="req"?"flex":"none";
     document.getElementById("myList").style.display=homeTab==="my"?"flex":"none";
 
@@ -1190,14 +1199,30 @@
   const TIME_COORD={ // 추천 시간 문자열 → [요일, 시작시각]
     "목요일 오전 10:00":[3,10], "수요일 오후 3:00":[2,15], "금요일 오후 1:00":[4,13],
     "수요일 오전 9:00":[2,9], "화요일 오후 5:30":[1,17.5],
+    "화요일 오전 10:00":[1,10], "월요일 오후 3:00":[0,15],
   };
   let kickoffConfirmedAt=null, calFrom="exit";
+  const NEXT_MON=new Date(2026,6,13);
+  const mondayOf=d=>{ const m=new Date(d); m.setDate(m.getDate()-((m.getDay()+6)%7)); m.setHours(0,0,0,0); return m; };
   function buildCalView(focus){
+    // 보여줄 주: 회고(mymeet)는 주최자가 고른 기간의 주, 그 외는 다음 주
+    let weekStart=NEXT_MON;
+    if(focus==="mymeet" && typeof selS!=="undefined" && selS){
+      const m=mondayOf(selS); if(+m>+NEXT_MON) weekStart=m;
+      else if(+m<+NEXT_MON) weekStart=NEXT_MON;
+      else weekStart=m;
+    }
+    const dates=[...Array(5)].map((_,i)=>{ const x=new Date(weekStart); x.setDate(weekStart.getDate()+i); return x; });
+    const suffix = +weekStart===+NEXT_MON ? " · 다음 주"
+      : +weekStart===+new Date(2026,6,20) ? " · 다다음 주" : "";
+    document.getElementById("calSub").textContent=
+      (dates[0].getMonth()+1)+"월 "+dates[0].getDate()+"일 – "+dates[4].getDate()+"일"+suffix;
+
     const days=document.getElementById("cvDays"), body=document.getElementById("cvBody");
     days.replaceChildren();
     days.appendChild(document.createElement("span"));
-    [["월",13],["화",14],["수",15],["목",16],["금",17]].forEach(([w,n])=>{
-      const s=document.createElement("span"); s.innerHTML=w+"<b>"+n+"</b>"; days.appendChild(s);
+    ["월","화","수","목","금"].forEach((w,i)=>{
+      const s=document.createElement("span"); s.innerHTML=w+"<b>"+dates[i].getDate()+"</b>"; days.appendChild(s);
     });
     body.replaceChildren();
     const gut=document.createElement("div"); gut.className="cv-gut";
@@ -1244,7 +1269,7 @@
 
   submit.addEventListener("click",()=>{
     saveLive(); store[currentReq].submitted=true;
-    assignRoles(false); // 첫 완료 = 참석자 플로우
+    if(currentReq==="kickoff") assignRoles(false); // 역할 고정은 킥오프(메인 서사)만 — weekly는 라벨 반전 방지 위해 제외
     goStep("done");
     if(currentReq==="kickoff") setTimeout(showDevice2, 800); // 내가 마지막 응답자 → 주최자에게 띠롱
     else if(currentReq==="weekly") setTimeout(showWeeklyArrived, 800); // 선택 참석 응답도 주최자 폰에 도착
@@ -1367,26 +1392,42 @@
     }catch(e){}
   }
 
-  // 방금 참석자가 흘린 사정이 주최자 화면 근거에 그대로 반영되게
+  // 방금 참석자가 흘린 사정(시간대+요일)이 주최자 화면 후보·근거에 그대로 반영되게
   function buildTimes2(){
-    const M=[
-      {t:"수요일 오전 9:00", n:"이른 아침", obj:"을", top:"은"},
-      {t:"금요일 오후 1:00", n:"점심 직후", obj:"를", top:"는"},
-      {t:"화요일 오후 5:30", n:"늦은 오후", obj:"를", top:"는"},
+    const s=store.kickoff;
+    const SLOT_NAME={0:"이른 아침",1:"점심 직후",2:"늦은 오후"};
+    const SLOT_OBJ ={0:"을",1:"를",2:"를"}, SLOT_TOP={0:"은",1:"는",2:"는"};
+    const CANDS=[ // 후보 풀 — 사용자가 요일을 막으면 대체 후보가 올라온다
+      {t:"목요일 오전 10:00", d:"목", slot:null},
+      {t:"수요일 오후 3:00",  d:"수", slot:null},
+      {t:"화요일 오전 10:00", d:"화", slot:null},
+      {t:"월요일 오후 3:00",  d:"월", slot:null},
+      {t:"금요일 오후 1:00",  d:"금", slot:1},
+      {t:"수요일 오전 9:00",  d:"수", slot:0},
+      {t:"화요일 오후 5:30",  d:"화", slot:2},
     ];
-    const s=store.kickoff; let bi=-1,bv=0;
-    s.time.forEach((v,i)=>{ if(v>bv){bv=v;bi=i;} });
-    let third={t:"금요일 오후 1:00", why:"두 명이 점심 직후를 웬만하면 피하고 싶어 해요"};
-    if(bv>0){
-      const m=M[bi];
-      third={t:m.t, why: bv===3 ? "한 명이 "+m.n+m.top+" 안 된다고 했어요"
-                              : "한 명이 "+m.n+m.obj+" "+(bv===2?"웬만하면":"살짝")+" 피하고 싶어 해요"};
+    const scored=CANDS.map(c=>{
+      const dp=s.days[c.d]||0, tp=c.slot==null?0:(s.time[c.slot]||0);
+      const p=Math.max(dp,tp);
+      const src = dp>=tp
+        ? {name:c.d+"요일", obj:"을", top:"은", v:dp}
+        : {name:SLOT_NAME[c.slot], obj:SLOT_OBJ[c.slot], top:SLOT_TOP[c.slot], v:tp};
+      return {...c, p, src};
+    }).sort((a,b)=>a.p-b.p);
+    const why=(c,i)=>{
+      if(c.p===0) return i===0?"여섯 명 모두 편한 시간이에요":"필수 참석자는 모두 편한 시간이에요";
+      if(c.p===3) return "한 명이 "+c.src.name+c.src.top+" 안 된다고 했어요";
+      return "한 명이 "+c.src.name+c.src.obj+" "+(c.p===2?"웬만하면":"살짝")+" 피하고 싶어 해요";
+    };
+    // 1·2위 = 페널티 최소 / 3위 = 사용자 신호를 '설명'하는 후보(왜 밀렸는지 근거로 보여줌)
+    const top2=scored.slice(0,2);
+    const maxSig=Math.max(0, ...Object.values(s.days||{}), ...s.time);
+    let third=scored[2];
+    if(maxSig>0){
+      const echo=[...scored].reverse().find(c=>c.p===maxSig && !top2.includes(c));
+      if(echo) third=echo;
     }
-    return [
-      {t:"목요일 오전 10:00", why:"여섯 명 모두 편한 시간이에요", best:true},
-      {t:"수요일 오후 3:00",  why:"필수 참석자는 모두 편한 시간이에요"},
-      third,
-    ];
+    return [...top2, third].map((c,i)=>({t:c.t, why:why(c,i), best:i===0}));
   }
   let TIMES2=[];
   function renderTimes2(){
@@ -1451,6 +1492,7 @@
     document.getElementById("s2Cta").textContent="재촉했어요 · 답이 오면 알려드릴게요";
     setTimeout(()=>{
       chime();
+      pushNoti("지수님이 기다리고 있어요","신규 기능 킥오프 · 불편한 시간을 알려주세요"); // 알림함에도 기록
       setNotif1("지수님이 기다리고 있어요","신규 기능 킥오프 · 불편한 시간을 알려주세요",()=>openReq("kickoff"));
     }, 450);
   });
@@ -1462,9 +1504,12 @@
     document.getElementById("notif1Title").textContent=t;
     document.getElementById("notif1Body").textContent=b;
     notif1Tap=onTap; notif1.classList.add("show");
-    clearTimeout(notif1Timer); // 2초간 안 누르면 누른 것처럼 진행
+    clearTimeout(notif1Timer); // 2초간 안 누르면 누른 것처럼 진행 — 단, 입력 중엔 화면을 뒤엎지 않음
     notif1Timer=setTimeout(()=>{
-      if(notif1.classList.contains("show")){ notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); }
+      if(!notif1.classList.contains("show")) return;
+      notif1.classList.remove("show");
+      const busy=["1","2","hostCreate","hostWho"].includes(curStep); // 입력 중 → 알림함 적립만
+      if(!busy && notif1Tap) notif1Tap();
     }, 2000);
   }
   notif1.addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
@@ -1501,7 +1546,7 @@
   ];
   const people=document.getElementById("people");
   const hostSendBtn=document.getElementById("hostSend");
-  const KO_N=["영","한","두","세","네","다섯","여섯"];
+  const KO_N=["영","한","두","세","네","다섯","여섯","일곱"];
   function includedCount(){ return PEOPLE.filter(p=>p.included!==false).length; }
   function updateHostCta(){
     const n=includedCount();
@@ -1565,9 +1610,7 @@
         calPrev=document.getElementById("calPrev"), calNext=document.getElementById("calNext"),
         presetBtns=[...document.querySelectorAll("#presetRow .preset")];
   const fmtD=d=>(d.getMonth()+1)+"/"+d.getDate();
-  function spanLabel(){
-    if(!selS) return "기간을 골라 주세요";
-    if(!selE) return fmtD(selS)+"부터";
+  function spanLabel(){ // whenOk에서 selS/selE 보정 후 호출됨
     const p=PRESETS.find(p=>+p.s===+selS && +p.e===+selE);
     return p ? p.label+" · "+fmtD(p.s)+" – "+fmtD(p.e) : fmtD(selS)+" – "+fmtD(selE);
   }
@@ -1585,10 +1628,13 @@
     for(let d=1; d<=days; d++){
       const date=new Date(viewY,viewM,d);
       const b=document.createElement("button"); b.type="button"; b.className="cal-day"; b.textContent=d;
+      b.setAttribute("aria-label", (viewM+1)+"월 "+d+"일");
       if(date<TODAY){ b.disabled=true; }
-      if(selS && +date===+selS){ b.classList.add("rs"); if(!selE) b.classList.add("solo"); }
-      if(selE && +date===+selE) b.classList.add("re");
-      if(selS && selE && date>selS && date<selE) b.classList.add("mid");
+      let sel=false;
+      if(selS && +date===+selS){ b.classList.add("rs"); sel=true; if(!selE) b.classList.add("solo"); }
+      if(selE && +date===+selE){ b.classList.add("re"); sel=true; }
+      if(selS && selE && date>selS && date<selE){ b.classList.add("mid"); sel=true; }
+      b.setAttribute("aria-pressed", sel?"true":"false");
       b.addEventListener("click",()=>{
         if(!selS || (selS&&selE)){ selS=date; selE=null; }
         else if(+date===+selS){ selE=date; }
@@ -1618,6 +1664,7 @@
     document.getElementById("hostCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span;
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     assignRoles(true); // 첫 완료 = 주최자 플로우
+    regenHostTimes(); // 인원 변경 반영
     hostState="collecting"; myPoked=false; myAnswered=3;
     s2HasReq=true; s2ReqAnswered=false; renderS2Req(); // 상대 폰의 '답할 요청'에 도착
     goStep("hostSent");
@@ -1644,22 +1691,29 @@
   document.getElementById("hostNext").addEventListener("click",()=>goStep("hostWho","fwd"));
   document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate","fwd"));
 
-  /* ================= 주최자(지수) 결과 ================= */
-  const HOST_TIMES=[
-    {t:"목요일 오전 10:00", why:"여섯 명 모두 편한 시간이에요", best:true},
-    {t:"수요일 오후 3:00",  why:"한 명이 수요일을 살짝 피하고 싶어 해요"},
-    {t:"금요일 오후 1:00",  why:"두 명이 점심 직후를 웬만하면 피하고 싶어 해요"},
-  ];
+  /* ================= 주최자(은솔) 결과 — 인원은 명단에서 파생 ================= */
+  let HOST_TIMES=[];
   const times=document.getElementById("times"); let hostPick=0;
-  HOST_TIMES.forEach((h,i)=>{
-    const c=document.createElement("button"); c.className="time-card"; c.type="button"; c.setAttribute("role","radio");
-    c.innerHTML='<span class="tc-top"><span class="tc-time">'+h.t+'</span>'+(h.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
-      '<span class="tc-why">'+h.why+'</span>';
-    c.addEventListener("click",()=>{ hostPick=i; renderTimes(); });
-    times.appendChild(c);
-  });
+  function regenHostTimes(){
+    const n=includedCount()+1; // 참석자 + 주최자
+    HOST_TIMES=[
+      {t:"목요일 오전 10:00", why:(KO_N[n]||n)+" 명 모두 편한 시간이에요", best:true},
+      {t:"수요일 오후 3:00",  why:"한 명이 수요일을 살짝 피하고 싶어 해요"},
+      {t:"금요일 오후 1:00",  why:"두 명이 점심 직후를 웬만하면 피하고 싶어 해요"},
+    ];
+    hostPick=0;
+    times.replaceChildren();
+    HOST_TIMES.forEach((h,i)=>{
+      const c=document.createElement("button"); c.className="time-card"; c.type="button"; c.setAttribute("role","radio");
+      c.innerHTML='<span class="tc-top"><span class="tc-time">'+h.t+'</span>'+(h.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
+        '<span class="tc-why">'+h.why+'</span>';
+      c.addEventListener("click",()=>{ hostPick=i; renderTimes(); });
+      times.appendChild(c);
+    });
+    renderTimes();
+  }
   function renderTimes(){ [...times.children].forEach((c,i)=>c.setAttribute("aria-checked", i===hostPick?"true":"false")); }
-  renderTimes();
+  regenHostTimes();
   document.getElementById("hostConfirm").addEventListener("click",()=>{
     hostState="confirmed"; hostPickedLabel=HOST_TIMES[hostPick].t;
     document.getElementById("previewTip").hidden=true;
@@ -1751,6 +1805,12 @@
   attachDrag(document.getElementById("hL2"),-1,wrap2,badge2);
   let rt; window.addEventListener("resize", ()=>{ clearTimeout(rt); rt=setTimeout(()=>{ if(window.innerWidth>640){ setW(wrap,badge,wrap.offsetWidth,false); if(wrap2.classList.contains("on")) setW(wrap2,badge2,wrap2.offsetWidth,false); } },80); });
   if(window.innerWidth>640) setWidth(390,false);
+
+  // 접근성: Esc로 열린 시트 닫기, 토스트는 상태 알림(숨김 상태 포커스 방지)
+  window.addEventListener("keydown", e=>{
+    if(e.key==="Escape") ["exitModal","whenModal","msgModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
+  });
+  [notif, notif1].forEach(n=>{ n.setAttribute("role","status"); n.tabIndex=-1; });
 
   // 첫 화면 = 허브(홈)
   renderHome(); goStep("exit");
