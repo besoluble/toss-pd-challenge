@@ -49,47 +49,31 @@
     position:absolute; top:14px; left:14px; right:14px; z-index:30;
     display:flex; gap:4px; align-items:flex-start; text-align:left;
     border:0; font:inherit;
-    background:rgba(255,255,255,.97); backdrop-filter:blur(10px); border-radius:16px; padding:6px 6px 6px 14px;
+    background:rgba(255,255,255,.97); backdrop-filter:blur(10px); border-radius:18px; padding:8px 8px 8px 12px;
     box-shadow:0 8px 28px rgba(16,24,40,.20), 0 2px 6px rgba(16,24,40,.08);
     transform:translateY(-130%); opacity:0;
     transition:transform .55s cubic-bezier(.2,.9,.3,1.08), opacity .4s var(--ease);
   }
   .notif.show{ transform:none; opacity:1; }
   .notif:active{ scale:.98; }
-  .notif-icon{ font-size:16px; line-height:1.3; }
-  .notif-body{ font-size:12.5px; color:var(--ink-2); line-height:1.45; }
-  .notif-body b{ display:block; font-size:13px; color:var(--ink); }
+  .notif-icon{
+    flex:none; width:42px; height:42px; border-radius:11px; background:var(--blue-weak);
+    display:grid; place-items:center; font-size:21px; line-height:1;
+  }
+  .notif-body{ font-size:13.5px; color:var(--ink-2); line-height:1.5; min-width:0; }
+  .notif-body b{ display:block; font-size:15px; color:var(--ink); margin-bottom:1px; }
   .notif-main{
-    display:flex; gap:10px; align-items:flex-start; text-align:left; flex:1;
-    border:0; background:none; font:inherit; cursor:pointer; padding:7px 0;
+    display:flex; gap:12px; align-items:center; text-align:left; flex:1; min-width:0;
+    border:0; background:none; font:inherit; cursor:pointer; padding:8px 0;
   }
   .notif-x{
-    flex:none; align-self:flex-start; width:30px; height:30px; margin-top:4px;
+    flex:none; align-self:center; width:32px; height:32px;
     border:0; background:none; border-radius:50%; color:var(--ink-4); cursor:pointer;
     display:grid; place-items:center; transition:background-color .16s var(--ease);
   }
   .notif-x:active{ background:var(--surface); }
   .notif-x svg{ width:13px; height:13px; }
 
-  /* 안 누르면 뜨는 탭 가이드 — 클릭 커서 + 커서 팁에서 퍼지는 파문 (자동 전환 대신 능동 조작 유도) */
-  .tap-hint{
-    position:absolute; right:12px; bottom:-18px; width:38px; height:38px;
-    display:none; pointer-events:none; z-index:2;
-  }
-  .notif.show.hint .tap-hint{ display:block; }
-  .tap-hint::after{
-    content:""; position:absolute; left:3px; top:1px; width:22px; height:22px; border-radius:50%;
-    background:rgba(49,130,246,.25);
-    animation:tapring 1.5s ease-out infinite;
-  }
-  .tap-hint svg{
-    position:absolute; inset:0; width:100%; height:100%;
-    transform-origin:37% 32%;
-    animation:tappress 1.5s ease-in-out infinite;
-    filter:drop-shadow(0 1px 2px rgba(16,24,40,.18));
-  }
-  @keyframes tapring{ 0%{ transform:scale(.3); opacity:.6; } 100%{ transform:scale(1.3); opacity:0; } }
-  @keyframes tappress{ 0%,100%{ transform:scale(1); } 40%{ transform:scale(.86); } }
   .wrap{ position:relative; width:390px; max-width:100%; height:100%; }
   .wrap.anim, .wrap2.anim{ transition:width .38s var(--ease); }
   .screen{
@@ -794,7 +778,6 @@
           <button class="notif-x" id="notif1X" type="button" aria-label="알림 닫기">
             <svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
-          <span class="tap-hint" aria-hidden="true"><svg viewBox="0 0 38 38" fill="none"><path d="M14 12l16 13.5-7.5 1 4 7-3.2 1.8-4-7-5.3 4.2z" fill="#191F28" stroke="#191F28" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
         </div>
 
         <!-- 기간 선택 시트 -->
@@ -1110,7 +1093,6 @@
           <button class="notif-x" id="notif2X" type="button" aria-label="알림 닫기">
             <svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
-          <span class="tap-hint" aria-hidden="true"><svg viewBox="0 0 38 38" fill="none"><path d="M14 12l16 13.5-7.5 1 4 7-3.2 1.8-4-7-5.3 4.2z" fill="#191F28" stroke="#191F28" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
         </div>
 
         <!-- 지수 · 기간 선택 시트 -->
@@ -1655,7 +1637,7 @@
     if(s2CalFrom==="noti") s2Go("noti","back"); else s2Go("home","back");
   });
   function openNoti(){
-    clearTimeout(notif1Timer); notif1.classList.remove("show","hint"); // 같은 내용 이중 노출 방지
+    notif1.classList.remove("show"); // 같은 내용 이중 노출 방지
     renderNoti(); goStep("noti","fwd");     // 홈 → 알림: 우측에서 밀려 들어옴
     notis.forEach(n=>n.fresh=false);        // 다음 방문부턴 읽음 처리 (점은 이번 방문 동안 유지)
     bellDot.hidden=true;
@@ -1819,7 +1801,7 @@
     setNotif2(t,b,()=>{ rec.fresh=false; renderNoti2List(); if(onTap) onTap(); });
   }
   function openNoti2(){
-    clearTimeout(notif2Timer); notif.classList.remove("show","hint"); // 이중 노출 방지
+    notif.classList.remove("show"); // 이중 노출 방지
     renderNoti2List(); s2Go("noti","fwd");
     s2Notis.forEach(n=>n.fresh=false); s2BellDot.hidden=true;
   }
@@ -1900,13 +1882,11 @@
   }
 
   const notif=document.getElementById("notif");
-  let notif2Tap=null, notif2Timer=null;
-  function setNotif2(title, body, onTap){
+  let notif2Tap=null;
+  function setNotif2(title, body, onTap){ // 자동 진행 없음 — 카드 자체가 어포던스
     document.getElementById("notif2Title").textContent=title;
     document.getElementById("notif2Body").textContent=body;
-    notif2Tap=onTap; notif.classList.add("show"); notif.classList.remove("hint");
-    clearTimeout(notif2Timer); // 자동 전환 대신: 안 누르면 탭 가이드
-    notif2Timer=setTimeout(()=>{ if(notif.classList.contains("show")) notif.classList.add("hint"); }, 2600);
+    notif2Tap=onTap; notif.classList.add("show");
   }
   // 디바이스1의 역할 = 최초로 완료한 플로우가 정의 (이후 고정) — 프로필 칩의 이름 옆에 붙는다
   let rolesAssigned=false;
@@ -1976,7 +1956,7 @@
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
     document.getElementById("s2ResultsSub").textContent=allOf(r)+"의 캘린더와 알려준 사정을 반영했어요."+(store[id].declined?" 선택 참석 한 명은 이번엔 빠져요.":"");
     TIMES2=buildTimes2(id, allOf(r)); pick2=0; renderTimes2();
-    notif.classList.remove("show","hint");
+    notif.classList.remove("show");
     s2Go("results","fwd");
   }
   function revealDevice2(){
@@ -1986,21 +1966,19 @@
     setWidth(wrap.offsetWidth,true); // 좁아진 공간에 맞춰 디바이스1 조정
     return true;
   }
-  document.getElementById("notif2Main").addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show","hint"); if(notif2Tap) notif2Tap(); });
-  document.getElementById("notif2X").addEventListener("click",()=>{ clearTimeout(notif2Timer); notif.classList.remove("show","hint"); }); // 닫기만 — 기록은 벨에 남는다
+  document.getElementById("notif2Main").addEventListener("click",()=>{ notif.classList.remove("show"); if(notif2Tap) notif2Tap(); });
+  document.getElementById("notif2X").addEventListener("click",()=>{ notif.classList.remove("show"); }); // 닫기만 — 기록은 벨에 남는다
   document.getElementById("s2DoneOk").addEventListener("click",()=>s2Go("home","back"));
   document.getElementById("s2Back").addEventListener("click",()=>s2Go("home","back"));
   const notif1=document.getElementById("notif1");
-  let notif1Tap=null, notif1Timer=null;
-  function setNotif1(t,b,onTap){
+  let notif1Tap=null;
+  function setNotif1(t,b,onTap){ // 자동 진행 없음 — 카드 자체가 어포던스
     document.getElementById("notif1Title").textContent=t;
     document.getElementById("notif1Body").textContent=b;
-    notif1Tap=onTap; notif1.classList.add("show"); notif1.classList.remove("hint");
-    clearTimeout(notif1Timer); // 자동 전환 대신: 안 누르면 탭 가이드
-    notif1Timer=setTimeout(()=>{ if(notif1.classList.contains("show")) notif1.classList.add("hint"); }, 2600);
+    notif1Tap=onTap; notif1.classList.add("show");
   }
-  document.getElementById("notif1Main").addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show","hint"); if(notif1Tap) notif1Tap(); });
-  document.getElementById("notif1X").addEventListener("click",()=>{ clearTimeout(notif1Timer); notif1.classList.remove("show","hint"); }); // 닫기만 — 기록은 벨에 남는다
+  document.getElementById("notif1Main").addEventListener("click",()=>{ notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
+  document.getElementById("notif1X").addEventListener("click",()=>{ notif1.classList.remove("show"); }); // 닫기만 — 기록은 벨에 남는다
   document.getElementById("s2Confirm").addEventListener("click",()=>{
     const id=s2ActiveMeet, t=TIMES2[pick2].t, r=REQS[id];
     store[id].confirmedAt=t; // 확정 — 양쪽 리스트를 떠나 캘린더·알림함에 산다
