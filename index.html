@@ -377,8 +377,8 @@
   .ev-link b{ margin-left:auto; }
   .ev-link svg{ width:15px; height:15px; color:var(--ink-4); flex:none; }
   .prof-head{ display:flex; align-items:center; gap:18px; margin:4px 2px 22px; }
-  .prof-av{ width:92px; height:92px; flex:none; }
-  .prof-av img{ scale:1.16; } /* 아바타 SVG 자체 여백 보정 — 얼굴이 원을 꽉 채우게 */
+  .prof-head .avatar{ width:92px; height:92px; flex:none; } /* .avatar 기본 32px보다 특이도 높게 */
+  .prof-head .avatar img{ scale:1.12; } /* SVG 내부 여백 보정 */
   .prof-id{ display:flex; flex-direction:column; min-width:0; }
   .prof-name{ font-size:19px; font-weight:700; color:var(--ink); }
   .prof-role{ font-size:14px; color:var(--ink-3); margin-top:4px; }
