@@ -219,8 +219,10 @@
   }
   .cta:active{ scale:.96; background:var(--blue-press); }
   /* ---------- 이탈 확인 바텀시트 ---------- */
-  .modal{ position:absolute; inset:0; z-index:20; display:none; }
-  .modal.show{ display:block; }
+  /* display 토글은 트랜지션을 죽이므로 visibility로 — 열림·닫힘 모션 모두 동작 */
+  .modal{ position:absolute; inset:0; z-index:20; visibility:hidden; pointer-events:none;
+    transition:visibility 0s linear .38s; }
+  .modal.show{ visibility:visible; pointer-events:auto; transition-delay:0s; }
   .modal .dim{ position:absolute; inset:0; background:rgba(25,31,40,.45); opacity:0; transition:opacity .25s var(--ease); }
   .modal.show .dim{ opacity:1; }
   .sheet{
