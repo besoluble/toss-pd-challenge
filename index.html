@@ -1541,9 +1541,9 @@
     document.getElementById("s2Meta").textContent="✓ "+TIMES2[pick2].t+" 확정 · 모두에게 알렸어요";
     document.getElementById("s2Cta").style.display="none";
     s2Go("done");
-    setTimeout(()=>{ // 참석자에게 확정 알림 띠롱
+    setTimeout(()=>{ // 참석자에게 확정 알림 띠롱 → 일정이 '사는 곳'인 내 캘린더로
       chime();
-      setNotif1("회의 시간이 정해졌어요","신규 기능 킥오프 · "+TIMES2[pick2].t, openNoti);
+      setNotif1("회의 시간이 정해졌어요","신규 기능 킥오프 · "+TIMES2[pick2].t, ()=>openCalView("exit","kickoff"));
     }, 650);
   });
   document.getElementById("again").addEventListener("click",()=>goStep(1,"back"));
@@ -1741,7 +1741,7 @@
     setTimeout(()=>{
       chime();
       pushNoti2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel+" · 캘린더에 추가했어요");
-      setNotif2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel, openNoti2); // 2초 후 알림함으로
+      setNotif2("회의 시간이 정해졌어요", meet.name+" · "+hostPickedLabel, goS2ReqTab); // 확정이 반영된 요청 카드로
     }, first?900:650);
   });
   document.getElementById("hostAgain").addEventListener("click",()=>goStep("host","back"));
