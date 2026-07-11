@@ -804,7 +804,7 @@
           <p class="sub" id="s2HomeSub"></p>
 
           <div class="tabs" role="tablist" aria-label="홈 탭">
-            <button class="tab" role="tab" aria-selected="false" data-s2tab="req">답할 요청<span class="tab-badge">0</span></button>
+            <button class="tab" role="tab" aria-selected="false" data-s2tab="req">답할 요청<span class="tab-badge" id="s2BadgeReq">0</span></button>
             <button class="tab" role="tab" aria-selected="true"  data-s2tab="my">내가 잡는 회의<span class="tab-badge" id="s2BadgeMy">1</span></button>
           </div>
 
@@ -1088,13 +1088,20 @@
       const done=hostState==="confirmed";
       const c=document.createElement("button");
       c.className="req-card"+(done?" submitted":""); c.type="button";
+      const total=includedCount(), answered=Math.min(myAnswered, total);
       c.innerHTML='<span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
-        '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · 다섯 명 중 세 명이 답했어요")+'</span>'+
+        '<span class="req-meta">'+(done?"✓ "+hostPickedLabel+" 확정 · 모두에게 알렸어요":"사정을 모으는 중이에요 · "+(KO_N[total]||total)+" 명 중 "+(KO_N[answered]||answered)+" 명이 답했어요")+'</span>'+
         '<span class="req-cta">'+(done?"확정 내용 보기":(myPoked?"재촉했어요 · 답이 오면 알려드릴게요":"살짝 재촉하기"))+'</span>';
       c.addEventListener("click",()=>{
         if(done){ openCalView("exit","mymeet"); return; }
         if(myPoked) return;
-        myPoked=true; chime(); renderHome(); // 아직 안 답한 사람들에게 살짝 재촉
+        myPoked=true; renderHome(); // 아직 안 답한 사람들에게 살짝 재촉
+        const first=revealDevice2(); // 재촉이 상대 폰에 실제로 도착
+        setTimeout(()=>{
+          chime();
+          pushNoti2("은솔님이 기다리고 있어요", meet.name+" · 불편한 시간을 알려주세요");
+          setNotif2("은솔님이 기다리고 있어요", meet.name+" · 불편한 시간을 알려주세요", goS2ReqTab);
+        }, first?900:450);
       });
       myList.appendChild(c);
     }
@@ -1215,20 +1222,48 @@
   let s2Tab="my", s2MyTitle="사정을 모으고<br>있어요";
   const s2HomeTitle=document.getElementById("s2HomeTitle");
   function setS2MyTitle(t){ s2MyTitle=t; if(s2Tab==="my") s2HomeTitle.innerHTML=t; }
-  document.querySelectorAll("[data-s2tab]").forEach(t=>{
-    t.addEventListener("click",()=>{
-      if(s2Tab===t.dataset.s2tab) return;
-      s2Tab=t.dataset.s2tab;
-      document.querySelectorAll("[data-s2tab]").forEach(x=>x.setAttribute("aria-selected", x.dataset.s2tab===s2Tab?"true":"false"));
-      const req=document.getElementById("s2ReqList"), my=document.getElementById("s2MyList");
-      req.style.display=s2Tab==="req"?"flex":"none";
-      my.style.display=s2Tab==="my"?"flex":"none";
-      s2HomeTitle.innerHTML=s2Tab==="req"?"모두 답했어요!":s2MyTitle;
+  // 지수 폰에 도착하는 요청(은솔의 회고) — 서로의 행동이 상대 폰에 나타나는 핵심 배선
+  let s2HasReq=false, s2ReqAnswered=false, myAnswered=3;
+  function renderS2Req(){
+    const box=document.getElementById("s2ReqList"); box.replaceChildren();
+    const bq=document.getElementById("s2BadgeReq");
+    const pending=s2HasReq&&!s2ReqAnswered;
+    bq.textContent=pending?1:0; bq.classList.toggle("hot", pending);
+    if(!s2HasReq){
+      const p=document.createElement("p"); p.className="empty-hint";
+      p.textContent="지금은 답할 요청이 없어요."; box.appendChild(p); return;
+    }
+    const c=document.createElement("button");
+    c.className="req-card"+(s2ReqAnswered?" submitted":""); c.type="button";
+    c.innerHTML='<span class="req-top"><span class="req-title">'+meet.name+' · '+meet.dur+'</span>'+
+      '<span class="req-tag req">필수 참석</span></span>'+
+      '<span class="req-meta">'+(s2ReqAnswered?"✓ 사정을 알려드렸어요":meet.span+" · 은솔님이 물어봤어요")+'</span>'+
+      '<span class="req-cta">'+(s2ReqAnswered?"잘 반영될 거예요":"불편한 시간 알려주기")+'</span>';
+    c.addEventListener("click",()=>{
+      if(s2ReqAnswered) return;
+      s2ReqAnswered=true; myAnswered=4; chime();
+      renderS2Req(); renderHome(); // 은솔 홈 카드의 응답 수도 함께 갱신
+    });
+    box.appendChild(c);
+  }
+  function setS2Tab(tab, animate){
+    s2Tab=tab;
+    document.querySelectorAll("[data-s2tab]").forEach(x=>x.setAttribute("aria-selected", x.dataset.s2tab===s2Tab?"true":"false"));
+    const req=document.getElementById("s2ReqList"), my=document.getElementById("s2MyList");
+    req.style.display=s2Tab==="req"?"flex":"none";
+    my.style.display=s2Tab==="my"?"flex":"none";
+    s2HomeTitle.innerHTML=s2Tab==="req"?((s2HasReq&&!s2ReqAnswered)?"확인할 요청이<br>있어요":"모두 답했어요!"):s2MyTitle;
+    if(animate){
       const el=s2Tab==="req"?req:my;
       el.animate([{opacity:0, transform:"translateY(6px)"},{opacity:1, transform:"none"}],
         {duration:200, easing:"cubic-bezier(0.2,0,0,1)"});
-    });
+    }
+  }
+  function goS2ReqTab(){ renderS2Req(); setS2Tab("req", true); s2Go("home","back"); }
+  document.querySelectorAll("[data-s2tab]").forEach(t=>{
+    t.addEventListener("click",()=>{ if(s2Tab!==t.dataset.s2tab) setS2Tab(t.dataset.s2tab, true); });
   });
+  renderS2Req();
   function s2Go(k, dir){
     Object.values(s2Els).forEach(s=>s.classList.remove("active","nav-fwd","nav-back"));
     const el=s2Els[k]; el.classList.add("active");
@@ -1525,7 +1560,15 @@
     document.getElementById("hostCtx").innerHTML="<b>"+meet.name+" · "+meet.dur+"</b> · "+meet.span;
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     assignRoles(true); // 첫 완료 = 주최자 플로우
-    hostState="collecting"; goStep("hostSent");
+    hostState="collecting"; myPoked=false; myAnswered=3;
+    s2HasReq=true; s2ReqAnswered=false; renderS2Req(); // 상대 폰의 '답할 요청'에 도착
+    goStep("hostSent");
+    const first=revealDevice2();
+    setTimeout(()=>{
+      chime();
+      pushNoti2("새 요청이 도착했어요", meet.name+" · 은솔님이 사정을 물어봤어요");
+      setNotif2("새 요청이 도착했어요", meet.name+" · 은솔님이 사정을 물어봤어요", goS2ReqTab);
+    }, first?900:500);
   });
   document.getElementById("hostPreview").addEventListener("click",()=>goStep("host","fwd"));
   const goHomeMy=()=>{ homeTab="my"; renderHome(); goStep("exit","back"); };
