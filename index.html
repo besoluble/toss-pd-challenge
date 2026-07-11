@@ -1414,7 +1414,7 @@
   }
   document.getElementById("s2Bell").addEventListener("click", openNoti2);
   document.getElementById("s2NotiBack").addEventListener("click",()=>s2Go("home","back"));
-  renderNoti2List(); renderS2My();
+  renderNoti2List();
 
   function chime(){ // 띠롱
     try{
@@ -1867,7 +1867,7 @@
   [notif, notif1].forEach(n=>{ n.setAttribute("role","status"); n.tabIndex=-1; });
 
   // 첫 화면 = 허브(홈)
-  renderHome(); goStep("exit");
+  renderS2My(); renderHome(); goStep("exit");
 })();
 </script>
 </body>
