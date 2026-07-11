@@ -848,10 +848,10 @@
                 <span class="req-meta" id="s2Meta">다섯 명 중 네 명이 사정을 알려줬어요</span>
                 <span class="req-cta" id="s2Cta">살짝 재촉하기</span>
               </button>
-              <button class="req-card" id="s2Weekly" type="button" hidden>
+              <button class="req-card submitted" id="s2Weekly" type="button" hidden style="cursor:default;">
                 <span class="req-top"><span class="req-title">홈팀 위클리 · 30분</span></span>
-                <span class="req-meta">사정을 모으는 중이에요 · 네 명 중 세 명이 답했어요</span>
-                <span class="req-cta" id="s2WeeklyCta">살짝 재촉하기</span>
+                <span class="req-meta">✓ 네 명 모두 사정을 알려줬어요</span>
+                <span class="req-cta">추천 시간을 준비하고 있어요</span>
               </button>
             </div>
           </div>
@@ -1259,17 +1259,10 @@
     setS2Tab("my");
     setTimeout(()=>{
       chime();
-      pushNoti2("새 사정이 도착했어요","홈팀 위클리 · 네 명 중 세 명이 답했어요");
-      setNotif2("새 사정이 도착했어요","홈팀 위클리 · 네 명 중 세 명이 답했어요",()=>{ setS2Tab("my"); s2Go("home","back"); });
+      pushNoti2("모두의 사정이 모였어요","홈팀 위클리 · 이제 시간을 정할 수 있어요");
+      setNotif2("모두의 사정이 모였어요","홈팀 위클리 · 이제 시간을 정할 수 있어요",()=>{ setS2Tab("my"); s2Go("home","back"); });
     }, first?650:200);
   }
-  // 위클리도 같은 재촉 문법
-  let weeklyPoked=false;
-  document.getElementById("s2Weekly").addEventListener("click",()=>{
-    if(weeklyPoked) return;
-    weeklyPoked=true; chime();
-    document.getElementById("s2WeeklyCta").textContent="재촉했어요 · 답이 오면 알려드릴게요";
-  });
 
   /* ================= 디바이스 2: 주최자(지수)의 폰 ================= */
   let dev2Shown=false, pick2=0;
