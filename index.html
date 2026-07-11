@@ -2114,7 +2114,7 @@
 
   /* ================= 주최자: 요청 만들기 ================= */
   const PEOPLE=[ // 팀 5명 — 본인 제외 4명, 상대 디바이스의 주인이 맨 위
-    {name:"김지수", role:"프로덕트 오너 · 홈팀", req:true},
+    {name:"김지수", role:"프로덕트 오너", req:true, locked:true}, // 오너는 제외 불가
     {name:"이수아", role:"프로덕트 디자이너", req:true},
     {name:"박민수", role:"프론트엔드 개발자", req:true},
     {name:"최분석", role:"데이터 분석가", req:false},
@@ -2139,6 +2139,15 @@
     btns[0].addEventListener("click",()=>{ p.req=true; renderPick(); });
     btns[1].addEventListener("click",()=>{ p.req=false; renderPick(); });
     minus.addEventListener("click",()=>{
+      if(p.locked){ // 제외 대신 이유를 그 자리에서 (직책 줄이 잠시 답한다)
+        const roleEl=row.querySelector(".p-role");
+        if(roleEl && !row._noting){
+          row._noting=true;
+          roleEl.textContent="오너는 제외할 수 없어요"; roleEl.style.color="var(--blue)";
+          setTimeout(()=>{ roleEl.textContent=p.role; roleEl.style.color=""; row._noting=false; }, 2200);
+        }
+        return;
+      }
       p.included=!p.included;
       row.classList.toggle("excluded", !p.included);
       minus.textContent=p.included?"－":"＋";
