@@ -147,9 +147,6 @@
   }
 
   .nav{ height:32px; display:flex; align-items:center; margin-bottom:18px; }
-  .ctx-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .ctx-row .ctx{ margin-bottom:0; }
-  .ctx-row{ margin-bottom:10px; }
   .back{
     width:36px; height:36px; margin-left:-8px; border:0; background:none; cursor:pointer; border-radius:10px;
     display:grid; place-items:center; color:var(--ink-2);
@@ -590,15 +587,16 @@
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
-          <div class="ctx-row">
-            <div class="ctx" id="ctx1"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
-            <span class="req-tag opt opt-only">선택 참석</span>
-          </div>
+          <div class="ctx" id="ctx1"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
           <h1 class="title">불편한 시간만<br>알려주세요</h1>
           <div class="chips">
             <span class="cal">
               <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               캘린더 일정과 겹치는 시간은 알아서 피해요
+            </span>
+            <span class="cal opt-only">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              꼭 안 와도 괜찮은 회의예요
             </span>
           </div>
 
@@ -1047,15 +1045,16 @@
               <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </div>
-          <div class="ctx-row">
-            <div class="ctx" id="s2AnsCtx"></div>
-            <span class="req-tag opt" id="s2OptTag" hidden>선택 참석</span>
-          </div>
+          <div class="ctx" id="s2AnsCtx"></div>
           <h1 class="title">불편한 시간만<br>알려주세요</h1>
           <div class="chips">
             <span class="cal">
               <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               캘린더 일정과 겹치는 시간은 알아서 피해요
+            </span>
+            <span class="cal" id="s2OptChip" hidden>
+              <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              꼭 안 와도 괜찮은 회의예요
             </span>
           </div>
 
@@ -2546,7 +2545,7 @@
     s2DayPick.setAllowed(h.daysAllowed||DAYS);
     document.getElementById("s2Ans2Title").innerHTML=(spanWord(h)==="그 기간에"?"그중":spanWord(h))+" 불편한 요일이<br>있나요?";
     document.getElementById("s2AnsCtx").innerHTML="<b>"+h.name+" · "+h.dur+"</b> · "+h.span;
-    document.getElementById("s2OptTag").hidden=h.jiReq; // 은솔이 '선택'으로 정했으면 우상단 태그 (스냅샷 기준)
+    document.getElementById("s2OptChip").hidden=h.jiReq; // 은솔이 '선택'으로 정했으면 안심 칩 등장 (스냅샷 기준)
     updateS2AnsCta();
     s2Go("ans1","fwd");
   }
