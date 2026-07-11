@@ -65,8 +65,9 @@
   .notif:active{ scale:.98; }
   .notif-icon{
     flex:none; width:42px; height:42px; border-radius:11px; background:var(--blue-weak);
-    display:grid; place-items:center; font-size:21px; line-height:1;
+    display:grid; place-items:center;
   }
+  .notif-icon img{ width:26px; height:26px; display:block; }
   .notif-body{ font-size:13.5px; color:var(--ink-2); line-height:1.5; min-width:0; }
   .notif-body b{ display:block; font-size:15px; color:var(--ink); margin-bottom:1px; }
   .notif-main{
@@ -830,7 +831,7 @@
         <!-- 참석자 알림 토스트 (재촉·확정) -->
         <div class="notif" id="notif1">
           <button class="notif-main" id="notif1Main" type="button">
-            <span class="notif-icon">🔔</span>
+            <span class="notif-icon"><img src="icons/icon_alarm.svg" alt=""></span>
             <span class="notif-body"><b id="notif1Title"></b><span id="notif1Body"></span></span>
           </button>
           <button class="notif-x" id="notif1X" type="button" aria-label="알림 닫기">
@@ -1191,7 +1192,7 @@
 
         <div class="notif" id="notif">
           <button class="notif-main" id="notif2Main" type="button">
-            <span class="notif-icon">🔔</span>
+            <span class="notif-icon"><img src="icons/icon_alarm.svg" alt=""></span>
             <span class="notif-body"><b id="notif2Title">모두의 사정이 모였어요</b><span id="notif2Body">신규 기능 킥오프 · 이제 시간을 정할 수 있어요</span></span>
           </button>
           <button class="notif-x" id="notif2X" type="button" aria-label="알림 닫기">
