@@ -361,6 +361,20 @@
   .ev-row+.ev-row{ border-top:1px solid var(--surface); }
   .ev-row span{ color:var(--ink-3); flex:none; }
   .ev-row b{ font-weight:600; color:var(--ink); text-align:right; }
+  .ev-link{ width:100%; background:none; border:0; font:inherit; cursor:pointer; }
+  .ev-link b{ margin-left:auto; }
+  .ev-link svg{ width:15px; height:15px; color:var(--ink-4); flex:none; }
+  .ev-sheet{ overflow:hidden; }
+  .ev-slider{ display:flex; width:200%; transition:transform .32s var(--ease); }
+  .ev-pane{ width:50%; flex:none; min-width:0; }
+  .ev-sheet.people .ev-slider{ transform:translateX(-50%); }
+  .ev-ppl-head{ display:flex; align-items:center; gap:6px; margin:-4px 0 6px -8px; }
+  .ev-ppl-head h3{ margin:0; }
+  .ev-ppl{ display:flex; flex-direction:column; }
+  .ppl-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 2px; font-size:14.5px; }
+  .ppl-row+.ppl-row{ border-top:1px solid var(--surface); }
+  .ppl-row b{ font-weight:600; color:var(--ink); }
+  .ppl-row span{ color:var(--ink-3); font-size:13px; text-align:right; }
   .cv-ev.flash{ animation:evFlash .9s var(--ease) 2; }
   @keyframes evFlash{ 0%,100%{ box-shadow:none; } 50%{ box-shadow:0 0 0 3px var(--blue-weak), 0 4px 12px rgba(49,130,246,.35); } }
 
@@ -846,18 +860,35 @@
         <!-- 일정 상세 -->
         <div class="modal" id="evModal">
           <div class="dim" id="evDim"></div>
-          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="evTitle">
-            <h3 id="evTitle"></h3>
-            <div class="ev-rows">
-              <div class="ev-row"><span>시간</span><b id="evTime"></b></div>
-              <div class="ev-row"><span>주최</span><b id="evHost"></b></div>
-              <div class="ev-row"><span>참석</span><b id="evCount"></b></div>
+          <div class="sheet ev-sheet" id="evSheet" role="dialog" aria-modal="true" aria-labelledby="evTitle">
+            <div class="ev-slider">
+              <div class="ev-pane">
+                <h3 id="evTitle"></h3>
+                <div class="ev-rows">
+                  <div class="ev-row"><span>시간</span><b id="evTime"></b></div>
+                  <div class="ev-row"><span>주최</span><b id="evHost"></b></div>
+                  <button type="button" class="ev-row ev-link" id="evCountBtn">
+                    <span>참석</span><b id="evCount"></b>
+                    <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+                <span class="cal" id="evOpt" hidden>
+                  <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  꼭 안 와도 괜찮은 회의예요
+                </span>
+                <button class="cta" id="evOk" style="margin-top:14px;">확인</button>
+              </div>
+              <div class="ev-pane">
+                <div class="ev-ppl-head">
+                  <button type="button" class="back" id="evPplBack" aria-label="이전으로">
+                    <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <h3>참석자</h3>
+                </div>
+                <div class="ev-ppl" id="evPpl"></div>
+                <button class="cta" id="evPplOk" style="margin-top:14px;">확인</button>
+              </div>
             </div>
-            <span class="cal" id="evOpt" hidden>
-              <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              꼭 안 와도 괜찮은 회의예요
-            </span>
-            <button class="cta" id="evOk" style="margin-top:14px;">확인</button>
           </div>
         </div>
 
@@ -1159,18 +1190,35 @@
         <!-- 일정 상세 -->
         <div class="modal" id="s2EvModal">
           <div class="dim" id="s2EvDim"></div>
-          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="s2EvTitle">
-            <h3 id="s2EvTitle"></h3>
-            <div class="ev-rows">
-              <div class="ev-row"><span>시간</span><b id="s2EvTime"></b></div>
-              <div class="ev-row"><span>주최</span><b id="s2EvHost"></b></div>
-              <div class="ev-row"><span>참석</span><b id="s2EvCount"></b></div>
+          <div class="sheet ev-sheet" id="s2EvSheet" role="dialog" aria-modal="true" aria-labelledby="s2EvTitle">
+            <div class="ev-slider">
+              <div class="ev-pane">
+                <h3 id="s2EvTitle"></h3>
+                <div class="ev-rows">
+                  <div class="ev-row"><span>시간</span><b id="s2EvTime"></b></div>
+                  <div class="ev-row"><span>주최</span><b id="s2EvHost"></b></div>
+                  <button type="button" class="ev-row ev-link" id="s2EvCountBtn">
+                    <span>참석</span><b id="s2EvCount"></b>
+                    <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+                <span class="cal" id="s2EvOpt" hidden>
+                  <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  꼭 안 와도 괜찮은 회의예요
+                </span>
+                <button class="cta" id="s2EvOk" style="margin-top:14px;">확인</button>
+              </div>
+              <div class="ev-pane">
+                <div class="ev-ppl-head">
+                  <button type="button" class="back" id="s2EvPplBack" aria-label="이전으로">
+                    <svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <h3>참석자</h3>
+                </div>
+                <div class="ev-ppl" id="s2EvPpl"></div>
+                <button class="cta" id="s2EvPplOk" style="margin-top:14px;">확인</button>
+              </div>
             </div>
-            <span class="cal" id="s2EvOpt" hidden>
-              <svg viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5l3 3 8-8.5" stroke="#3182F6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              꼭 안 와도 괜찮은 회의예요
-            </span>
-            <button class="cta" id="s2EvOk" style="margin-top:14px;">확인</button>
           </div>
         </div>
 
@@ -1383,9 +1431,12 @@
      전역 변수나 DOM에 요청 상태를 저장하지 않는다 — 두 번째 회의가 첫 번째를 덮어쓰는 사고의 뿌리였다. */
   // total = 응답자 수(나 포함), 수집 중 표시는 total-1명 답한 상태에서 내가 마지막
   const REQS={
-    kickoff:{ name:"신규 기능 킥오프", dur:"1시간", durH:1,  total:4, who:"김지수님", optional:false },
-    weekly:{  name:"홈팀 위클리",      dur:"30분",  durH:0.5, total:3, who:"김지수님", optional:true },
+    kickoff:{ name:"신규 기능 킥오프", dur:"1시간", durH:1,  total:4, who:"김지수님", optional:false,
+      people:[{name:"장은솔",req:true},{name:"이수아",req:true},{name:"박민수",req:true},{name:"최분석",req:false}] },
+    weekly:{  name:"홈팀 위클리",      dur:"30분",  durH:0.5, total:3, who:"김지수님", optional:true,
+      people:[{name:"장은솔",req:false},{name:"이수아",req:true},{name:"박민수",req:true}] },
   };
+  const TEAM_ROLE={ "장은솔":"프로덕트 디자이너", "김지수":"프로덕트 오너", "이수아":"프로덕트 디자이너", "박민수":"프론트엔드 개발자", "최분석":"데이터 분석가" };
   const titleOf=r=>r.name+" · "+r.dur;
   const ctxOf=r=>"<b>"+titleOf(r)+"</b> · "+(r.span||"다음 주 중");
   const allOf=r=>(KO_N[r.total+1]||r.total+1)+" 명"; // 주최자 포함 전체 인원
@@ -1705,15 +1756,22 @@
     }
   }
   function meetingDetail(key, forJi){ // 파란 이벤트의 정체 — 각 디바이스의 관점으로
-    if(key==="review") return {title:"디자인 시스템 리뷰", time:"화요일 오전 11:00 · 1시간",
-      host:forJi?"나":"김지수님", count:"다섯 명", opt:false};
+    const viewer=forJi?"김지수":"장은솔";
+    const pack=(title,time,hostName,invitees,opt)=>{
+      const ppl=[{name:hostName, req:true, host:true}].concat(invitees||[]);
+      const rep=hostName!==viewer?hostName:(invitees[0]&&invitees[0].name)||hostName;
+      return {title, time,
+        host:hostName===viewer?"나":hostName+"님",
+        count:rep+"님 외 "+(KO_N[ppl.length-1]||ppl.length-1)+" 명",
+        people:ppl, opt};
+    };
+    if(key==="review") return pack("디자인 시스템 리뷰","화요일 오전 11:00 · 1시간","김지수",
+      [{name:"장은솔",req:true},{name:"이수아",req:true},{name:"박민수",req:true},{name:"최분석",req:false}], false);
     if(REQS[key]){ const r=REQS[key];
-      return {title:r.name, time:store[key].confirmedAt+" · "+r.dur,
-        host:forJi?"나":r.who, count:allOf(r), opt:!forJi && r.optional};
+      return pack(r.name, store[key].confirmedAt+" · "+r.dur, "김지수", r.people||[], !forJi && r.optional);
     }
     if(HOSTED[key]){ const h=HOSTED[key];
-      return {title:h.name, time:h.confirmedAt+" · "+h.dur,
-        host:forJi?"장은솔님":"나", count:(KO_N[h.total+1]||h.total+1)+" 명", opt:forJi && !h.jiReq};
+      return pack(h.name, h.confirmedAt+" · "+h.dur, "장은솔", h.people||[], forJi && !h.jiReq);
     }
     return null;
   }
@@ -1724,6 +1782,14 @@
     document.getElementById(prefix+"Host").textContent=d.host;
     document.getElementById(prefix+"Count").textContent=d.count;
     document.getElementById(prefix+"Opt").hidden=!d.opt;
+    const box=document.getElementById(prefix+"Ppl"); box.replaceChildren();
+    d.people.forEach(x=>{
+      const row=document.createElement("div"); row.className="ppl-row";
+      const note=(x.host?" · 주최":"")+(!x.req&&!x.host?" · 선택 참석":"");
+      row.innerHTML="<b>"+x.name+"</b><span>"+(TEAM_ROLE[x.name]||"")+note+"</span>";
+      box.appendChild(row);
+    });
+    document.getElementById(prefix+"Sheet").classList.remove("people"); // 항상 첫 패널부터
     return true;
   }
   function openEvDetail(key){
@@ -1732,6 +1798,12 @@
   function openS2EvDetail(key){
     if(fillEvSheet("s2Ev", meetingDetail(key,true))) document.getElementById("s2EvModal").classList.add("show");
   }
+  document.getElementById("evCountBtn").addEventListener("click",()=>document.getElementById("evSheet").classList.add("people"));
+  document.getElementById("evPplBack").addEventListener("click",()=>document.getElementById("evSheet").classList.remove("people"));
+  document.getElementById("evPplOk").addEventListener("click",()=>document.getElementById("evModal").classList.remove("show"));
+  document.getElementById("s2EvCountBtn").addEventListener("click",()=>document.getElementById("s2EvSheet").classList.add("people"));
+  document.getElementById("s2EvPplBack").addEventListener("click",()=>document.getElementById("s2EvSheet").classList.remove("people"));
+  document.getElementById("s2EvPplOk").addEventListener("click",()=>document.getElementById("s2EvModal").classList.remove("show"));
   document.getElementById("evDim").addEventListener("click",()=>document.getElementById("evModal").classList.remove("show"));
   document.getElementById("evOk").addEventListener("click",()=>document.getElementById("evModal").classList.remove("show"));
   document.getElementById("s2EvDim").addEventListener("click",()=>document.getElementById("s2EvModal").classList.remove("show"));
@@ -2264,6 +2336,7 @@
     HOSTED[hid]={ name, dur:meet.dur, durH:meet.durMin/60, span:meet.span, spanS:meet.spanS, spanE:meet.spanE,
       daysAllowed:weekdaysIn(meet.spanS, meet.spanE),
       total:n, jiIn:ji.included!==false, jiReq:!!ji.req, jiAnswered:false, sim:0,
+      people:PEOPLE.filter(x=>x.included!==false).map(x=>({name:x.name, req:!!x.req})),
       poked:false, confirmedAt:null, canceled:false, timers:[] };
     hostStore[hid]={time:[0,0,0], days:emptyDays(), submitted:false, declined:false};
     document.getElementById("sentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
@@ -2393,7 +2466,8 @@
     // 은솔 행의 필수/선택이 그대로 은솔 폰의 요청 태그가 된다 — 보내는 순간 스냅샷 (H4)
     REQS[id]={name, dur:s2Meet.dur, durH:s2Meet.durMin/60, total:n, who:"김지수님",
       optional:!S2PEOPLE[0].req, span:s2Meet.span, spanS:s2Meet.spanS, spanE:s2Meet.spanE,
-      daysAllowed:weekdaysIn(s2Meet.spanS, s2Meet.spanE)};
+      daysAllowed:weekdaysIn(s2Meet.spanS, s2Meet.spanE),
+      people:S2PEOPLE.filter(x=>x.included!==false).map(x=>({name:x.name, req:!!x.req}))};
     store[id]=emptyStore();
     document.getElementById("s2SentSub").innerHTML=(KO_N[n]||n)+" 명에게 조용히 물어보고 있어요.<br>사정이 모이면 시간을 추천해드릴게요.";
     renderS2My();
