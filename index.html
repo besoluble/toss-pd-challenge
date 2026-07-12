@@ -561,11 +561,18 @@
   .tc-pill{ font-size:11px; font-weight:700; color:#fff; background:var(--blue); padding:3px 8px; border-radius:999px; }
   .tc-why{ font-size:13px; color:var(--ink-3); }
   .time-card[aria-checked="true"] .tc-why{ color:var(--ink-2); }
-  .tc-detail{ display:flex; flex-direction:column; gap:6px; align-self:stretch; margin-top:10px; padding-top:10px; border-top:1px solid rgba(16,24,40,.07); }
-  .tc-line{ font-size:12.5px; color:var(--ink-3); line-height:1.5; }
-  .tc-more{ margin-top:9px; display:inline-flex; align-items:center; gap:3px; border:0; background:none; font-family:inherit; font-size:12px; font-weight:600; color:#1B64DA; cursor:pointer; padding:2px 0; }
-  .tc-more svg{ width:14px; height:14px; transition:transform .2s var(--ease); }
-  .tc-more.open svg{ transform:rotate(180deg); }
+  .why-panel{ align-self:stretch; }
+  .why-toggle{ display:inline-flex; align-items:center; gap:4px; border:0; background:none; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink-3); cursor:pointer; padding:4px 0; }
+  .why-toggle svg{ width:15px; height:15px; transition:transform .2s var(--ease); }
+  .why-toggle.open svg{ transform:rotate(180deg); }
+  .why-body{ margin-top:8px; max-height:230px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+  .why-body::-webkit-scrollbar{ display:none; }
+  .why-anon{ font-size:12px; color:var(--ink-4); margin:0 0 12px; line-height:1.5; }
+  .why-list{ display:flex; flex-direction:column; gap:13px; }
+  .why-item{ display:flex; flex-direction:column; gap:3px; }
+  .why-time{ font-size:13px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px; }
+  .why-rec{ font-size:10px; font-weight:700; color:#fff; background:var(--blue); padding:2px 7px; border-radius:999px; }
+  .why-line{ font-size:12.5px; color:var(--ink-3); line-height:1.5; }
   .done-body h2{ font-size:21px; font-weight:700; margin:0; text-wrap:balance; }
   .done-body p{ font-size:14.5px; color:var(--ink-3); margin:0; line-height:1.55; text-wrap:pretty; }
 
@@ -814,7 +821,16 @@
           </div>
 
           <div class="foot">
-            <p class="privacy">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
+            <div class="why-panel">
+              <button type="button" class="why-toggle" id="hostWhyToggle" aria-expanded="false">
+                <span>어떻게 골랐는지 살펴보기</span>
+                <svg viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="why-body" id="hostWhyBody" hidden>
+                <p class="why-anon">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
+                <div class="why-list" id="hostWhyList"></div>
+              </div>
+            </div>
             <button class="cta" id="hostConfirm">이 시간으로 확정하기</button>
           </div>
         </section>
@@ -1154,7 +1170,16 @@
             <div class="times" id="times2" role="radiogroup" aria-label="추천 시간"></div>
           </div>
           <div class="foot">
-            <p class="privacy">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
+            <div class="why-panel">
+              <button type="button" class="why-toggle" id="s2WhyToggle" aria-expanded="false">
+                <span>어떻게 골랐는지 살펴보기</span>
+                <svg viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="why-body" id="s2WhyBody" hidden>
+                <p class="why-anon">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
+                <div class="why-list" id="s2WhyList"></div>
+              </div>
+            </div>
             <button class="cta" id="s2Confirm">이 시간으로 확정하기</button>
           </div>
         </section>
@@ -2133,14 +2158,11 @@
     return buildCandidates(store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional);
   }
   let TIMES2=[];
-  function tcInner(x){
-    const has=x.detail && x.detail.length;
+  function tcInner(x){ // 카드는 확신 한 줄만 (근거는 하단 통합 펼침으로)
     return '<span class="tc-top"><span class="tc-time">'+x.t+'</span>'+(x.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
-      '<span class="tc-why">'+x.headline+'</span>'+
-      (has?'<span class="tc-detail" hidden>'+x.detail.map(l=>'<span class="tc-line">'+l+'</span>').join('')+'</span>'+
-        '<button type="button" class="tc-more"><span class="tc-more-t">이유 자세히 보기</span><svg viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>':'');
+      '<span class="tc-why">'+x.headline+'</span>';
   }
-  function buildTimeCards(box, list, getPick, setPick){ // 접힘=확신 한 줄, 펼침=역할별 내역 (규칙3)
+  function buildTimeCards(box, list, getPick, setPick){
     box.replaceChildren();
     list.forEach((x,i)=>{
       const c=document.createElement("div"); c.className="time-card"; c.setAttribute("role","radio"); c.tabIndex=0;
@@ -2148,16 +2170,26 @@
       c.innerHTML=tcInner(x);
       c.addEventListener("click",()=>{ setPick(i); [...box.children].forEach((el,j)=>el.setAttribute("aria-checked", j===i?"true":"false")); });
       c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ if(e.preventDefault)e.preventDefault(); c.click(); } });
-      const more=c.querySelector(".tc-more");
-      if(more && more.addEventListener) more.addEventListener("click",e=>{ if(e.stopPropagation)e.stopPropagation();
-        const d=c.querySelector(".tc-detail"), open=d.hidden;
-        d.hidden=!open; more.classList.toggle("open", open);
-        const t=c.querySelector(".tc-more-t"); if(t) t.textContent=open?"이유 접기":"이유 자세히 보기";
-      });
       box.appendChild(c);
     });
   }
   function renderTimes2(){ buildTimeCards(document.getElementById("times2"), TIMES2, ()=>pick2, i=>pick2=i); }
+  // 하단 통합 근거 패널 — 세 후보의 근거를 한 곳에서 비교 (익명 안내가 머리글)
+  function renderWhyList(el, list){
+    el.replaceChildren();
+    list.forEach(x=>{
+      const row=document.createElement("div"); row.className="why-item";
+      row.innerHTML='<b class="why-time">'+x.t+(x.best?'<span class="why-rec">추천</span>':'')+'</b>'+
+        x.detail.map(l=>'<span class="why-line">'+l+'</span>').join('');
+      el.appendChild(row);
+    });
+  }
+  function resetWhy(pfx){ const b=document.getElementById(pfx+"WhyBody"), t=document.getElementById(pfx+"WhyToggle"); b.hidden=true; t.classList.remove("open"); t.setAttribute("aria-expanded","false"); }
+  function wireWhy(pfx){
+    const t=document.getElementById(pfx+"WhyToggle"), b=document.getElementById(pfx+"WhyBody");
+    t.addEventListener("click",()=>{ const open=b.hidden; b.hidden=!open; t.classList.toggle("open",open); t.setAttribute("aria-expanded",open?"true":"false"); });
+  }
+  wireWhy("s2"); wireWhy("host");
 
   const notif=document.getElementById("notif");
   let notif2Tap=null;
@@ -2487,6 +2519,7 @@
     HOST_TIMES=buildCandidates(signals, h.durH, (h.total+1)+"명", hid, h.daysAllowed, h.jiReq);
     hostPick=0;
     buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
+    renderWhyList(document.getElementById("hostWhyList"), HOST_TIMES); resetWhy("host");
     goStep("host","fwd");
   }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
