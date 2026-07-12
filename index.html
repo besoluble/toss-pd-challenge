@@ -2256,14 +2256,16 @@
     const sub=document.getElementById(o.subId);
     const tm=document.getElementById(o.timesId), cf=document.getElementById(o.confirmId), why=document.getElementById(o.whyId);
     const show=el=>{ if(el) el.hidden=false; }, hide=el=>{ if(el) el.hidden=true; };
+    const sp=o.span||""; // 기간은 반드시 span에서 유도 — 하드코딩 '이번 주' 금지(임의 기간에도 항상 맞게)
+    const per=sp.startsWith("다음 주")?"다음 주":sp.startsWith("이번 주")?"이번 주":"이 기간";
     show(sub);
     if(o.list.empty){ // 빈 시간 자체가 0 — 확정할 게 없으니 카드·버튼 감춤
-      sub.textContent="이번 주엔 모두가 함께 비는 시간이 없어요. 기간을 넓혀 다시 물어보는 게 좋겠어요.";
+      sub.textContent=per+"엔 모두가 함께 비는 시간이 없어요. 기간을 넓혀 다시 물어보는 게 좋겠어요.";
       hide(tm); hide(cf); hide(why); return;
     }
     show(tm); show(cf); show(why);
     if(o.list.fallback){ // 필수 참석자가 전부 막힘 — 익명 깨고 이름 밝히되 사실+대안(비난 금지·과한 강조 없이 서브 자리)
-      sub.textContent=o.blocked+"님은 이번 주에 가능한 시간이 없어요. 그래도 나머지 분들 기준으로 가장 나은 시간을 골랐어요.";
+      sub.textContent=o.blocked+"님은 "+per+"에 가능한 시간이 없어요. 그래도 나머지 분들 기준으로 가장 나은 시간을 골랐어요.";
       return;
     }
     const base=(o.list[0]&&o.list[0].score>0)
@@ -2276,7 +2278,7 @@
     const r=REQS[id], dec=store[id].declined, cnt=((r.total+1)-(dec?1:0))+"명"; // 빠지면 인원 −1
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
     TIMES2=buildTimes2(id); pick2=0; renderTimes2();
-    resultsChrome({list:TIMES2, subId:"s2ResultsSub", timesId:"times2", confirmId:"s2Confirm", whyId:"s2WhyOpen", blocked:"장은솔", cnt, declined:dec});
+    resultsChrome({list:TIMES2, subId:"s2ResultsSub", timesId:"times2", confirmId:"s2Confirm", whyId:"s2WhyOpen", blocked:"장은솔", cnt, declined:dec, span:r.span});
     notif.classList.remove("show");
     s2Go("results","fwd");
   }
@@ -2541,7 +2543,7 @@
     HOST_TIMES=buildCandidates(signals, h.durH, hid, h.daysAllowed, h.jiReq, dec?"ji":null); // 빠진 지수의 캘린더 제외
     hostPick=0;
     buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
-    resultsChrome({list:HOST_TIMES, subId:"hostSub", timesId:"times", confirmId:"hostConfirm", whyId:"hostWhyOpen", blocked:"김지수", cnt, declined:dec});
+    resultsChrome({list:HOST_TIMES, subId:"hostSub", timesId:"times", confirmId:"hostConfirm", whyId:"hostWhyOpen", blocked:"김지수", cnt, declined:dec, span:h.span});
     goStep("host","fwd");
   }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
