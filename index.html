@@ -2115,11 +2115,11 @@
   ];
   const roleW=r=>r==="req"?3:1; // 필수 불편 ≫ 선택 불편 (주최자 판단 우선순위)
   // 후보 슬롯의 점수 = Σ(역할가중치 × 강도) — 1~4단계 결정 규칙의 가중합 표현
-  function buildCandidates(s, durH, allWord, excludeKey, allowed, answererReq){
+  function buildCandidates(s, durH, allWord, excludeKey, allowed, answererReq, excludeCal){
     const taken=[{d:1,h:11,durH:1}]; // 디자인 시스템 리뷰(기확정)
     Object.keys(REQS).forEach(x=>{ const ca=store[x].confirmedAt; if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:REQS[x].durH}); });
     Object.keys(HOSTED).forEach(x=>{ const ca=HOSTED[x].confirmedAt; if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:HOSTED[x].durH}); });
-    const busy=MY_EVENTS.concat(JI_EVENTS);
+    const busy=(excludeCal==="my"?[]:MY_EVENTS).concat(excludeCal==="ji"?[]:JI_EVENTS); // 빠진 사람 캘린더는 제외
     const conflict=c=> busy.some(e=>e.d===c.d && c.h<e.e && c.h+durH>e.s) || taken.some(e=>e.d===c.d && c.h<e.h+e.durH && c.h+durH>e.h);
     const okDays=allowed||DAYS, arole=answererReq?"req":"opt";
     const cands=MASTER.filter(c=>okDays.includes(c.day) && !conflict(c) && c.h+durH<=18).map(c=>{
@@ -2152,7 +2152,8 @@
     return {t:c.t, best, headline, score:c.score};
   }
   function buildTimes2(reqId, allWord){
-    return buildCandidates(store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional);
+    const dec=store[reqId].declined; // 은솔(선택 참석)이 빠지면 그의 사정·캘린더를 빼고 추천
+    return buildCandidates(dec?{time:[0,0,0],days:emptyDays()}:store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional, dec?"my":null);
   }
   let TIMES2=[];
   function tcInner(x){ // 카드는 확신 한 줄만 (근거는 하단 통합 펼침으로)
@@ -2243,13 +2244,13 @@
 
   function openS2Results(id){
     s2ActiveMeet=id;
-    const r=REQS[id];
+    const r=REQS[id], dec=store[id].declined, cnt=((r.total+1)-(dec?1:0))+"명"; // 빠지면 인원 −1
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
-    TIMES2=buildTimes2(id, allOf(r)); pick2=0; renderTimes2();
+    TIMES2=buildTimes2(id, cnt); pick2=0; renderTimes2();
     const s2SubBase=(TIMES2[0]&&TIMES2[0].score>0)
       ? "모두에게 완벽한 시간은 없어서, 가장 적게 부딪히는 순서로 골랐어요."
-      : allOf(r)+"의 캘린더와 알려준 사정을 반영했어요.";
-    document.getElementById("s2ResultsSub").textContent=s2SubBase+(store[id].declined?" 선택 참석 한 명은 이번엔 빠져요.":"");
+      : cnt+"의 캘린더와 알려준 사정을 반영했어요.";
+    document.getElementById("s2ResultsSub").textContent=s2SubBase+(dec?" 선택 참석 한 명은 이번엔 빠져요.":"");
     notif.classList.remove("show");
     s2Go("results","fwd");
   }
@@ -2508,13 +2509,15 @@
     const h=HOSTED[hid]; if(!h||h.canceled) return;
     hostActive=hid;
     document.getElementById("hostCtx").innerHTML="<b>"+h.name+" · "+h.dur+"</b> · "+h.span;
-    const signals=h.jiIn?hostStore[hid]:{time:[0,0,0],days:emptyDays()};
-    HOST_TIMES=buildCandidates(signals, h.durH, (h.total+1)+"명", hid, h.daysAllowed, h.jiReq);
+    const dec=hostStore[hid].declined, cnt=((h.total+1)-(dec?1:0))+"명"; // 지수(선택 참석)가 빠지면 인원 −1
+    const signals=(h.jiIn && !dec)?hostStore[hid]:{time:[0,0,0],days:emptyDays()};
+    HOST_TIMES=buildCandidates(signals, h.durH, cnt, hid, h.daysAllowed, h.jiReq, dec?"ji":null); // 빠진 지수의 캘린더 제외
     hostPick=0;
     buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
-    document.getElementById("hostSub").textContent=(HOST_TIMES[0]&&HOST_TIMES[0].score>0)
+    const hostSubBase=(HOST_TIMES[0]&&HOST_TIMES[0].score>0)
       ? "모두에게 완벽한 시간은 없어서, 가장 적게 부딪히는 순서로 골랐어요."
-      : "모두의 캘린더와 알려준 사정을 반영했어요.";
+      : cnt+"의 캘린더와 알려준 사정을 반영했어요.";
+    document.getElementById("hostSub").textContent=hostSubBase+(dec?" 선택 참석 한 명은 이번엔 빠져요.":"");
     goStep("host","fwd");
   }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
