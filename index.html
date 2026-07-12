@@ -1108,6 +1108,7 @@
           </div>
 
           <div class="foot">
+            <button class="foot-link s2msg-open">따로 전할 말이 있어요</button>
             <button class="cta" id="s2Next1">다 편해요</button>
           </div>
         </section>
@@ -1129,11 +1130,24 @@
           </div>
 
           <div class="foot">
+            <button class="foot-link s2msg-open">따로 전할 말이 있어요</button>
             <button class="cta" id="s2Submit">다 편해요</button>
           </div>
         </section>
 
         <!-- 지수 · 답변 완료 -->
+        <!-- 지수 · 이 중에 없는 사정 → 주최자에게 메시지 (은솔과 대칭) -->
+        <div class="modal" id="s2MsgModal">
+          <div class="dim" id="s2MsgDim"></div>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="s2MsgTitle">
+            <h3 id="s2MsgTitle">따로 전할 말이 있나요?</h3>
+            <p>시간 사정은 위에서 고르는 게 가장 정확하게 반영돼요.</p>
+            <textarea class="text-input msg-area" id="s2MsgText" rows="3"
+              placeholder="예) 그 주는 출장이라 원격으로만 참석할 수 있어요"></textarea>
+            <button class="cta" id="s2MsgSend" style="margin-top:14px;">주최자에게 보내기</button>
+          </div>
+        </div>
+
         <section class="step" id="s2AnsDone" aria-live="polite">
           <div class="nav">
             <button class="back" id="s2AnsClose" aria-label="홈으로">
@@ -2713,6 +2727,7 @@
     document.getElementById("s2Ans2Title").innerHTML=(spanWord(h)==="그 기간에"?"그중":spanWord(h))+" 불편한 요일이<br>있나요?";
     document.getElementById("s2AnsCtx").innerHTML="<b>"+h.name+" · "+h.dur+"</b> · "+h.span;
     document.getElementById("s2OptChip").hidden=h.jiReq; // 은솔이 '선택'으로 정했으면 안심 칩 등장 (스냅샷 기준)
+    document.getElementById("s2MsgText").value=""; resetS2MsgLinks(); // 메시지는 항상 새로
     updateS2AnsCta();
     s2Go("ans1","fwd");
   }
@@ -2766,6 +2781,17 @@
     msgModal.classList.remove("show");
     msgText.value=""; // 다음 메시지는 새로 쓴다
     msgOpens.forEach(b=>{ b.textContent="✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요"; b.classList.add("sent"); });
+  });
+  // 지수 메시지 (은솔과 대칭 — 목적지는 동일하게 '보냄 확인'까지)
+  const s2MsgModal=document.getElementById("s2MsgModal"), s2MsgText=document.getElementById("s2MsgText");
+  const s2MsgOpens=[...document.querySelectorAll(".s2msg-open")];
+  s2MsgOpens.forEach(b=>b.addEventListener("click",()=>{ s2MsgModal.classList.add("show"); setTimeout(()=>s2MsgText.focus(),400); }));
+  document.getElementById("s2MsgDim").addEventListener("click",()=>s2MsgModal.classList.remove("show"));
+  function resetS2MsgLinks(){ s2MsgOpens.forEach(b=>{ b.textContent="따로 전할 말이 있어요"; b.classList.remove("sent"); }); }
+  document.getElementById("s2MsgSend").addEventListener("click",()=>{
+    if(!s2MsgText.value.trim()){ s2MsgText.focus(); return; }
+    s2MsgModal.classList.remove("show"); s2MsgText.value="";
+    s2MsgOpens.forEach(b=>{ b.textContent="✓ 주최자에게 보냈어요 · 남은 질문도 답해 주세요"; b.classList.add("sent"); });
   });
 
   /* ================= 이탈 확인 ================= */
