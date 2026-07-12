@@ -2142,7 +2142,9 @@
     const costed=cands.filter(c=>c!==card1 && c.score>0); // 비용 있는 후보(점수 오름차순) — 2·3번은 여기서
     const picks=[card1, ...costed.slice(0,2)];             // [완벽/최선] · [가장 싼 비용] · [다음 비용]
     if(picks.length<3) for(const c of cands){ if(picks.length>=3) break; if(!picks.includes(c)) picks.push(c); } // 비용 후보가 2개 미만일 때만 완벽 후보로 채움(동률 카피 방어)
-    return picks.slice(0,3).map((c,i)=>reasonOf(c, i)); // 인덱스=순위
+    // 불변식 강제: fill이 완벽 후보를 비용 후보 뒤에 붙일 수 있으므로, 순위 부여 전에 반드시 점수순 재정렬
+    // (안 하면 "불편한 분도 없어 그다음으로"가 "…적어 이어서" 아래에 떠 순서=순위 모순 재발)
+    return picks.slice(0,3).sort((a,b)=> a.score-b.score || Math.abs(a.h-10)-Math.abs(b.h-10) || a.d-b.d).map((c,i)=>reasonOf(c, i)); // 인덱스=순위
   }
   function reasonOf(c, rank){ // rank 0=1위,1=2위,2=3위 — 모든 카드가 같은 이유 구조(필수 안심·순위·긍정)
     const comfort = c.score===0 ? "없어" : "적어";       // 완벽=없어 · 절충=적어
