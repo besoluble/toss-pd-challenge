@@ -502,6 +502,7 @@
   }
   .text-input:focus{ box-shadow:inset 0 0 0 2px var(--blue-weak); }
   .text-input::placeholder{ color:var(--ink-4); }
+  #whenLabel.ph, #s2WhenLabel.ph{ color:var(--ink-4); font-weight:400; }
   /* 인풋 3종(목적·길이·언제)은 같은 타이포·같은 바탕으로 */
   .stepper{ display:inline-flex; align-items:center; align-self:flex-start; background:var(--surface-2); border-radius:12px; padding:4px; }
   .stepper button{
@@ -748,7 +749,7 @@
           <div class="content" style="gap:18px;">
             <div class="form-field">
               <span class="f-label">회의 목적</span>
-              <input class="text-input" id="meetName" type="text" value="스프린트 회고" placeholder="무엇을 위한 회의인가요?" autocomplete="off" maxlength="24" />
+              <input class="text-input" id="meetName" type="text" placeholder="무엇을 위한 회의인가요?" autocomplete="off" maxlength="24" />
             </div>
             <div class="form-field">
               <span class="f-label">언제쯤이면 좋아요?</span>
@@ -1034,7 +1035,7 @@
           <div class="content" style="gap:18px;">
             <div class="form-field">
               <span class="f-label">회의 목적</span>
-              <input class="text-input" id="s2MeetName" type="text" value="디자인 크리틱" placeholder="무엇을 위한 회의인가요?" autocomplete="off" maxlength="24" />
+              <input class="text-input" id="s2MeetName" type="text" placeholder="무엇을 위한 회의인가요?" autocomplete="off" maxlength="24" />
             </div>
             <div class="form-field">
               <span class="f-label">언제쯤이면 좋아요?</span>
@@ -2482,11 +2483,11 @@
   const SPAN_DEFAULT=PRESETS[1].label+" · "+fmtD(PRESETS[1].s)+" – "+fmtD(PRESETS[1].e);
   meet.span=SPAN_DEFAULT; meet.spanS=PRESETS[1].s; meet.spanE=PRESETS[1].e;
   const whenLabel=document.getElementById("whenLabel");
-  whenLabel.textContent=SPAN_DEFAULT;
+  whenLabel.textContent="기간을 골라주세요"; whenLabel.classList.add("ph"); // placeholder (내부 기본 span은 유지)
   makeWhenPicker(
     {modal:"whenModal", grid:"calGrid", title:"calTitle", prev:"calPrev", next:"calNext",
      presetRow:"presetRow", btn:"whenBtn", dim:"whenDim", ok:"whenOk"},
-    (s,sd,ed)=>{ meet.span=s; meet.spanS=sd; meet.spanE=ed; whenLabel.textContent=s; });
+    (s,sd,ed)=>{ meet.span=s; meet.spanS=sd; meet.spanE=ed; whenLabel.textContent=s; whenLabel.classList.remove("ph"); });
   hostSendBtn.addEventListener("click",()=>{
     const n=includedCount(); if(!n) return;
     const hid="h"+(++hostSeq);
@@ -2545,7 +2546,12 @@
   document.getElementById("hostBack").addEventListener("click",()=>{ renderHome(); goStep("exit","back"); });
   document.getElementById("hostBack2").addEventListener("click",()=>goStep("hostCreate","back"));
   document.getElementById("hostNext").addEventListener("click",()=>goStep("hostWho","fwd"));
-  document.getElementById("fabNew").addEventListener("click",()=>goStep("hostCreate","fwd"));
+  document.getElementById("fabNew").addEventListener("click",()=>{ // 열 때마다 fresh 폼
+    document.getElementById("meetName").value="";
+    whenLabel.textContent="기간을 골라주세요"; whenLabel.classList.add("ph");
+    meet.span=SPAN_DEFAULT; meet.spanS=PRESETS[1].s; meet.spanE=PRESETS[1].e;
+    goStep("hostCreate","fwd");
+  });
 
   /* ================= 주최자(은솔) 결과 — 지수의 진짜 답이 후보를 바꾼다 ================= */
   let HOST_TIMES=[], hostActive=null;
@@ -2611,9 +2617,15 @@
   makeWhenPicker(
     {modal:"s2WhenModal", grid:"s2CalGrid", title:"s2CalTitle", prev:"s2CalPrev", next:"s2CalNext",
      presetRow:"s2PresetRow", btn:"s2WhenBtn", dim:"s2WhenDim", ok:"s2WhenOk"},
-    (s,sd,ed)=>{ s2Meet.span=s; s2Meet.spanS=sd; s2Meet.spanE=ed; document.getElementById("s2WhenLabel").textContent=s; });
+    (s,sd,ed)=>{ s2Meet.span=s; s2Meet.spanS=sd; s2Meet.spanE=ed; const l=document.getElementById("s2WhenLabel"); l.textContent=s; l.classList.remove("ph"); });
+  { const l=document.getElementById("s2WhenLabel"); l.textContent="기간을 골라주세요"; l.classList.add("ph"); } // 초기 placeholder
 
-  document.getElementById("s2FabNew").addEventListener("click",()=>s2Go("create","fwd"));
+  document.getElementById("s2FabNew").addEventListener("click",()=>{ // 열 때마다 fresh 폼
+    document.getElementById("s2MeetName").value="";
+    const l=document.getElementById("s2WhenLabel"); l.textContent="기간을 골라주세요"; l.classList.add("ph");
+    s2Meet.span=SPAN_DEFAULT; s2Meet.spanS=PRESETS[1].s; s2Meet.spanE=PRESETS[1].e;
+    s2Go("create","fwd");
+  });
   document.getElementById("s2CreateBack").addEventListener("click",()=>s2Go("home","back"));
   document.getElementById("s2CreateNext").addEventListener("click",()=>s2Go("who","fwd"));
   document.getElementById("s2WhoBack").addEventListener("click",()=>s2Go("create","back"));
