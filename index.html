@@ -2114,10 +2114,6 @@
     {role:"opt", axis:"day",  day:"수", deg:1}, // 선택 F: 수요일 살짝
   ];
   const roleW=r=>r==="req"?3:1; // 필수 불편 ≫ 선택 불편 (주최자 판단 우선순위)
-  function degPhrase(deg, role){
-    if(deg===3) return role==="opt"?"오기 어려워요":"안 된다고 했어요";
-    return deg===2?"웬만하면 피하고 싶어 해요":"살짝 아쉬워해요";
-  }
   // 후보 슬롯의 점수 = Σ(역할가중치 × 강도) — 1~4단계 결정 규칙의 가중합 표현
   function buildCandidates(s, durH, allWord, excludeKey, allowed, answererReq){
     const taken=[{d:1,h:11,durH:1}]; // 디자인 시스템 리뷰(기확정)
@@ -2149,25 +2145,11 @@
     return picks.slice(0,3).map(c=>reasonOf(c, c===card1, allWord));
   }
   function reasonOf(c, best, allWord){
-    const hasReq=c.bad.some(b=>b.role==="req");
-    let headline;
-    if(c.score===0) headline = best ? allWord+" 모두 편한 시간이에요" : "이 시간도 모두 편해요";
-    else if(best) headline = "지금 가장 잘 맞는 시간이에요";
-    else if(!hasReq) headline = "필수 참석자는 모두 편해요";
-    else { const req=c.bad.filter(b=>b.role==="req"), md=Math.max(...req.map(b=>b.deg)); // 필수를 중심에: 그들의 불편을 정면으로
-      headline = "필수 참석 "+req.length+"명이 "+degPhrase(md,"req"); }
-    const detail=[];
-    if(c.score===0){ detail.push("필수·선택 참석자 모두 편한 시간이에요"); }
-    else {
-      if(!hasReq) detail.push("필수 참석자는 모두 편해요");
-      const g={};
-      c.bad.forEach(b=>{ const k=b.role+"|"+b.label; (g[k]=g[k]||{role:b.role,label:b.label,degs:[]}).degs.push(b.deg); });
-      Object.values(g).forEach(x=>{
-        const md=Math.max(...x.degs), roleTxt=x.role==="req"?"필수 참석":"선택 참석";
-        detail.push(x.label+" · "+roleTxt+" "+x.degs.length+"명이 "+degPhrase(md,x.role));
-      });
-    }
-    return {t:c.t, best, headline, detail, score:c.score};
+    // 카드는 확신만 — 개별 비용은 안 쓴다(주최자 JTBD: 감정 헤아리기 아닌 결정). 순위 납득은 순서 + 규칙 시트가 담당.
+    const headline = best
+      ? (c.score===0 ? allWord+" 모두 편한 시간이에요" : "가장 적게 부딪히는 시간이에요")
+      : "이 시간도 괜찮아요";
+    return {t:c.t, best, headline, score:c.score};
   }
   function buildTimes2(reqId, allWord){
     return buildCandidates(store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional);
