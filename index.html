@@ -1168,7 +1168,7 @@
           </div>
           <div class="ctx" id="s2Ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
-          <p class="sub" id="s2ResultsSub">여섯 명의 캘린더와 알려준 사정을 반영했어요.</p>
+          <p class="sub" id="s2ResultsSub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
           <div class="content">
             <div class="times" id="times2" role="radiogroup" aria-label="추천 시간"></div>
           </div>
@@ -2147,7 +2147,7 @@
   function reasonOf(c, best, allWord){
     // 카드는 확신만 — 개별 비용은 안 쓴다(주최자 JTBD: 감정 헤아리기 아닌 결정). 순위 납득은 순서 + 규칙 시트가 담당.
     const headline = best
-      ? (c.score===0 ? allWord+" 모두 편한 시간이에요" : "필수 참석자가 다 되고, 불편한 분도 적어 가장 먼저 추천해요")
+      ? (c.score===0 ? allWord+" 모두 편한 시간이라 가장 먼저 추천해요" : "필수 참석자가 다 되고, 불편한 분도 적어 가장 먼저 추천해요")
       : "이 시간도 괜찮아요";
     return {t:c.t, best, headline, score:c.score};
   }
