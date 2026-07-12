@@ -2147,7 +2147,7 @@
   function reasonOf(c, best, allWord){
     // 카드는 확신만 — 개별 비용은 안 쓴다(주최자 JTBD: 감정 헤아리기 아닌 결정). 순위 납득은 순서 + 규칙 시트가 담당.
     const headline = best
-      ? (c.score===0 ? allWord+" 모두 편한 시간이에요" : "가장 적게 부딪히는 시간이에요")
+      ? (c.score===0 ? allWord+" 모두 편한 시간이에요" : "필수 참석자가 다 되고, 불편한 분도 적어 가장 먼저 추천해요")
       : "이 시간도 괜찮아요";
     return {t:c.t, best, headline, score:c.score};
   }
