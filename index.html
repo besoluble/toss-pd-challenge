@@ -2141,11 +2141,11 @@
     }).filter(c=>!c.hard).sort((a,b)=> a.score-b.score || Math.abs(a.h-10)-Math.abs(b.h-10) || a.d-b.d);
     // 카드 3장 = 결정 규칙의 3층 서사: [최선] · [선택만 불편] · [필수도 불편].
     // 동률(모두 편한 시간 여럿)을 화면엔 안 띄우되(규칙2 최상의 그림), 답변자가 표시한 시간은 점수가 올라 아래로 밀림(규칙1).
+    // 불변식: 카드는 항상 점수 오름차순(위=더 나음). 완벽 후보가 비용 후보 아래로 새지 않는다.
     const card1=cands[0];
-    const optOnly=cands.find(c=>c!==card1 && c.score>0 && !c.bad.some(b=>b.role==="req"));
-    const reqCost=cands.find(c=>c!==card1 && c!==optOnly && c.bad.some(b=>b.role==="req"));
-    const picks=[card1, optOnly, reqCost].filter(Boolean);
-    for(const c of cands){ if(picks.length>=3) break; if(!picks.includes(c)) picks.push(c); }
+    const costed=cands.filter(c=>c!==card1 && c.score>0); // 비용 있는 후보(점수 오름차순) — 2·3번은 여기서
+    const picks=[card1, ...costed.slice(0,2)];             // [완벽/최선] · [가장 싼 비용] · [다음 비용]
+    if(picks.length<3) for(const c of cands){ if(picks.length>=3) break; if(!picks.includes(c)) picks.push(c); } // 비용 후보가 2개 미만일 때만 완벽 후보로 채움(동률 카피 방어)
     return picks.slice(0,3).map(c=>reasonOf(c, c===card1, allWord));
   }
   function reasonOf(c, best, allWord){
