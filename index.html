@@ -562,9 +562,14 @@
   .tc-why{ font-size:13px; color:var(--ink-3); }
   .time-card[aria-checked="true"] .tc-why{ color:var(--ink-2); }
   .why-anon{ font-size:12px; color:var(--ink-4); margin:0 0 12px; line-height:1.5; }
-  .why-list{ display:flex; flex-direction:column; gap:6px; }
-  .why-intro{ font-size:12px; font-weight:700; color:var(--ink-2); margin:0 0 2px; }
-  .why-line{ font-size:12.5px; color:var(--ink-3); line-height:1.5; padding-left:2px; }
+  .why-list{ display:block; }
+  .why-stage{ display:flex; flex-direction:column; gap:3px; }
+  .why-stage + .why-stage{ margin-top:15px; }
+  .why-num{ font-size:11px; font-weight:700; color:var(--blue); }
+  .why-head{ font-size:13.5px; font-weight:700; color:var(--ink); }
+  .why-sub{ font-size:12.5px; color:var(--ink-3); line-height:1.5; }
+  .why-sub b{ color:var(--ink); font-weight:700; }
+  .why-line{ font-size:12.5px; color:var(--ink-3); line-height:1.5; padding-left:2px; margin-top:5px; }
   .why-concl{ font-size:12.5px; color:var(--ink-2); margin:12px 0 0; line-height:1.6; }
   .why-concl b{ color:var(--ink); font-weight:700; }
   .done-body h2{ font-size:21px; font-weight:700; margin:0; text-wrap:balance; }
@@ -808,7 +813,7 @@
           </div>
           <div class="ctx" id="hostCtx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
-          <p class="sub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
+          <p class="sub" id="hostSub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
 
           <div class="content">
             <div class="times" id="times" role="radiogroup" aria-label="추천 시간"></div>
@@ -924,7 +929,7 @@
         <div class="modal" id="hostWhyModal">
           <div class="dim" id="hostWhyDim"></div>
           <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="hostWhyTitle">
-            <h3 id="hostWhyTitle">어떻게 골랐는지</h3>
+            <h3 id="hostWhyTitle">이렇게 골랐어요</h3>
             <p class="why-anon">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
             <div class="why-list" id="hostWhyList"></div>
             <button class="cta" id="hostWhyOk" style="margin-top:16px;">확인</button>
@@ -1266,7 +1271,7 @@
         <div class="modal" id="s2WhyModal">
           <div class="dim" id="s2WhyDim"></div>
           <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="s2WhyTitle">
-            <h3 id="s2WhyTitle">어떻게 골랐는지</h3>
+            <h3 id="s2WhyTitle">이렇게 골랐어요</h3>
             <p class="why-anon">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
             <div class="why-list" id="s2WhyList"></div>
             <button class="cta" id="s2WhyOk" style="margin-top:16px;">확인</button>
@@ -2100,6 +2105,8 @@
     {role:"req", axis:"time", slot:1, deg:1}, // 필수 B: 점심 직후 살짝
     {role:"req", axis:"day",  day:"금", deg:2}, // 필수 C: 금요일 웬만하면
     {role:"opt", axis:"time", slot:2, deg:3}, // 선택 D: 늦은 오후 참석 불가(선택이라 배제 안 함)
+    {role:"req", axis:"time", slot:0, deg:1}, // 필수 E: 이른 아침 살짝
+    {role:"opt", axis:"day",  day:"수", deg:1}, // 선택 F: 수요일 살짝
   ];
   const roleW=r=>r==="req"?3:1; // 필수 불편 ≫ 선택 불편 (주최자 판단 우선순위)
   function degPhrase(deg, role){
@@ -2127,18 +2134,22 @@
       const score=bad.reduce((a,b)=>a+roleW(b.role)*b.deg,0);
       return {...c, bad, hard, score};
     }).filter(c=>!c.hard).sort((a,b)=> a.score-b.score || Math.abs(a.h-10)-Math.abs(b.h-10) || a.d-b.d);
-    const top2=cands.slice(0,2);
-    let third=cands[2];
-    const contrast=cands.find(c=>c.score>0 && c!==top2[0] && c!==top2[1]); // 3번째는 '비용 있는' 후보를 보여 복합 고려를 드러냄
-    if(contrast && (!third || third.score===0)) third=contrast;
-    return [...top2, third].filter(Boolean).map((c,i)=>reasonOf(c, i===0, allWord));
+    // 카드 3장 = 결정 규칙의 3층 서사: [최선] · [선택만 불편] · [필수도 불편].
+    // 동률(모두 편한 시간 여럿)을 화면엔 안 띄우되(규칙2 최상의 그림), 답변자가 표시한 시간은 점수가 올라 아래로 밀림(규칙1).
+    const card1=cands[0];
+    const optOnly=cands.find(c=>c!==card1 && c.score>0 && !c.bad.some(b=>b.role==="req"));
+    const reqCost=cands.find(c=>c!==card1 && c!==optOnly && c.bad.some(b=>b.role==="req"));
+    const picks=[card1, optOnly, reqCost].filter(Boolean);
+    for(const c of cands){ if(picks.length>=3) break; if(!picks.includes(c)) picks.push(c); }
+    return picks.slice(0,3).map(c=>reasonOf(c, c===card1, allWord));
   }
   function reasonOf(c, best, allWord){
     const hasReq=c.bad.some(b=>b.role==="req");
     let headline;
-    if(c.score===0) headline = best ? allWord+" 모두 편한 시간이에요" : "모두 편한 시간이에요";
+    if(c.score===0) headline = best ? allWord+" 모두 편한 시간이에요" : "이 시간도 모두 편해요";
+    else if(best) headline = "지금 가장 잘 맞는 시간이에요";
     else if(!hasReq) headline = "필수 참석자는 모두 편해요";
-    else headline = best ? "지금 가장 잘 맞는 시간이에요" : "필수 참석자도 대부분 편해요";
+    else headline = "필수 참석자도 대부분 편해요";
     const detail=[];
     if(c.score===0){ detail.push("필수·선택 참석자 모두 편한 시간이에요"); }
     else {
@@ -2150,7 +2161,7 @@
         detail.push(x.label+" · "+roleTxt+" "+x.degs.length+"명이 "+degPhrase(md,x.role));
       });
     }
-    return {t:c.t, best, headline, detail};
+    return {t:c.t, best, headline, detail, score:c.score};
   }
   function buildTimes2(reqId, allWord){
     return buildCandidates(store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional);
@@ -2186,10 +2197,20 @@
       return x.label+" · "+rt+" "+x.degs.length+"명이 "+degPhrase(md,x.role);
     });
   }
-  function renderWhy(pfx, sig, answererReq, bestTime){
+  function whyStage(n, head, sub, extra){
+    return '<div class="why-stage"><span class="why-num">'+n+'단계</span>'
+      +'<b class="why-head">'+head+'</b><span class="why-sub">'+sub+'</span>'+(extra||'')+'</div>';
+  }
+  function renderWhy(pfx, sig, answererReq, top){
     const terrain=terrainSummary(sig, answererReq);
-    let html='<p class="why-intro">이런 사정까지 저울질했어요</p>'+terrain.map(l=>'<span class="why-line">'+l+'</span>').join('');
-    if(bestTime) html+='<p class="why-concl">필수 참석자가 안 되는 시간은 빼고, 이 사정들을 반영해<br><b>'+bestTime+'</b>을 가장 먼저 추천해요</p>';
+    const perfect = top && top.score===0;
+    let html=whyStage(1, "안 되는 시간을 뺐어요", "캘린더에 일정이 있거나, 필수 참석자가 못 오는 시간");
+    html+= perfect
+      ? whyStage(2, "모두 편한 시간을 찾았어요", "<b>"+top.t+"</b> · 아무 사정과도 안 겹쳐요")
+      : whyStage(2, "모두 편한 시간은 없었어요", "그래서 가장 덜 부딪히는 시간을 골랐어요");
+    html+= whyStage(3, "나머지는 덜 부딪히는 순서로", "필수 참석자의 사정을 먼저 봤어요",
+      terrain.map(l=>'<span class="why-line">'+l+'</span>').join(''));
+    if(!perfect && top) html+='<p class="why-concl"><b>'+top.t+'</b>이 이 사정들과 가장 적게 부딪혀 가장 먼저 추천해요</p>';
     document.getElementById(pfx+"WhyList").innerHTML=html;
   }
   function wireWhy(pfx){
@@ -2264,9 +2285,12 @@
     s2ActiveMeet=id;
     const r=REQS[id];
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
-    document.getElementById("s2ResultsSub").textContent=allOf(r)+"의 캘린더와 알려준 사정을 반영했어요."+(store[id].declined?" 선택 참석 한 명은 이번엔 빠져요.":"");
     TIMES2=buildTimes2(id, allOf(r)); pick2=0; renderTimes2();
-    renderWhy("s2", store[id], !r.optional, TIMES2[0]&&TIMES2[0].t);
+    const s2SubBase=(TIMES2[0]&&TIMES2[0].score>0)
+      ? "모두에게 완벽한 시간은 없어서, 가장 적게 부딪히는 순서로 골랐어요."
+      : allOf(r)+"의 캘린더와 알려준 사정을 반영했어요.";
+    document.getElementById("s2ResultsSub").textContent=s2SubBase+(store[id].declined?" 선택 참석 한 명은 이번엔 빠져요.":"");
+    renderWhy("s2", store[id], !r.optional, TIMES2[0]);
     notif.classList.remove("show");
     s2Go("results","fwd");
   }
@@ -2529,7 +2553,10 @@
     HOST_TIMES=buildCandidates(signals, h.durH, (h.total+1)+"명", hid, h.daysAllowed, h.jiReq);
     hostPick=0;
     buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
-    renderWhy("host", signals, h.jiReq, HOST_TIMES[0]&&HOST_TIMES[0].t);
+    document.getElementById("hostSub").textContent=(HOST_TIMES[0]&&HOST_TIMES[0].score>0)
+      ? "모두에게 완벽한 시간은 없어서, 가장 적게 부딪히는 순서로 골랐어요."
+      : "모두의 캘린더와 알려준 사정을 반영했어요.";
+    renderWhy("host", signals, h.jiReq, HOST_TIMES[0]);
     goStep("host","fwd");
   }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
