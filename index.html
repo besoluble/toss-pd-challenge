@@ -561,13 +561,10 @@
   .tc-pill{ font-size:11px; font-weight:700; color:#fff; background:var(--blue); padding:3px 8px; border-radius:999px; }
   .tc-why{ font-size:13px; color:var(--ink-3); }
   .time-card[aria-checked="true"] .tc-why{ color:var(--ink-2); }
-  /* 필수 전부 불가/빈 시간 안내 — 옅은 주의색, 사실만 (비난 프레이밍 금지) */
-  .results-banner{ background:#FFF7EA; border:1px solid #F6E2BC; border-radius:14px; padding:13px 15px; margin:0 0 16px; font-size:13.5px; line-height:1.55; color:#7A5A22; }
-  .results-banner b{ color:#5C4212; font-weight:700; }
-  .results-banner[hidden]{ display:none; }
   .why-list{ display:block; }
   .why-stage{ display:flex; flex-direction:column; gap:3px; }
   .why-stage + .why-stage{ margin-top:15px; }
+  .why-top{ display:flex; align-items:baseline; gap:6px; } /* 단계 라벨 + 타이틀 한 줄로 */
   .why-num{ font-size:11px; font-weight:700; color:var(--blue); }
   .why-head{ font-size:13.5px; font-weight:700; color:var(--ink); }
   .why-sub{ font-size:12.5px; color:var(--ink-3); line-height:1.5; }
@@ -817,7 +814,6 @@
           <div class="ctx" id="hostCtx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
           <p class="sub" id="hostSub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
-          <div class="results-banner" id="hostBanner" hidden></div>
 
           <div class="content">
             <div class="times" id="times" role="radiogroup" aria-label="추천 시간"></div>
@@ -935,9 +931,9 @@
           <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="hostWhyTitle">
             <h3 id="hostWhyTitle">이렇게 시간을 골라요</h3>
             <div class="why-list">
-              <div class="why-stage"><span class="why-num">1단계</span><b class="why-head">안 되는 시간부터 빼요</b><span class="why-sub">캘린더에 일정이 있거나, 필수 참석자가 못 오는 시간</span></div>
-              <div class="why-stage"><span class="why-num">2단계</span><b class="why-head">모두 편한 시간을 먼저 찾아요</b><span class="why-sub">아무의 사정과도 겹치지 않는 시간이 있으면 우선 추천해요</span></div>
-              <div class="why-stage"><span class="why-num">3단계</span><b class="why-head">없으면, 덜 부딪히는 순서로</b><span class="why-sub">꼭 와야 하는 분의 사정을 먼저, 선택 참석은 마지막에 고려해요</span></div>
+              <div class="why-stage"><div class="why-top"><span class="why-num">1단계</span><b class="why-head">안 되는 시간부터 빼요</b></div><span class="why-sub">캘린더에 일정이 있거나, 필수 참석자가 못 오는 시간</span></div>
+              <div class="why-stage"><div class="why-top"><span class="why-num">2단계</span><b class="why-head">모두 편한 시간을 먼저 찾아요</b></div><span class="why-sub">아무의 사정과도 겹치지 않는 시간이 있으면 우선 추천해요</span></div>
+              <div class="why-stage"><div class="why-top"><span class="why-num">3단계</span><b class="why-head">없으면, 덜 부딪히는 순서로</b></div><span class="why-sub">꼭 와야 하는 분의 사정을 먼저, 선택 참석은 마지막에 고려해요</span></div>
             </div>
             <button class="cta" id="hostWhyOk" style="margin-top:16px;">확인</button>
           </div>
@@ -1174,7 +1170,6 @@
           <div class="ctx" id="s2Ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
           <p class="sub" id="s2ResultsSub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
-          <div class="results-banner" id="s2Banner" hidden></div>
           <div class="content">
             <div class="times" id="times2" role="radiogroup" aria-label="추천 시간"></div>
           </div>
@@ -1281,9 +1276,9 @@
           <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="s2WhyTitle">
             <h3 id="s2WhyTitle">이렇게 시간을 골라요</h3>
             <div class="why-list">
-              <div class="why-stage"><span class="why-num">1단계</span><b class="why-head">안 되는 시간부터 빼요</b><span class="why-sub">캘린더에 일정이 있거나, 필수 참석자가 못 오는 시간</span></div>
-              <div class="why-stage"><span class="why-num">2단계</span><b class="why-head">모두 편한 시간을 먼저 찾아요</b><span class="why-sub">아무의 사정과도 겹치지 않는 시간이 있으면 우선 추천해요</span></div>
-              <div class="why-stage"><span class="why-num">3단계</span><b class="why-head">없으면, 덜 부딪히는 순서로</b><span class="why-sub">꼭 와야 하는 분의 사정을 먼저, 선택 참석은 마지막에 고려해요</span></div>
+              <div class="why-stage"><div class="why-top"><span class="why-num">1단계</span><b class="why-head">안 되는 시간부터 빼요</b></div><span class="why-sub">캘린더에 일정이 있거나, 필수 참석자가 못 오는 시간</span></div>
+              <div class="why-stage"><div class="why-top"><span class="why-num">2단계</span><b class="why-head">모두 편한 시간을 먼저 찾아요</b></div><span class="why-sub">아무의 사정과도 겹치지 않는 시간이 있으면 우선 추천해요</span></div>
+              <div class="why-stage"><div class="why-top"><span class="why-num">3단계</span><b class="why-head">없으면, 덜 부딪히는 순서로</b></div><span class="why-sub">꼭 와야 하는 분의 사정을 먼저, 선택 참석은 마지막에 고려해요</span></div>
             </div>
             <button class="cta" id="s2WhyOk" style="margin-top:16px;">확인</button>
           </div>
@@ -2158,11 +2153,10 @@
     return out;
   }
   function reasonOf(c, rank, fallback){ // rank 0/1/2 · fallback=필수가 전부 막힌 대안 모드
-    const comfort = c.softScore===0 ? "없어" : "적어";       // 하드 제외 소프트 불편 (완벽=없어·절충=적어)
     const order = rank===0 ? "가장 먼저" : rank===1 ? "이어서" : "그다음으로"; // 1위/2위/3위
     const lead = fallback
-      ? "필수 참석자 "+c.reqBlocked+"명이 안 되지만, 불편한 분도 "+comfort   // 사실+대안 (이름은 배너 몫)
-      : "필수 참석자가 다 되고, 불편한 분도 "+comfort;
+      ? "필수 참석자 "+c.reqBlocked+"명이 안 되지만, 나머지 분들은 "+(c.softScore===0?"다 편해서":"대체로 편해서") // 부재자 제외, 남은 분들 기준
+      : "필수 참석자가 다 되고, 불편한 분도 "+(c.softScore===0?"없어":"적어");
     const headline = lead+" "+order+" 추천해요";
     return {t:c.t, best:rank===0, headline, score:c.score, softScore:c.softScore, reqBlocked:c.reqBlocked};
   }
@@ -2257,21 +2251,21 @@
     }, 450);
   }
 
-  // 결과 화면 크롬: 빈 시간(0개)·필수 전부 불가(배너+이름)·정상 서브카피를 한 곳에서 (H5: 한 상태 단일 출처)
+  // 결과 화면 크롬: 필수 전부 불가·빈 시간·정상 안내를 모두 '서브카피(.sub)' 한 자리에서 (H5·과한 강조 배제)
   function resultsChrome(o){
-    const bn=document.getElementById(o.bannerId), sub=document.getElementById(o.subId);
+    const sub=document.getElementById(o.subId);
     const tm=document.getElementById(o.timesId), cf=document.getElementById(o.confirmId), why=document.getElementById(o.whyId);
     const show=el=>{ if(el) el.hidden=false; }, hide=el=>{ if(el) el.hidden=true; };
+    show(sub);
     if(o.list.empty){ // 빈 시간 자체가 0 — 확정할 게 없으니 카드·버튼 감춤
-      bn.innerHTML="<b>이번 주엔 모두가 함께 비는 시간이 없어요.</b> 다들 일정이 겹쳐서, 기간을 넓혀 다시 물어보는 게 좋겠어요.";
-      show(bn); hide(sub); hide(tm); hide(cf); hide(why); return;
+      sub.textContent="이번 주엔 모두가 함께 비는 시간이 없어요. 기간을 넓혀 다시 물어보는 게 좋겠어요.";
+      hide(tm); hide(cf); hide(why); return;
     }
     show(tm); show(cf); show(why);
-    if(o.list.fallback){ // 필수 참석자가 전부 막힘 — 익명 깨고 이름 밝히되 사실+대안(비난 금지)
-      bn.innerHTML="<b>"+o.blocked+"님은 이번 주에 가능한 시간이 없어요.</b> 그래도 나머지 분들 기준으로 가장 나은 시간을 골랐어요.";
-      show(bn); hide(sub); return;
+    if(o.list.fallback){ // 필수 참석자가 전부 막힘 — 익명 깨고 이름 밝히되 사실+대안(비난 금지·과한 강조 없이 서브 자리)
+      sub.textContent=o.blocked+"님은 이번 주에 가능한 시간이 없어요. 그래도 나머지 분들 기준으로 가장 나은 시간을 골랐어요.";
+      return;
     }
-    hide(bn); show(sub);
     const base=(o.list[0]&&o.list[0].score>0)
       ? "모두에게 완벽한 시간은 없어서, 가장 적게 부딪히는 순서로 골랐어요."
       : o.cnt+"의 캘린더와 알려준 사정을 반영했어요.";
@@ -2282,7 +2276,7 @@
     const r=REQS[id], dec=store[id].declined, cnt=((r.total+1)-(dec?1:0))+"명"; // 빠지면 인원 −1
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
     TIMES2=buildTimes2(id); pick2=0; renderTimes2();
-    resultsChrome({list:TIMES2, subId:"s2ResultsSub", bannerId:"s2Banner", timesId:"times2", confirmId:"s2Confirm", whyId:"s2WhyOpen", blocked:"장은솔", cnt, declined:dec});
+    resultsChrome({list:TIMES2, subId:"s2ResultsSub", timesId:"times2", confirmId:"s2Confirm", whyId:"s2WhyOpen", blocked:"장은솔", cnt, declined:dec});
     notif.classList.remove("show");
     s2Go("results","fwd");
   }
@@ -2547,7 +2541,7 @@
     HOST_TIMES=buildCandidates(signals, h.durH, hid, h.daysAllowed, h.jiReq, dec?"ji":null); // 빠진 지수의 캘린더 제외
     hostPick=0;
     buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
-    resultsChrome({list:HOST_TIMES, subId:"hostSub", bannerId:"hostBanner", timesId:"times", confirmId:"hostConfirm", whyId:"hostWhyOpen", blocked:"김지수", cnt, declined:dec});
+    resultsChrome({list:HOST_TIMES, subId:"hostSub", timesId:"times", confirmId:"hostConfirm", whyId:"hostWhyOpen", blocked:"김지수", cnt, declined:dec});
     goStep("host","fwd");
   }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
