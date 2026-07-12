@@ -195,6 +195,14 @@
     opacity:0; transition:opacity .25s var(--ease);
   }
   .content.has-more::after, .editor.has-more::after, .cv.has-more::after{ opacity:1; }
+  /* FAB 화면(홈 등): FAB는 스크롤 위치와 무관하게 콘텐츠 위에 떠 있어, has-more 페이드만으론 맨 아래에서 버튼 뒤가 비친다.
+     ':has(> .fab)'로 버튼 유무에 따라 자동 적용 — 새 FAB 화면이 생겨도 같은 문제가 재발하지 않는다. */
+  .step:has(> .fab) .content{ padding-bottom:80px; }   /* 마지막 카드가 버튼 위로 스크롤돼 안 가려짐 */
+  .step:has(> .fab) .content::after{ display:none; }   /* 아래 상시 스크림이 대신 (has-more 페이드 중복 제거) */
+  .step:has(> .fab)::after{                            /* 스크롤 중 버튼 뒤 콘텐츠를 덮는 상시 흰 페이드 */
+    content:""; position:absolute; left:0; right:0; bottom:0; height:120px; z-index:5; pointer-events:none;
+    background:linear-gradient(rgba(255,255,255,0), #fff 40%);
+  }
 
   /* slider rows */
   .legend-row{ display:flex; justify-content:flex-end; margin-bottom:6px; }
