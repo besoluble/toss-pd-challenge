@@ -561,6 +561,10 @@
   .tc-pill{ font-size:11px; font-weight:700; color:#fff; background:var(--blue); padding:3px 8px; border-radius:999px; }
   .tc-why{ font-size:13px; color:var(--ink-3); }
   .time-card[aria-checked="true"] .tc-why{ color:var(--ink-2); }
+  /* 필수 전부 불가/빈 시간 안내 — 옅은 주의색, 사실만 (비난 프레이밍 금지) */
+  .results-banner{ background:#FFF7EA; border:1px solid #F6E2BC; border-radius:14px; padding:13px 15px; margin:0 0 16px; font-size:13.5px; line-height:1.55; color:#7A5A22; }
+  .results-banner b{ color:#5C4212; font-weight:700; }
+  .results-banner[hidden]{ display:none; }
   .why-list{ display:block; }
   .why-stage{ display:flex; flex-direction:column; gap:3px; }
   .why-stage + .why-stage{ margin-top:15px; }
@@ -813,6 +817,7 @@
           <div class="ctx" id="hostCtx"><b>스프린트 회고 · 30분</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
           <p class="sub" id="hostSub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
+          <div class="results-banner" id="hostBanner" hidden></div>
 
           <div class="content">
             <div class="times" id="times" role="radiogroup" aria-label="추천 시간"></div>
@@ -1169,6 +1174,7 @@
           <div class="ctx" id="s2Ctx"><b>신규 기능 킥오프 · 1시간</b> · 다음 주 중</div>
           <h1 class="title">모두 괜찮은 시간을<br>찾았어요</h1>
           <p class="sub" id="s2ResultsSub">모두의 캘린더와 알려준 사정을 반영했어요.</p>
+          <div class="results-banner" id="s2Banner" hidden></div>
           <div class="content">
             <div class="times" id="times2" role="radiogroup" aria-label="추천 시간"></div>
           </div>
@@ -2115,14 +2121,14 @@
   ];
   const roleW=r=>r==="req"?3:1; // 필수 불편 ≫ 선택 불편 (주최자 판단 우선순위)
   // 후보 슬롯의 점수 = Σ(역할가중치 × 강도) — 1~4단계 결정 규칙의 가중합 표현
-  function buildCandidates(s, durH, allWord, excludeKey, allowed, answererReq, excludeCal){
+  function buildCandidates(s, durH, excludeKey, allowed, answererReq, excludeCal){
     const taken=[{d:1,h:11,durH:1}]; // 디자인 시스템 리뷰(기확정)
     Object.keys(REQS).forEach(x=>{ const ca=store[x].confirmedAt; if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:REQS[x].durH}); });
     Object.keys(HOSTED).forEach(x=>{ const ca=HOSTED[x].confirmedAt; if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:HOSTED[x].durH}); });
     const busy=(excludeCal==="my"?[]:MY_EVENTS).concat(excludeCal==="ji"?[]:JI_EVENTS); // 빠진 사람 캘린더는 제외
     const conflict=c=> busy.some(e=>e.d===c.d && c.h<e.e && c.h+durH>e.s) || taken.some(e=>e.d===c.d && c.h<e.h+e.durH && c.h+durH>e.h);
     const okDays=allowed||DAYS, arole=answererReq?"req":"opt";
-    const cands=MASTER.filter(c=>okDays.includes(c.day) && !conflict(c) && c.h+durH<=18).map(c=>{
+    const scored=MASTER.filter(c=>okDays.includes(c.day) && !conflict(c) && c.h+durH<=18).map(c=>{
       const bad=[];
       BACKDROP.forEach(b=>{
         if(b.axis==="time" && b.slot===c.slot) bad.push({role:b.role, deg:b.deg, label:SLOT_NAME[b.slot]});
@@ -2131,30 +2137,38 @@
       const tp=c.slot==null?0:(s.time[c.slot]||0), dp=s.days[c.day]||0;
       if(tp>0) bad.push({role:arole, deg:tp, label:SLOT_NAME[c.slot], me:true}); // 답변자(실사용자) 신호
       if(dp>0) bad.push({role:arole, deg:dp, label:c.day+"요일", me:true});
-      const hard=bad.some(b=>b.role==="req" && b.deg===3); // 필수 '안 돼요' = 후보 제외(1단계)
-      const score=bad.reduce((a,b)=>a+roleW(b.role)*b.deg,0);
-      return {...c, bad, hard, score};
-    }).filter(c=>!c.hard).sort((a,b)=> a.score-b.score || Math.abs(a.h-10)-Math.abs(b.h-10) || a.d-b.d);
-    // 카드 3장 = 결정 규칙의 3층 서사: [최선] · [선택만 불편] · [필수도 불편].
-    // 동률(모두 편한 시간 여럿)을 화면엔 안 띄우되(규칙2 최상의 그림), 답변자가 표시한 시간은 점수가 올라 아래로 밀림(규칙1).
-    // 불변식: 카드는 항상 점수 오름차순(위=더 나음). 완벽 후보가 비용 후보 아래로 새지 않는다.
-    const card1=cands[0];
-    const costed=cands.filter(c=>c!==card1 && c.score>0); // 비용 있는 후보(점수 오름차순) — 2·3번은 여기서
-    const picks=[card1, ...costed.slice(0,2)];             // [완벽/최선] · [가장 싼 비용] · [다음 비용]
-    if(picks.length<3) for(const c of cands){ if(picks.length>=3) break; if(!picks.includes(c)) picks.push(c); } // 비용 후보가 2개 미만일 때만 완벽 후보로 채움(동률 카피 방어)
-    // 불변식 강제: fill이 완벽 후보를 비용 후보 뒤에 붙일 수 있으므로, 순위 부여 전에 반드시 점수순 재정렬
-    // (안 하면 "불편한 분도 없어 그다음으로"가 "…적어 이어서" 아래에 떠 순서=순위 모순 재발)
-    return picks.slice(0,3).sort((a,b)=> a.score-b.score || Math.abs(a.h-10)-Math.abs(b.h-10) || a.d-b.d).map((c,i)=>reasonOf(c, i)); // 인덱스=순위
+      const reqBlocked=bad.some(b=>b.role==="req" && b.deg===3)?1:0; // 필수 '안 돼요'=참석 불가. 하드 출처는 답변자 1명뿐이라 0/1
+      const softScore=bad.reduce((a,b)=> a + ((b.role==="req"&&b.deg===3)?0:roleW(b.role)*b.deg), 0); // 하드 제외 소프트 비용
+      const score=softScore + reqBlocked*roleW("req")*3; // 하드는 큰 가중치로 랭킹 맨 뒤
+      return {...c, bad, reqBlocked, softScore, score};
+    });
+    const bySort=(a,b)=> a.score-b.score || Math.abs(a.h-10)-Math.abs(b.h-10) || a.d-b.d;
+    if(scored.length===0){ const out=[]; out.empty=true; out.fallback=false; return out; } // 빈 시간 자체가 0(달력 꽉 참 등)
+    const feasible=scored.filter(c=>c.reqBlocked===0).sort(bySort); // 모든 필수가 올 수 있는 시간(1단계 통과)
+    const fallback=feasible.length===0;                            // 필수가 전부 막힘 → 대안 안내 모드
+    const pool=feasible.length?feasible:scored.slice().sort(bySort);
+    // 카드 3장 = 결정 규칙의 3층 서사. 동률(완벽 여럿)은 안 띄우고(규칙2), 답변자 표시 시간은 점수가 올라 밀림(규칙1).
+    const card1=pool[0];
+    const costed=pool.filter(c=>c!==card1 && c.score>0); // 비용 있는 후보 — 2·3번은 여기서
+    const picks=[card1, ...costed.slice(0,2)];
+    if(picks.length<3) for(const c of pool){ if(picks.length>=3) break; if(!picks.includes(c)) picks.push(c); } // 비용 후보 2개 미만일 때만 완벽 후보로 채움(동률 카피 방어)
+    // 불변식 강제: fill이 완벽 후보를 비용 뒤에 붙일 수 있으므로, 순위 부여 직전 반드시 점수순 재정렬(카피가 순위를 말하므로 정렬 오류=문구 모순)
+    const out=picks.slice(0,3).sort(bySort).map((c,i)=>reasonOf(c, i, fallback));
+    out.fallback=fallback; out.empty=false; // 화면이 배너·빈상태를 읽는다
+    return out;
   }
-  function reasonOf(c, rank){ // rank 0=1위,1=2위,2=3위 — 모든 카드가 같은 이유 구조(필수 안심·순위·긍정)
-    const comfort = c.score===0 ? "없어" : "적어";       // 완벽=없어 · 절충=적어
+  function reasonOf(c, rank, fallback){ // rank 0/1/2 · fallback=필수가 전부 막힌 대안 모드
+    const comfort = c.softScore===0 ? "없어" : "적어";       // 하드 제외 소프트 불편 (완벽=없어·절충=적어)
     const order = rank===0 ? "가장 먼저" : rank===1 ? "이어서" : "그다음으로"; // 1위/2위/3위
-    const headline = "필수 참석자가 다 되고, 불편한 분도 "+comfort+" "+order+" 추천해요";
-    return {t:c.t, best:rank===0, headline, score:c.score};
+    const lead = fallback
+      ? "필수 참석자 "+c.reqBlocked+"명이 안 되지만, 불편한 분도 "+comfort   // 사실+대안 (이름은 배너 몫)
+      : "필수 참석자가 다 되고, 불편한 분도 "+comfort;
+    const headline = lead+" "+order+" 추천해요";
+    return {t:c.t, best:rank===0, headline, score:c.score, softScore:c.softScore, reqBlocked:c.reqBlocked};
   }
-  function buildTimes2(reqId, allWord){
+  function buildTimes2(reqId){
     const dec=store[reqId].declined; // 은솔(선택 참석)이 빠지면 그의 사정·캘린더를 빼고 추천
-    return buildCandidates(dec?{time:[0,0,0],days:emptyDays()}:store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional, dec?"my":null);
+    return buildCandidates(dec?{time:[0,0,0],days:emptyDays()}:store[reqId], REQS[reqId].durH, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional, dec?"my":null);
   }
   let TIMES2=[];
   function tcInner(x){ // 모든 카드가 같은 구조로 이유를 말한다 (순위는 문구·배지로 구분)
@@ -2243,15 +2257,32 @@
     }, 450);
   }
 
+  // 결과 화면 크롬: 빈 시간(0개)·필수 전부 불가(배너+이름)·정상 서브카피를 한 곳에서 (H5: 한 상태 단일 출처)
+  function resultsChrome(o){
+    const bn=document.getElementById(o.bannerId), sub=document.getElementById(o.subId);
+    const tm=document.getElementById(o.timesId), cf=document.getElementById(o.confirmId), why=document.getElementById(o.whyId);
+    const show=el=>{ if(el) el.hidden=false; }, hide=el=>{ if(el) el.hidden=true; };
+    if(o.list.empty){ // 빈 시간 자체가 0 — 확정할 게 없으니 카드·버튼 감춤
+      bn.innerHTML="<b>이번 주엔 모두가 함께 비는 시간이 없어요.</b> 다들 일정이 겹쳐서, 기간을 넓혀 다시 물어보는 게 좋겠어요.";
+      show(bn); hide(sub); hide(tm); hide(cf); hide(why); return;
+    }
+    show(tm); show(cf); show(why);
+    if(o.list.fallback){ // 필수 참석자가 전부 막힘 — 익명 깨고 이름 밝히되 사실+대안(비난 금지)
+      bn.innerHTML="<b>"+o.blocked+"님은 이번 주에 가능한 시간이 없어요.</b> 그래도 나머지 분들 기준으로 가장 나은 시간을 골랐어요.";
+      show(bn); hide(sub); return;
+    }
+    hide(bn); show(sub);
+    const base=(o.list[0]&&o.list[0].score>0)
+      ? "모두에게 완벽한 시간은 없어서, 가장 적게 부딪히는 순서로 골랐어요."
+      : o.cnt+"의 캘린더와 알려준 사정을 반영했어요.";
+    sub.textContent=base+(o.declined?" 선택 참석 한 명은 이번엔 빠져요.":"");
+  }
   function openS2Results(id){
     s2ActiveMeet=id;
     const r=REQS[id], dec=store[id].declined, cnt=((r.total+1)-(dec?1:0))+"명"; // 빠지면 인원 −1
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
-    TIMES2=buildTimes2(id, cnt); pick2=0; renderTimes2();
-    const s2SubBase=(TIMES2[0]&&TIMES2[0].score>0)
-      ? "모두에게 완벽한 시간은 없어서, 가장 적게 부딪히는 순서로 골랐어요."
-      : cnt+"의 캘린더와 알려준 사정을 반영했어요.";
-    document.getElementById("s2ResultsSub").textContent=s2SubBase+(dec?" 선택 참석 한 명은 이번엔 빠져요.":"");
+    TIMES2=buildTimes2(id); pick2=0; renderTimes2();
+    resultsChrome({list:TIMES2, subId:"s2ResultsSub", bannerId:"s2Banner", timesId:"times2", confirmId:"s2Confirm", whyId:"s2WhyOpen", blocked:"장은솔", cnt, declined:dec});
     notif.classList.remove("show");
     s2Go("results","fwd");
   }
@@ -2276,6 +2307,7 @@
   document.getElementById("notif1Main").addEventListener("click",()=>{ notif1.classList.remove("show"); if(notif1Tap) notif1Tap(); });
   document.getElementById("notif1X").addEventListener("click",()=>{ notif1.classList.remove("show"); }); // 닫기만 — 기록은 벨에 남는다
   document.getElementById("s2Confirm").addEventListener("click",()=>{
+    if(!TIMES2.length) return; // 빈 시간 상태 방어
     const id=s2ActiveMeet, t=TIMES2[pick2].t, r=REQS[id];
     store[id].confirmedAt=t; // 확정 — 양쪽 리스트를 떠나 캘린더·알림함에 산다
     document.getElementById("s2DoneSub").innerHTML=t+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
@@ -2512,16 +2544,14 @@
     document.getElementById("hostCtx").innerHTML="<b>"+h.name+" · "+h.dur+"</b> · "+h.span;
     const dec=hostStore[hid].declined, cnt=((h.total+1)-(dec?1:0))+"명"; // 지수(선택 참석)가 빠지면 인원 −1
     const signals=(h.jiIn && !dec)?hostStore[hid]:{time:[0,0,0],days:emptyDays()};
-    HOST_TIMES=buildCandidates(signals, h.durH, cnt, hid, h.daysAllowed, h.jiReq, dec?"ji":null); // 빠진 지수의 캘린더 제외
+    HOST_TIMES=buildCandidates(signals, h.durH, hid, h.daysAllowed, h.jiReq, dec?"ji":null); // 빠진 지수의 캘린더 제외
     hostPick=0;
     buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
-    const hostSubBase=(HOST_TIMES[0]&&HOST_TIMES[0].score>0)
-      ? "모두에게 완벽한 시간은 없어서, 가장 적게 부딪히는 순서로 골랐어요."
-      : cnt+"의 캘린더와 알려준 사정을 반영했어요.";
-    document.getElementById("hostSub").textContent=hostSubBase+(dec?" 선택 참석 한 명은 이번엔 빠져요.":"");
+    resultsChrome({list:HOST_TIMES, subId:"hostSub", bannerId:"hostBanner", timesId:"times", confirmId:"hostConfirm", whyId:"hostWhyOpen", blocked:"김지수", cnt, declined:dec});
     goStep("host","fwd");
   }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
+    if(!HOST_TIMES.length) return; // 빈 시간 상태 방어
     const hid=hostActive, h=HOSTED[hid]; if(!h||h.confirmedAt) return;
     h.confirmedAt=HOST_TIMES[hostPick].t;
     document.getElementById("hostDoneSub").innerHTML=h.confirmedAt+"으로 잡았어요.<br>참석자 모두에게 알릴게요.";
