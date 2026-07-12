@@ -2154,7 +2154,8 @@
     if(c.score===0) headline = best ? allWord+" 모두 편한 시간이에요" : "이 시간도 모두 편해요";
     else if(best) headline = "지금 가장 잘 맞는 시간이에요";
     else if(!hasReq) headline = "필수 참석자는 모두 편해요";
-    else headline = "필수 참석자도 대부분 편해요";
+    else { const req=c.bad.filter(b=>b.role==="req"), md=Math.max(...req.map(b=>b.deg)); // 필수를 중심에: 그들의 불편을 정면으로
+      headline = "필수 참석 "+req.length+"명이 "+degPhrase(md,"req"); }
     const detail=[];
     if(c.score===0){ detail.push("필수·선택 참석자 모두 편한 시간이에요"); }
     else {
