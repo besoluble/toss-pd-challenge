@@ -559,8 +559,8 @@
   .tc-top{ display:flex; align-items:center; gap:8px; }
   .tc-time{ font-size:16px; font-weight:700; color:var(--ink); }
   .tc-pill{ font-size:11px; font-weight:700; color:#fff; background:var(--blue); padding:3px 8px; border-radius:999px; }
-  .tc-checks{ display:flex; flex-direction:column; gap:5px; margin-top:6px; }
-  .tc-cline{ display:flex; align-items:flex-start; gap:7px; font-size:13px; color:var(--ink-3); line-height:1.45; }
+  .tc-checks{ display:flex; flex-direction:column; gap:4px; margin-top:5px; }
+  .tc-cline{ display:flex; align-items:flex-start; gap:7px; font-size:13px; color:var(--ink-3); line-height:1.4; }
   .tc-cline svg{ flex:none; margin-top:1px; }
   .time-card[aria-checked="true"] .tc-cline{ color:var(--ink-2); }
   .why-list{ display:block; margin-top:18px; } /* 타이틀과 단계 목록 사이 숨 */
@@ -2170,8 +2170,8 @@
     return buildCandidates(dec?{time:[0,0,0],days:emptyDays()}:store[reqId], REQS[reqId].durH, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional, dec?"my":null);
   }
   let TIMES2=[];
-  const CK_ICON='<svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M3.5 9.3l3.4 3.4L14.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; // 충족(글자색 따라감)
-  const WARN_ICON='<svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.2" stroke="#B7791F" stroke-width="1.5"/><path d="M9 5.4v4.2" stroke="#B7791F" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="12.4" r=".95" fill="#B7791F"/></svg>'; // 주의(앰버·비경고)
+  const CK_ICON='<svg viewBox="0 0 18 18" width="13" height="13" fill="none" aria-hidden="true"><path d="M3.5 9.3l3.4 3.4L14.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; // 충족(글자색 따라감)
+  const WARN_ICON='<svg viewBox="0 0 18 18" width="13" height="13" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.2" stroke="#B7791F" stroke-width="1.5"/><path d="M9 5.4v4.2" stroke="#B7791F" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="12.4" r=".95" fill="#B7791F"/></svg>'; // 주의(앰버·비경고)
   function tcInner(x){ // 이유 = 상태 반응형 체크리스트 2줄
     const rows=x.lines.map(l=>'<span class="tc-cline">'+(l.icon==="warn"?WARN_ICON:CK_ICON)+'<span>'+l.text+'</span></span>').join('');
     return '<span class="tc-top"><span class="tc-time">'+x.t+'</span>'+(x.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
