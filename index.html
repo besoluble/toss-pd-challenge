@@ -568,11 +568,11 @@
   .why-body{ margin-top:8px; max-height:230px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
   .why-body::-webkit-scrollbar{ display:none; }
   .why-anon{ font-size:12px; color:var(--ink-4); margin:0 0 12px; line-height:1.5; }
-  .why-list{ display:flex; flex-direction:column; gap:13px; }
-  .why-item{ display:flex; flex-direction:column; gap:3px; }
-  .why-time{ font-size:13px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px; }
-  .why-rec{ font-size:10px; font-weight:700; color:#fff; background:var(--blue); padding:2px 7px; border-radius:999px; }
-  .why-line{ font-size:12.5px; color:var(--ink-3); line-height:1.5; }
+  .why-list{ display:flex; flex-direction:column; gap:6px; }
+  .why-intro{ font-size:12px; font-weight:700; color:var(--ink-2); margin:0 0 2px; }
+  .why-line{ font-size:12.5px; color:var(--ink-3); line-height:1.5; padding-left:2px; }
+  .why-concl{ font-size:12.5px; color:var(--ink-2); margin:12px 0 0; line-height:1.6; }
+  .why-concl b{ color:var(--ink); font-weight:700; }
   .done-body h2{ font-size:21px; font-weight:700; margin:0; text-wrap:balance; }
   .done-body p{ font-size:14.5px; color:var(--ink-3); margin:0; line-height:1.55; text-wrap:pretty; }
 
@@ -2175,14 +2175,24 @@
   }
   function renderTimes2(){ buildTimeCards(document.getElementById("times2"), TIMES2, ()=>pick2, i=>pick2=i); }
   // 하단 통합 근거 패널 — 세 후보의 근거를 한 곳에서 비교 (익명 안내가 머리글)
-  function renderWhyList(el, list){
-    el.replaceChildren();
-    list.forEach(x=>{
-      const row=document.createElement("div"); row.className="why-item";
-      row.innerHTML='<b class="why-time">'+x.t+(x.best?'<span class="why-rec">추천</span>':'')+'</b>'+
-        x.detail.map(l=>'<span class="why-line">'+l+'</span>').join('');
-      el.appendChild(row);
+  // 시스템이 저울질한 사정 요약 = 큐레이션 배경 + 답변자 실제 신호 (규칙1·2를 펼침에서 증명)
+  function terrainSummary(sig, answererReq){
+    const arole=answererReq?"req":"opt", all=[];
+    BACKDROP.forEach(b=> all.push({role:b.role, label:b.axis==="time"?SLOT_NAME[b.slot]:(b.day+"요일"), deg:b.deg}));
+    [0,1,2].forEach(i=>{ if((sig.time[i]||0)>0) all.push({role:arole, label:SLOT_NAME[i], deg:sig.time[i]}); });
+    DAYS.forEach(d=>{ if((sig.days[d]||0)>0) all.push({role:arole, label:d+"요일", deg:sig.days[d]}); });
+    const g={};
+    all.forEach(x=>{ const k=x.role+"|"+x.label; (g[k]=g[k]||{role:x.role,label:x.label,degs:[]}).degs.push(x.deg); });
+    return Object.values(g).sort((a,b)=> (a.role==="req"?0:1)-(b.role==="req"?0:1) || Math.max(...b.degs)-Math.max(...a.degs)).map(x=>{
+      const md=Math.max(...x.degs), rt=x.role==="req"?"필수 참석":"선택 참석";
+      return x.label+" · "+rt+" "+x.degs.length+"명이 "+degPhrase(md,x.role);
     });
+  }
+  function renderWhy(pfx, sig, answererReq, bestTime){
+    const terrain=terrainSummary(sig, answererReq);
+    let html='<p class="why-intro">이런 사정까지 저울질했어요</p>'+terrain.map(l=>'<span class="why-line">'+l+'</span>').join('');
+    if(bestTime) html+='<p class="why-concl">필수 참석자가 안 되는 시간은 빼고, 이 사정들을 반영해<br><b>'+bestTime+'</b>을 가장 먼저 추천해요</p>';
+    document.getElementById(pfx+"WhyList").innerHTML=html;
   }
   function resetWhy(pfx){ const b=document.getElementById(pfx+"WhyBody"), t=document.getElementById(pfx+"WhyToggle"); b.hidden=true; t.classList.remove("open"); t.setAttribute("aria-expanded","false"); }
   function wireWhy(pfx){
@@ -2257,6 +2267,7 @@
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
     document.getElementById("s2ResultsSub").textContent=allOf(r)+"의 캘린더와 알려준 사정을 반영했어요."+(store[id].declined?" 선택 참석 한 명은 이번엔 빠져요.":"");
     TIMES2=buildTimes2(id, allOf(r)); pick2=0; renderTimes2();
+    renderWhy("s2", store[id], !r.optional, TIMES2[0]&&TIMES2[0].t); resetWhy("s2");
     notif.classList.remove("show");
     s2Go("results","fwd");
   }
@@ -2519,7 +2530,7 @@
     HOST_TIMES=buildCandidates(signals, h.durH, (h.total+1)+"명", hid, h.daysAllowed, h.jiReq);
     hostPick=0;
     buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
-    renderWhyList(document.getElementById("hostWhyList"), HOST_TIMES); resetWhy("host");
+    renderWhy("host", signals, h.jiReq, HOST_TIMES[0]&&HOST_TIMES[0].t); resetWhy("host");
     goStep("host","fwd");
   }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
