@@ -561,6 +561,11 @@
   .tc-pill{ font-size:11px; font-weight:700; color:#fff; background:var(--blue); padding:3px 8px; border-radius:999px; }
   .tc-why{ font-size:13px; color:var(--ink-3); }
   .time-card[aria-checked="true"] .tc-why{ color:var(--ink-2); }
+  .tc-detail{ display:flex; flex-direction:column; gap:6px; align-self:stretch; margin-top:10px; padding-top:10px; border-top:1px solid rgba(16,24,40,.07); }
+  .tc-line{ font-size:12.5px; color:var(--ink-3); line-height:1.5; }
+  .tc-more{ margin-top:9px; display:inline-flex; align-items:center; gap:3px; border:0; background:none; font-family:inherit; font-size:12px; font-weight:600; color:#1B64DA; cursor:pointer; padding:2px 0; }
+  .tc-more svg{ width:14px; height:14px; transition:transform .2s var(--ease); }
+  .tc-more.open svg{ transform:rotate(180deg); }
   .done-body h2{ font-size:21px; font-weight:700; margin:0; text-wrap:balance; }
   .done-body p{ font-size:14.5px; color:var(--ink-3); margin:0; line-height:1.55; text-wrap:pretty; }
 
@@ -2065,61 +2070,94 @@
 
   // 방금 참석자가 흘린 사정(시간대+요일)이 후보·근거에 그대로 반영되고,
   // 후보는 두 사람의 캘린더·기확정 회의와 겹치지 않는 '진짜 빈 칸'에서만 나온다
-  function buildCandidates(s, durH, allWord, excludeKey, allowed){
-    const SLOT_NAME={0:"이른 아침",1:"점심 직후",2:"늦은 오후"};
-    const SLOT_OBJ ={0:"을",1:"를",2:"를"}, SLOT_TOP={0:"은",1:"는",2:"는"};
+  // 큐레이션 배경 — 다른 참석자들의 사정(역할·강도 태그). '복합 고려'가 드러나게 세팅(규칙2). 답변자 신호가 이 위에 얹힌다(규칙1).
+  const SLOT_NAME={0:"이른 아침",1:"점심 직후",2:"늦은 오후"};
+  const BACKDROP=[
+    {role:"req", axis:"time", slot:1, deg:2}, // 필수 A: 점심 직후 웬만하면
+    {role:"req", axis:"time", slot:1, deg:1}, // 필수 B: 점심 직후 살짝
+    {role:"req", axis:"day",  day:"금", deg:2}, // 필수 C: 금요일 웬만하면
+    {role:"opt", axis:"time", slot:2, deg:3}, // 선택 D: 늦은 오후 참석 불가(선택이라 배제 안 함)
+  ];
+  const roleW=r=>r==="req"?3:1; // 필수 불편 ≫ 선택 불편 (주최자 판단 우선순위)
+  function degPhrase(deg, role){
+    if(deg===3) return role==="opt"?"오기 어려워요":"안 된다고 했어요";
+    return deg===2?"웬만하면 피하고 싶어 해요":"살짝 아쉬워해요";
+  }
+  // 후보 슬롯의 점수 = Σ(역할가중치 × 강도) — 1~4단계 결정 규칙의 가중합 표현
+  function buildCandidates(s, durH, allWord, excludeKey, allowed, answererReq){
     const taken=[{d:1,h:11,durH:1}]; // 디자인 시스템 리뷰(기확정)
-    Object.keys(REQS).forEach(x=>{
-      const ca=store[x].confirmedAt;
-      if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:REQS[x].durH});
-    });
-    Object.keys(HOSTED).forEach(x=>{
-      const ca=HOSTED[x].confirmedAt;
-      if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:HOSTED[x].durH});
-    });
+    Object.keys(REQS).forEach(x=>{ const ca=store[x].confirmedAt; if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:REQS[x].durH}); });
+    Object.keys(HOSTED).forEach(x=>{ const ca=HOSTED[x].confirmedAt; if(x!==excludeKey && ca && SLOT_MAP[ca]) taken.push({...SLOT_MAP[ca], durH:HOSTED[x].durH}); });
     const busy=MY_EVENTS.concat(JI_EVENTS);
-    const conflict=c=>
-      busy.some(e=>e.d===c.d && c.h<e.e && c.h+durH>e.s) ||
-      taken.some(e=>e.d===c.d && c.h<e.h+e.durH && c.h+durH>e.h);
-    const okDays=allowed||DAYS;
-    const scored=MASTER.filter(c=>okDays.includes(c.day) && !conflict(c) && c.h+durH<=18).map(c=>{
-      const dp=s.days[c.day]||0, tp=c.slot==null?0:(s.time[c.slot]||0);
-      const p=Math.max(dp,tp);
-      const src = dp>=tp
-        ? {name:c.day+"요일", obj:"을", top:"은", v:dp}
-        : {name:SLOT_NAME[c.slot], obj:SLOT_OBJ[c.slot], top:SLOT_TOP[c.slot], v:tp};
-      return {...c, p, src};
-    }).sort((a,b)=> a.p-b.p || (Math.abs(a.h-10)-Math.abs(b.h-10)) || a.d-b.d); // 동률이면 오전 10시 근처·이른 요일 선호
-    const why=(c,i)=>{
-      if(c.p===0) return i===0?allWord+" 모두 편한 시간이에요":"필수 참석자는 모두 편한 시간이에요";
-      if(c.p===3) return "한 명이 "+c.src.name+c.src.top+" 안 된다고 했어요";
-      return "한 명이 "+c.src.name+c.src.obj+" "+(c.p===2?"웬만하면":"살짝")+" 피하고 싶어 해요";
-    };
-    // 1·2위 = 페널티 최소 / 3위 = 사용자 신호를 '설명'하는 후보(왜 밀렸는지 근거로 보여줌)
-    const top2=scored.slice(0,2);
-    const maxSig=Math.max(0, ...Object.values(s.days||{}), ...s.time);
-    let third=scored[2];
-    if(maxSig>0){
-      const echo=[...scored].reverse().find(c=>c.p===maxSig && !top2.includes(c));
-      if(echo) third=echo;
+    const conflict=c=> busy.some(e=>e.d===c.d && c.h<e.e && c.h+durH>e.s) || taken.some(e=>e.d===c.d && c.h<e.h+e.durH && c.h+durH>e.h);
+    const okDays=allowed||DAYS, arole=answererReq?"req":"opt";
+    const cands=MASTER.filter(c=>okDays.includes(c.day) && !conflict(c) && c.h+durH<=18).map(c=>{
+      const bad=[];
+      BACKDROP.forEach(b=>{
+        if(b.axis==="time" && b.slot===c.slot) bad.push({role:b.role, deg:b.deg, label:SLOT_NAME[b.slot]});
+        if(b.axis==="day"  && b.day===c.day)   bad.push({role:b.role, deg:b.deg, label:c.day+"요일"});
+      });
+      const tp=c.slot==null?0:(s.time[c.slot]||0), dp=s.days[c.day]||0;
+      if(tp>0) bad.push({role:arole, deg:tp, label:SLOT_NAME[c.slot], me:true}); // 답변자(실사용자) 신호
+      if(dp>0) bad.push({role:arole, deg:dp, label:c.day+"요일", me:true});
+      const hard=bad.some(b=>b.role==="req" && b.deg===3); // 필수 '안 돼요' = 후보 제외(1단계)
+      const score=bad.reduce((a,b)=>a+roleW(b.role)*b.deg,0);
+      return {...c, bad, hard, score};
+    }).filter(c=>!c.hard).sort((a,b)=> a.score-b.score || Math.abs(a.h-10)-Math.abs(b.h-10) || a.d-b.d);
+    const top2=cands.slice(0,2);
+    let third=cands[2];
+    const contrast=cands.find(c=>c.score>0 && c!==top2[0] && c!==top2[1]); // 3번째는 '비용 있는' 후보를 보여 복합 고려를 드러냄
+    if(contrast && (!third || third.score===0)) third=contrast;
+    return [...top2, third].filter(Boolean).map((c,i)=>reasonOf(c, i===0, allWord));
+  }
+  function reasonOf(c, best, allWord){
+    const hasReq=c.bad.some(b=>b.role==="req");
+    let headline;
+    if(c.score===0) headline = best ? allWord+" 모두 편한 시간이에요" : "모두 편한 시간이에요";
+    else if(!hasReq) headline = "필수 참석자는 모두 편해요";
+    else headline = best ? "지금 가장 잘 맞는 시간이에요" : "필수 참석자도 대부분 편해요";
+    const detail=[];
+    if(c.score===0){ detail.push("필수·선택 참석자 모두 편한 시간이에요"); }
+    else {
+      if(!hasReq) detail.push("필수 참석자는 모두 편해요");
+      const g={};
+      c.bad.forEach(b=>{ const k=b.role+"|"+b.label; (g[k]=g[k]||{role:b.role,label:b.label,degs:[]}).degs.push(b.deg); });
+      Object.values(g).forEach(x=>{
+        const md=Math.max(...x.degs), roleTxt=x.role==="req"?"필수 참석":"선택 참석";
+        detail.push(x.label+" · "+roleTxt+" "+x.degs.length+"명이 "+degPhrase(md,x.role));
+      });
     }
-    return [...top2, third].filter(Boolean).map((c,i)=>({t:c.t, why:why(c,i), best:i===0}));
+    return {t:c.t, best, headline, detail};
   }
   function buildTimes2(reqId, allWord){
-    return buildCandidates(store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed);
+    return buildCandidates(store[reqId], REQS[reqId].durH, allWord, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional);
   }
   let TIMES2=[];
-  function renderTimes2(){
-    const box=document.getElementById("times2"); box.replaceChildren();
-    TIMES2.forEach((h,i)=>{
-      const c=document.createElement("button"); c.className="time-card"; c.type="button"; c.setAttribute("role","radio");
-      c.setAttribute("aria-checked", i===pick2?"true":"false");
-      c.innerHTML='<span class="tc-top"><span class="tc-time">'+h.t+'</span>'+(h.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
-        '<span class="tc-why">'+h.why+'</span>';
-      c.addEventListener("click",()=>{ pick2=i; renderTimes2(); });
+  function tcInner(x){
+    const has=x.detail && x.detail.length;
+    return '<span class="tc-top"><span class="tc-time">'+x.t+'</span>'+(x.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
+      '<span class="tc-why">'+x.headline+'</span>'+
+      (has?'<span class="tc-detail" hidden>'+x.detail.map(l=>'<span class="tc-line">'+l+'</span>').join('')+'</span>'+
+        '<button type="button" class="tc-more"><span class="tc-more-t">이유 자세히 보기</span><svg viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>':'');
+  }
+  function buildTimeCards(box, list, getPick, setPick){ // 접힘=확신 한 줄, 펼침=역할별 내역 (규칙3)
+    box.replaceChildren();
+    list.forEach((x,i)=>{
+      const c=document.createElement("div"); c.className="time-card"; c.setAttribute("role","radio"); c.tabIndex=0;
+      c.setAttribute("aria-checked", i===getPick()?"true":"false");
+      c.innerHTML=tcInner(x);
+      c.addEventListener("click",()=>{ setPick(i); [...box.children].forEach((el,j)=>el.setAttribute("aria-checked", j===i?"true":"false")); });
+      c.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ if(e.preventDefault)e.preventDefault(); c.click(); } });
+      const more=c.querySelector(".tc-more");
+      if(more && more.addEventListener) more.addEventListener("click",e=>{ if(e.stopPropagation)e.stopPropagation();
+        const d=c.querySelector(".tc-detail"), open=d.hidden;
+        d.hidden=!open; more.classList.toggle("open", open);
+        const t=c.querySelector(".tc-more-t"); if(t) t.textContent=open?"이유 접기":"이유 자세히 보기";
+      });
       box.appendChild(c);
     });
   }
+  function renderTimes2(){ buildTimeCards(document.getElementById("times2"), TIMES2, ()=>pick2, i=>pick2=i); }
 
   const notif=document.getElementById("notif");
   let notif2Tap=null;
@@ -2446,20 +2484,11 @@
     hostActive=hid;
     document.getElementById("hostCtx").innerHTML="<b>"+h.name+" · "+h.dur+"</b> · "+h.span;
     const signals=h.jiIn?hostStore[hid]:{time:[0,0,0],days:emptyDays()};
-    HOST_TIMES=buildCandidates(signals, h.durH, (h.total+1)+"명", hid, h.daysAllowed);
+    HOST_TIMES=buildCandidates(signals, h.durH, (h.total+1)+"명", hid, h.daysAllowed, h.jiReq);
     hostPick=0;
-    times.replaceChildren();
-    HOST_TIMES.forEach((x,i)=>{
-      const c=document.createElement("button"); c.className="time-card"; c.type="button"; c.setAttribute("role","radio");
-      c.innerHTML='<span class="tc-top"><span class="tc-time">'+x.t+'</span>'+(x.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
-        '<span class="tc-why">'+x.why+'</span>';
-      c.addEventListener("click",()=>{ hostPick=i; renderTimes(); });
-      times.appendChild(c);
-    });
-    renderTimes();
+    buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
     goStep("host","fwd");
   }
-  function renderTimes(){ [...times.children].forEach((c,i)=>c.setAttribute("aria-checked", i===hostPick?"true":"false")); }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
     const hid=hostActive, h=HOSTED[hid]; if(!h||h.confirmedAt) return;
     h.confirmedAt=HOST_TIMES[hostPick].t;
