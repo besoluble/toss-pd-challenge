@@ -2408,8 +2408,9 @@
     minusEl.addEventListener("click",()=>{ m=Math.max(10,m-10); render(); });
     plusEl.addEventListener("click",()=>{ m=Math.min(180,m+10); render(); });
     render();
+    return { reset(){ m=30; render(); } }; // 새 폼 열 때 기본값 복귀
   }
-  makeStepper(document.getElementById("durMinus"), document.getElementById("durVal"), document.getElementById("durPlus"),
+  const hostDurStepper=makeStepper(document.getElementById("durMinus"), document.getElementById("durVal"), document.getElementById("durPlus"),
     (s,m)=>{ meet.dur=s; meet.durMin=m; });
 
   // 언제: 프리셋 + 기간 캘린더 (바텀시트) — 두 디바이스 공용 팩토리. 모든 날짜는 TODAY에서 파생 (하드코딩 금지)
@@ -2487,7 +2488,15 @@
   makeWhenPicker(
     {modal:"whenModal", grid:"calGrid", title:"calTitle", prev:"calPrev", next:"calNext",
      presetRow:"presetRow", btn:"whenBtn", dim:"whenDim", ok:"whenOk"},
-    (s,sd,ed)=>{ meet.span=s; meet.spanS=sd; meet.spanE=ed; whenLabel.textContent=s; whenLabel.classList.remove("ph"); });
+    (s,sd,ed)=>{ meet.span=s; meet.spanS=sd; meet.spanE=ed; meet.spanPicked=true; whenLabel.textContent=s; whenLabel.classList.remove("ph"); updateHostCreateCta(); });
+  const hostNextBtn=document.getElementById("hostNext");
+  function updateHostCreateCta(){ // 참석자 검증(updateHostCta)과 같은 패턴 — 목적·기간 필수
+    const nameOk=document.getElementById("meetName").value.trim().length>0, spanOk=!!meet.spanPicked;
+    hostNextBtn.disabled=!(nameOk&&spanOk); hostNextBtn.style.opacity=hostNextBtn.disabled?".5":"";
+    hostNextBtn.textContent=!nameOk?"회의 목적을 입력해주세요":!spanOk?"기간을 골라주세요":"다음";
+  }
+  document.getElementById("meetName").addEventListener("input", updateHostCreateCta);
+  updateHostCreateCta();
   hostSendBtn.addEventListener("click",()=>{
     const n=includedCount(); if(!n) return;
     const hid="h"+(++hostSeq);
@@ -2549,7 +2558,8 @@
   document.getElementById("fabNew").addEventListener("click",()=>{ // 열 때마다 fresh 폼
     document.getElementById("meetName").value="";
     whenLabel.textContent="기간을 골라주세요"; whenLabel.classList.add("ph");
-    meet.span=SPAN_DEFAULT; meet.spanS=PRESETS[1].s; meet.spanE=PRESETS[1].e;
+    meet.span=SPAN_DEFAULT; meet.spanS=PRESETS[1].s; meet.spanE=PRESETS[1].e; meet.spanPicked=false;
+    hostDurStepper.reset(); updateHostCreateCta();
     goStep("hostCreate","fwd");
   });
 
@@ -2612,18 +2622,27 @@
   document.getElementById("s2InviteBtn").addEventListener("click",()=>{
     document.getElementById("s2InviteNote").classList.add("show");
   });
-  makeStepper(document.getElementById("s2DurMinus"), document.getElementById("s2DurVal"), document.getElementById("s2DurPlus"),
+  const s2DurStepper=makeStepper(document.getElementById("s2DurMinus"), document.getElementById("s2DurVal"), document.getElementById("s2DurPlus"),
     (s,m)=>{ s2Meet.dur=s; s2Meet.durMin=m; });
   makeWhenPicker(
     {modal:"s2WhenModal", grid:"s2CalGrid", title:"s2CalTitle", prev:"s2CalPrev", next:"s2CalNext",
      presetRow:"s2PresetRow", btn:"s2WhenBtn", dim:"s2WhenDim", ok:"s2WhenOk"},
-    (s,sd,ed)=>{ s2Meet.span=s; s2Meet.spanS=sd; s2Meet.spanE=ed; const l=document.getElementById("s2WhenLabel"); l.textContent=s; l.classList.remove("ph"); });
+    (s,sd,ed)=>{ s2Meet.span=s; s2Meet.spanS=sd; s2Meet.spanE=ed; s2Meet.spanPicked=true; const l=document.getElementById("s2WhenLabel"); l.textContent=s; l.classList.remove("ph"); updateS2CreateCta(); });
   { const l=document.getElementById("s2WhenLabel"); l.textContent="기간을 골라주세요"; l.classList.add("ph"); } // 초기 placeholder
+  const s2NextBtn=document.getElementById("s2CreateNext");
+  function updateS2CreateCta(){
+    const nameOk=document.getElementById("s2MeetName").value.trim().length>0, spanOk=!!s2Meet.spanPicked;
+    s2NextBtn.disabled=!(nameOk&&spanOk); s2NextBtn.style.opacity=s2NextBtn.disabled?".5":"";
+    s2NextBtn.textContent=!nameOk?"회의 목적을 입력해주세요":!spanOk?"기간을 골라주세요":"다음";
+  }
+  document.getElementById("s2MeetName").addEventListener("input", updateS2CreateCta);
+  updateS2CreateCta();
 
   document.getElementById("s2FabNew").addEventListener("click",()=>{ // 열 때마다 fresh 폼
     document.getElementById("s2MeetName").value="";
     const l=document.getElementById("s2WhenLabel"); l.textContent="기간을 골라주세요"; l.classList.add("ph");
-    s2Meet.span=SPAN_DEFAULT; s2Meet.spanS=PRESETS[1].s; s2Meet.spanE=PRESETS[1].e;
+    s2Meet.span=SPAN_DEFAULT; s2Meet.spanS=PRESETS[1].s; s2Meet.spanE=PRESETS[1].e; s2Meet.spanPicked=false;
+    s2DurStepper.reset(); updateS2CreateCta();
     s2Go("create","fwd");
   });
   document.getElementById("s2CreateBack").addEventListener("click",()=>s2Go("home","back"));
