@@ -559,8 +559,10 @@
   .tc-top{ display:flex; align-items:center; gap:8px; }
   .tc-time{ font-size:16px; font-weight:700; color:var(--ink); }
   .tc-pill{ font-size:11px; font-weight:700; color:#fff; background:var(--blue); padding:3px 8px; border-radius:999px; }
-  .tc-why{ font-size:13px; color:var(--ink-3); }
-  .time-card[aria-checked="true"] .tc-why{ color:var(--ink-2); }
+  .tc-checks{ display:flex; flex-direction:column; gap:5px; margin-top:6px; }
+  .tc-cline{ display:flex; align-items:flex-start; gap:7px; font-size:13px; color:var(--ink-3); line-height:1.45; }
+  .tc-cline svg{ flex:none; margin-top:1px; }
+  .time-card[aria-checked="true"] .tc-cline{ color:var(--ink-2); }
   .why-list{ display:block; margin-top:18px; } /* 타이틀과 단계 목록 사이 숨 */
   .why-stage{ display:flex; flex-direction:column; gap:3px; }
   .why-stage + .why-stage{ margin-top:15px; }
@@ -2154,20 +2156,26 @@
   }
   function reasonOf(c, rank, fallback){ // rank 0/1/2 · fallback=필수가 전부 막힌 대안 모드
     const order = rank===0 ? "가장 먼저" : rank===1 ? "이어서" : "그다음으로"; // 1위/2위/3위
-    const lead = fallback
-      ? "필수 참석자 "+c.reqBlocked+"명이 안 되지만, 나머지 분들은 "+(c.softScore===0?"다 편해서":"대체로 편해서") // 부재자 제외, 남은 분들 기준
-      : "필수 참석자가 다 되고, 불편한 분도 "+(c.softScore===0?"없어":"적어");
-    const headline = lead+" "+order+" 추천해요";
-    return {t:c.t, best:rank===0, headline, score:c.score, softScore:c.softScore, reqBlocked:c.reqBlocked};
+    // 이유 = 2줄 체크리스트. 아이콘은 조건 상태에 반응 — 충족=체크, 필수 불가=주의(부정에 체크가 붙는 모순 방지)
+    const l1 = fallback
+      ? {icon:"warn", text:"필수 참석자 "+c.reqBlocked+"명은 못 와요"}
+      : {icon:"ok",   text:"필수 참석자가 다 돼요"};
+    const l2 = fallback
+      ? {icon:"ok", text:"나머지 분들은 "+(c.softScore===0?"다":"대체로")+" 편해서 "+order+" 추천해요"}
+      : {icon:"ok", text:"불편한 분도 "+(c.softScore===0?"없어":"적어")+" "+order+" 추천해요"};
+    return {t:c.t, best:rank===0, lines:[l1,l2], score:c.score, softScore:c.softScore, reqBlocked:c.reqBlocked};
   }
   function buildTimes2(reqId){
     const dec=store[reqId].declined; // 은솔(선택 참석)이 빠지면 그의 사정·캘린더를 빼고 추천
     return buildCandidates(dec?{time:[0,0,0],days:emptyDays()}:store[reqId], REQS[reqId].durH, reqId, REQS[reqId].daysAllowed, !REQS[reqId].optional, dec?"my":null);
   }
   let TIMES2=[];
-  function tcInner(x){ // 모든 카드가 같은 구조로 이유를 말한다 (순위는 문구·배지로 구분)
+  const CK_ICON='<svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><path d="M3.5 9.3l3.4 3.4L14.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; // 충족(글자색 따라감)
+  const WARN_ICON='<svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.2" stroke="#B7791F" stroke-width="1.5"/><path d="M9 5.4v4.2" stroke="#B7791F" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="12.4" r=".95" fill="#B7791F"/></svg>'; // 주의(앰버·비경고)
+  function tcInner(x){ // 이유 = 상태 반응형 체크리스트 2줄
+    const rows=x.lines.map(l=>'<span class="tc-cline">'+(l.icon==="warn"?WARN_ICON:CK_ICON)+'<span>'+l.text+'</span></span>').join('');
     return '<span class="tc-top"><span class="tc-time">'+x.t+'</span>'+(x.best?'<span class="tc-pill">추천</span>':'')+'</span>'+
-      '<span class="tc-why">'+x.headline+'</span>';
+      '<span class="tc-checks">'+rows+'</span>';
   }
   function buildTimeCards(box, list, getPick, setPick){
     box.replaceChildren();
