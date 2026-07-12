@@ -561,12 +561,6 @@
   .tc-pill{ font-size:11px; font-weight:700; color:#fff; background:var(--blue); padding:3px 8px; border-radius:999px; }
   .tc-why{ font-size:13px; color:var(--ink-3); }
   .time-card[aria-checked="true"] .tc-why{ color:var(--ink-2); }
-  .why-panel{ align-self:stretch; }
-  .why-toggle{ display:inline-flex; align-items:center; gap:4px; border:0; background:none; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink-3); cursor:pointer; padding:4px 0; }
-  .why-toggle svg{ width:15px; height:15px; transition:transform .2s var(--ease); }
-  .why-toggle.open svg{ transform:rotate(180deg); }
-  .why-body{ margin-top:8px; max-height:230px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
-  .why-body::-webkit-scrollbar{ display:none; }
   .why-anon{ font-size:12px; color:var(--ink-4); margin:0 0 12px; line-height:1.5; }
   .why-list{ display:flex; flex-direction:column; gap:6px; }
   .why-intro{ font-size:12px; font-weight:700; color:var(--ink-2); margin:0 0 2px; }
@@ -821,16 +815,7 @@
           </div>
 
           <div class="foot">
-            <div class="why-panel">
-              <button type="button" class="why-toggle" id="hostWhyToggle" aria-expanded="false">
-                <span>어떻게 골랐는지 살펴보기</span>
-                <svg viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-              <div class="why-body" id="hostWhyBody" hidden>
-                <p class="why-anon">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
-                <div class="why-list" id="hostWhyList"></div>
-              </div>
-            </div>
+            <button type="button" class="foot-link" id="hostWhyOpen">어떻게 골랐는지 살펴보기</button>
             <button class="cta" id="hostConfirm">이 시간으로 확정하기</button>
           </div>
         </section>
@@ -932,6 +917,17 @@
               </div>
             </div>
             <button class="cta" id="profOk">확인</button>
+          </div>
+        </div>
+
+        <!-- 추천 근거 시트 -->
+        <div class="modal" id="hostWhyModal">
+          <div class="dim" id="hostWhyDim"></div>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="hostWhyTitle">
+            <h3 id="hostWhyTitle">어떻게 골랐는지</h3>
+            <p class="why-anon">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
+            <div class="why-list" id="hostWhyList"></div>
+            <button class="cta" id="hostWhyOk" style="margin-top:16px;">확인</button>
           </div>
         </div>
 
@@ -1170,16 +1166,7 @@
             <div class="times" id="times2" role="radiogroup" aria-label="추천 시간"></div>
           </div>
           <div class="foot">
-            <div class="why-panel">
-              <button type="button" class="why-toggle" id="s2WhyToggle" aria-expanded="false">
-                <span>어떻게 골랐는지 살펴보기</span>
-                <svg viewBox="0 0 20 20" fill="none"><path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-              <div class="why-body" id="s2WhyBody" hidden>
-                <p class="why-anon">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
-                <div class="why-list" id="s2WhyList"></div>
-              </div>
-            </div>
+            <button type="button" class="foot-link" id="s2WhyOpen">어떻게 골랐는지 살펴보기</button>
             <button class="cta" id="s2Confirm">이 시간으로 확정하기</button>
           </div>
         </section>
@@ -1272,6 +1259,17 @@
               </div>
             </div>
             <button class="cta" id="s2ProfOk">확인</button>
+          </div>
+        </div>
+
+        <!-- 추천 근거 시트 -->
+        <div class="modal" id="s2WhyModal">
+          <div class="dim" id="s2WhyDim"></div>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="s2WhyTitle">
+            <h3 id="s2WhyTitle">어떻게 골랐는지</h3>
+            <p class="why-anon">누가 어떤 사정을 알렸는지는 주최자도 볼 수 없어요</p>
+            <div class="why-list" id="s2WhyList"></div>
+            <button class="cta" id="s2WhyOk" style="margin-top:16px;">확인</button>
           </div>
         </div>
 
@@ -1455,7 +1453,7 @@
   function goStep(k, dir){ // dir: "fwd"(깊이 들어감) | "back"(얕아짐) | 생략(완료 = 페이드업)
     const el=stepEls[k];
     if(String(k)===curStep && el.classList.contains("active")){ // 같은 화면이면 애니메이션 재생 없이 정리만 (제자리 튕김 방지)
-      ["exitModal","whenModal","msgModal","cancelModal","evModal","profModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
+      ["exitModal","whenModal","msgModal","cancelModal","evModal","profModal","hostWhyModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
       return;
     }
     curStep=String(k);
@@ -1463,7 +1461,7 @@
     el.classList.add("active");
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
-    ["exitModal","whenModal","msgModal","cancelModal","evModal","profModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
+    ["exitModal","whenModal","msgModal","cancelModal","evModal","profModal","hostWhyModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
     resetMsgLinks(); // '보냈어요' 확인은 그 화면에서만
     screen.scrollTop=0;
     refreshScrollHints();
@@ -2015,7 +2013,7 @@
   function s2Go(k, dir){
     const el=s2Els[k];
     if(k===s2Cur && el.classList.contains("active")){ // 동일 화면 재진입 튕김 방지 (시트만 정리)
-      ["s2WhenModal","s2CancelModal","s2EvModal","s2ProfModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
+      ["s2WhenModal","s2CancelModal","s2EvModal","s2ProfModal","s2WhyModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
       return;
     }
     s2Cur=k;
@@ -2023,7 +2021,7 @@
     el.classList.add("active");
     if(dir==="fwd") el.classList.add("nav-fwd");
     else if(dir==="back") el.classList.add("nav-back");
-    ["s2WhenModal","s2CancelModal","s2EvModal","s2ProfModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
+    ["s2WhenModal","s2CancelModal","s2EvModal","s2ProfModal","s2WhyModal"].forEach(m=>document.getElementById(m).classList.remove("show")); // 화면 점프 시 열린 시트 정리
     refreshScrollHints();
   }
 
@@ -2194,10 +2192,11 @@
     if(bestTime) html+='<p class="why-concl">필수 참석자가 안 되는 시간은 빼고, 이 사정들을 반영해<br><b>'+bestTime+'</b>을 가장 먼저 추천해요</p>';
     document.getElementById(pfx+"WhyList").innerHTML=html;
   }
-  function resetWhy(pfx){ const b=document.getElementById(pfx+"WhyBody"), t=document.getElementById(pfx+"WhyToggle"); b.hidden=true; t.classList.remove("open"); t.setAttribute("aria-expanded","false"); }
   function wireWhy(pfx){
-    const t=document.getElementById(pfx+"WhyToggle"), b=document.getElementById(pfx+"WhyBody");
-    t.addEventListener("click",()=>{ const open=b.hidden; b.hidden=!open; t.classList.toggle("open",open); t.setAttribute("aria-expanded",open?"true":"false"); });
+    const m=()=>document.getElementById(pfx+"WhyModal");
+    document.getElementById(pfx+"WhyOpen").addEventListener("click",()=>m().classList.add("show"));
+    document.getElementById(pfx+"WhyDim").addEventListener("click",()=>m().classList.remove("show"));
+    document.getElementById(pfx+"WhyOk").addEventListener("click",()=>m().classList.remove("show"));
   }
   wireWhy("s2"); wireWhy("host");
 
@@ -2267,7 +2266,7 @@
     document.getElementById("s2Ctx").innerHTML=ctxOf(r);
     document.getElementById("s2ResultsSub").textContent=allOf(r)+"의 캘린더와 알려준 사정을 반영했어요."+(store[id].declined?" 선택 참석 한 명은 이번엔 빠져요.":"");
     TIMES2=buildTimes2(id, allOf(r)); pick2=0; renderTimes2();
-    renderWhy("s2", store[id], !r.optional, TIMES2[0]&&TIMES2[0].t); resetWhy("s2");
+    renderWhy("s2", store[id], !r.optional, TIMES2[0]&&TIMES2[0].t);
     notif.classList.remove("show");
     s2Go("results","fwd");
   }
@@ -2530,7 +2529,7 @@
     HOST_TIMES=buildCandidates(signals, h.durH, (h.total+1)+"명", hid, h.daysAllowed, h.jiReq);
     hostPick=0;
     buildTimeCards(times, HOST_TIMES, ()=>hostPick, i=>hostPick=i);
-    renderWhy("host", signals, h.jiReq, HOST_TIMES[0]&&HOST_TIMES[0].t); resetWhy("host");
+    renderWhy("host", signals, h.jiReq, HOST_TIMES[0]&&HOST_TIMES[0].t);
     goStep("host","fwd");
   }
   document.getElementById("hostConfirm").addEventListener("click",()=>{
@@ -2773,7 +2772,7 @@
 
   // 접근성: Esc로 열린 시트 닫기, 토스트는 상태 알림(숨김 상태 포커스 방지)
   window.addEventListener("keydown", e=>{
-    if(e.key==="Escape") ["exitModal","whenModal","msgModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
+    if(e.key==="Escape") ["exitModal","whenModal","msgModal","hostWhyModal","s2WhyModal"].forEach(m=>document.getElementById(m).classList.remove("show"));
   });
   [notif, notif1].forEach(n=>{ n.setAttribute("role","status"); n.tabIndex=-1; });
 
